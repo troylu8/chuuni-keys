@@ -73,7 +73,7 @@ export default function KeyIcon( { keyCode, hitringEvent, children, labelCentere
             `}
         >
             <span className="text-lg"> { children } </span>
-            { hitrings }
+            { hitrings.map(pair => pair[1]) }
         </div>
     )
 }
