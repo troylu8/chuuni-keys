@@ -1,9 +1,12 @@
 import { useState, createContext, useContext, useRef } from "react";
 
+export const HIT_WINDOWS = [50, 200, 400];
 
-type BroadcastDelta = (delta: number) => void;
+export type Delta = number | "miss";
 
-type DeltaListener = (delta: number) => any;
+type BroadcastDelta = (delta: Delta) => void;
+
+type DeltaListener = (delta: Delta) => any;
 type RemoveDeltaListener = () => void;
 
 type AddDeltaListener = (listener: DeltaListener) => RemoveDeltaListener;
@@ -21,7 +24,7 @@ export default function DeltaProvider({ children }: Props) {
     
     const listeners = useRef<Set<DeltaListener>>(new Set()).current;
     
-    function broadcastDelta(delta: number) {
+    function broadcastDelta(delta: Delta) {
         for (const listener of listeners) {
             listener(delta);
         }

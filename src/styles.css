@@ -22,3 +22,18 @@ body {
         opacity: 1;
     }
 }
+
+.anim-accuracy-tick {
+    animation: accuracy-tick 1s ease-out forwards;
+}
+@keyframes accuracy-tick {
+    0% {
+        opacity: 1;
+    }
+    30% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}

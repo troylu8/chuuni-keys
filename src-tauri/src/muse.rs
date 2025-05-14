@@ -45,7 +45,7 @@ pub struct MuseReader {
     absolute_pause_time: Arc<Mutex<u128>>,
 }
 impl MuseReader {
-    pub fn new(filepath: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new(filepath: &str) -> Result<(Self, String), Box<dyn Error>> {
         
         let mut note_events = VecDeque::new();
         let mut other_events = VecDeque::new();
@@ -59,15 +59,16 @@ impl MuseReader {
             }
         }
         
-        Ok(
+        Ok((
             Self { 
                 note_events: Arc::new(Mutex::new(note_events)),
                 other_events: Arc::new(Mutex::new(other_events)),
                 playing: Arc::new(AtomicBool::new(false)),
                 absolute_start_time: Arc::new(Mutex::new(0)),
                 absolute_pause_time: Arc::new(Mutex::new(0))
-            }
-        )
+            },
+            filepath.to_string()
+        ))
     }
     
     pub fn play<S, E>(&self, hitring_duration_ms: usize, on_start: S, mut on_event: E) 

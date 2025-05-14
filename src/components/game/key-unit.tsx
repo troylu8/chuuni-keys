@@ -1,10 +1,11 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState, ReactNode, useRef } from "react"
-import { useAbsoluteStartTime } from "../providers/start-time";
-import { usePaused } from "../providers/paused";
+import { useAbsoluteStartTime } from "../../providers/game-state";
+import { usePlayback } from "../../providers/playback";
+import { HIT_WINDOWS, useDelta } from "../../providers/delta";
 
 
-const HIT_WINDOWS = [50, 150, 300];
+
 
 const KEY_HEIGHT = 48;
 
@@ -16,11 +17,20 @@ type Props = Readonly<{
 }>
 export default function KeyUnit( { keyCode, hitringEvent, children, labelCentered }: Props ) {
     const [absoluteStartTime] = useAbsoluteStartTime();
-    const [paused] = usePaused();
+    const [paused] = usePlayback();
     const [pressed, setPressed] = useState(false);
     const [hitrings, setHitrings] = useState<[number, ReactNode][]>([]);
+    const [broadcastDelta] = useDelta();
     
     useEffect(() => {
+        function popHitring() {
+            setHitrings(prev => {
+                const next = [...prev];
+                next.shift()
+                return next;
+            })
+        }
+        
         function handleKeyDown(e: KeyboardEvent) {
             if (paused || e.key !== keyCode) return; 
             
@@ -30,7 +40,15 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             
             const delta = Date.now() - absoluteStartTime - hitrings[0][0];
             
-            console.log("diff: ", delta);
+            if (Math.abs(delta) <= HIT_WINDOWS[2] / 2) {
+                console.log("diff: ", delta);
+                broadcastDelta(delta);
+            }
+            else {
+                console.log("miss!", delta);
+                broadcastDelta("miss");
+            }
+            popHitring();
         }
         function handleKeyUp(e: KeyboardEvent) {
             if (e.key === keyCode) setPressed(false);
@@ -38,14 +56,6 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
         
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
-        
-        function popHitring() {
-            setHitrings(prev => {
-                const next = [...prev];
-                next.shift()
-                return next;
-            })
-        }
         
         const unlisten = listen(hitringEvent, e => {
             
@@ -60,7 +70,10 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
                     <Hitring 
                         key={hitTime}
                         hitTime={hitTime}
-                        onEnd={popHitring}
+                        onEnd={() => {
+                            popHitring();
+                            broadcastDelta("miss");
+                        }}
                     />
                 ]
             ]);
@@ -100,7 +113,7 @@ type HitringProps = Readonly<{
 function Hitring({ hitTime, onEnd }: HitringProps) {
     const [absoluteStartTime] = useAbsoluteStartTime();
     const [progress, setProgress] = useState(1);
-    const [paused] = usePaused();
+    const [paused] = usePlayback();
     
     const absoluteHitTime = absoluteStartTime + hitTime;
     
@@ -109,10 +122,8 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
     
     
     useEffect(() => {
-        console.log("useeffect called");
         
         if (paused && rafId.current != null) {
-            console.log("pause!!!!");
             cancelAnimationFrame(rafId.current);
             rafId.current = null;
         }

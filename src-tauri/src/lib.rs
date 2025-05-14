@@ -21,10 +21,10 @@ fn load_chart(app: AppHandle, state: State<'_, Mutex<AppState>>, filepath: &str)
     let mut state = state.lock().unwrap();
     state.muse_reader = None; // drop old muse reader to stop existing playback
     
-    let muse_reader = MuseReader::new(filepath).map_err(|e| e.to_string() )?;
+    let (muse_reader, audio_filepath) = MuseReader::new(filepath).map_err(|e| e.to_string() )?;
     muse_reader.play(
         HITRING_DURATION_MS, 
-        on_muse_start(app.clone()),
+        on_muse_start(app.clone(), audio_filepath),
         on_muse_event(app),
     );
     
@@ -32,10 +32,10 @@ fn load_chart(app: AppHandle, state: State<'_, Mutex<AppState>>, filepath: &str)
     Ok(fs::read_to_string(filepath).unwrap())
 }
 
-fn on_muse_start(app: AppHandle) -> impl FnOnce(u128) {
+fn on_muse_start(app: AppHandle, audio_filepath: String) -> impl FnOnce(u128) {
     move |start_time| {
         println!("sending start-chart {}", start_time);
-        app.emit("start-chart", start_time).unwrap();
+        app.emit("start-chart", (start_time, audio_filepath)).unwrap();
     }
 }
 fn on_muse_event(app: AppHandle) -> impl FnMut(MuseEvent) {
