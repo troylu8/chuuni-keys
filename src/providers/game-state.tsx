@@ -2,15 +2,16 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useState, createContext, useContext, useEffect } from "react";
 import { usePlayback } from "./playback";
+import { Page, usePage } from "./page";
 
 
-type StartGame = (filepath: string) => void;
+type StartGame = (chartPath: string, audioPath: string) => void;
 type TogglePauseGame = () => void;
 type StopGame = () => void;
 const ControlsContext = createContext<[boolean, StartGame, TogglePauseGame, StopGame] | null>(null);
 const StartTimeContext = createContext<[number, (next: number) => void] | null>(null);
 
-export function useControls() {
+export function useGameControls() {
     return useContext(ControlsContext)!;
 }
 export function useAbsoluteStartTime() {
@@ -21,7 +22,9 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function GameStateProvider({ children }: Props) {
-    const [_, startAudio, setAudioPlaying] = usePlayback();
+    const [_, setPage] = usePage();
+    
+    const [__, loadAudio, setAudioPlaying] = usePlayback();
     
     const [startTime, setStartTime] = useState(0);
     const [pauseTime, setPauseTime] = useState(0);
@@ -29,34 +32,33 @@ export default function GameStateProvider({ children }: Props) {
     
     useEffect(() => {
         const unlisten = listen("start-chart", e => {
-            const [startTime, audioFilepath] = e.payload as [number, string];
-            
             setPauseTime(0);
-            setStartTime(startTime);
-            startAudio(audioFilepath);
+            setStartTime(e.payload as number);
+            setAudioPlaying(true);
         });
-        
         return () => { unlisten.then(unlisten => unlisten()) };
     }, []);
     
-    function startGame(filepath: string) {
-        invoke("load_chart", { filepath } );
+    function startGame(chartPath: string, audioPath: string) {
+        loadAudio(audioPath);
+        invoke("game_start", { filepath: chartPath } );
     }
     function togglePauseGame() {
         if (paused) {
             setAudioPlaying(true);
-            invoke("resume");
+            invoke("game_resume");
             setPauseTime(0);
             setStartTime(startTime + Date.now() - pauseTime); // add pause duration to start time
         }
         else {
             setAudioPlaying(false);
-            invoke("pause");
+            invoke("game_pause");
             setPauseTime(Date.now());
         }
     }
     function stopGame() {
-        
+        invoke("game_stop");
+        setPage(Page.SONG_SELECT);
     }
     
     return (

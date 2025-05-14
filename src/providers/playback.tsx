@@ -1,8 +1,9 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useState, createContext, useContext, useRef } from "react";
 
-type StartAudio = (src: string) => void;
+type LoadAudio = (src: string) => void;
 type SetPlaying = (next: boolean) => void;
-const PlaybackContext = createContext<[boolean, StartAudio, SetPlaying] | null>(null);
+const PlaybackContext = createContext<[boolean, LoadAudio, SetPlaying] | null>(null);
 
 export function usePlayback() {
     return useContext(PlaybackContext)!;
@@ -16,10 +17,9 @@ export default function PlaybackProvider({ children }: Props) {
     
     const audio = useRef(new Audio()).current;
     
-    function startAudio(src: string) {
-        audio.src = src;
-        audio.play();
-        setPlayingInner(true);
+    function loadAudio(src: string) {
+        audio.src = convertFileSrc(src);
+        audio.load();
     }
     
     function setPlaying(playing: boolean) {
@@ -33,7 +33,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     return (
-        <PlaybackContext.Provider value={[playing, startAudio, setPlaying]}>
+        <PlaybackContext.Provider value={[playing, loadAudio, setPlaying]}>
             { children }
         </PlaybackContext.Provider>
     );
