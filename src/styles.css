@@ -14,23 +14,6 @@ body {
     background-color: var(--background);
 }
 
-@keyframes hitring {
-    0% {
-        top: -30px;
-        bottom: -30px;
-        left: -30px;
-        right: -30px;
-        border-radius: 27px;
-    }
-    100% {
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        border-radius: 12px;
-    }
-}
-
 @keyframes fade-in {
     0% {
         opacity: 0;

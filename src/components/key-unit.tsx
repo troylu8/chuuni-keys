@@ -28,7 +28,6 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             
             if (hitrings.length == 0) return console.log("none!");
             
-            console.log(Date.now() - absoluteStartTime, hitrings[0][0]);
             const delta = Date.now() - absoluteStartTime - hitrings[0][0];
             
             console.log("diff: ", delta);
@@ -49,7 +48,6 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
         }
         
         const unlisten = listen(hitringEvent, e => {
-            console.log("got hitringevent", e, absoluteStartTime);
             
             if (absoluteStartTime == 0) return; // received an event before start time was set
             
@@ -61,7 +59,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
                     hitTime,
                     <Hitring 
                         key={hitTime}
-                        absoluteHitTime={absoluteStartTime + hitTime}
+                        hitTime={hitTime}
                         onEnd={popHitring}
                     />
                 ]
@@ -93,46 +91,68 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
     )
 }
 
+const HITRING_MAX_GAP = 30;
+
 type HitringProps = Readonly<{
-    absoluteHitTime: number,
+    hitTime: number,
     onEnd: () => any
 }>
-function Hitring({ absoluteHitTime, onEnd }: HitringProps) {
-    const [gap, setGap] = useState(30);
+function Hitring({ hitTime, onEnd }: HitringProps) {
+    const [absoluteStartTime] = useAbsoluteStartTime();
+    const [progress, setProgress] = useState(1);
     const [paused] = usePaused();
     
-    const durationSecs = useRef((absoluteHitTime - Date.now()) / 1000);
+    const absoluteHitTime = absoluteStartTime + hitTime;
     
-    let rafId = useRef<number | null>(null);
+    const hitringDuration = useRef(absoluteHitTime - Date.now()).current;
+    const rafId = useRef<number | null>(null);
+    
     
     useEffect(() => {
-        if (paused && rafId.current != null) cancelAnimationFrame(rafId.current);
+        console.log("useeffect called");
+        
+        if (paused && rafId.current != null) {
+            console.log("pause!!!!");
+            cancelAnimationFrame(rafId.current);
+            rafId.current = null;
+        }
         else if (!paused) {
             
             function update() {
+                const now = Date.now();
                 
+                // if last hit window has passed
+                if (now > absoluteHitTime + HIT_WINDOWS[2] / 2) {
+                    cancelAnimationFrame(rafId.current!);
+                    rafId.current = null;
+                    onEnd();
+                    return;
+                }
                 
-                rafId.current = requestAnimationFrame(update);
+                setProgress(Math.max((absoluteHitTime - now) / hitringDuration, 0));
+                
+                if (rafId.current != null) rafId.current = requestAnimationFrame(update);
             }
             rafId.current = requestAnimationFrame(update);
         }
         
-    }, [paused])
+    }, [paused]);
+    
+    const gap = HITRING_MAX_GAP * progress;
     
     return (
-        <div 
-            className="absolute outline-foreground outline-2"
-            style={{
-                animation: `hitring ${durationSecs.current}s linear forwards, fade-in 0.2s ease-in forwards`,
-                animationPlayState: paused? "paused" : "running"
-            }}
-            onAnimationEnd={e => {
-                if (e.animationName === "hitring") {
-                    
-                    // wait until final hit window is over before removing this 
-                    const callOnEnd = setTimeout(onEnd, HIT_WINDOWS[2] / 2); 
-                }
-            }}
-        ></div>
+        <>
+            <div 
+                className="absolute outline-foreground outline-3"
+                style={{
+                    top: -gap,
+                    bottom: -gap,
+                    left: -gap,
+                    right: -gap,
+                    borderRadius: (2 * gap + KEY_HEIGHT) * 0.25,  // total size * 0.25
+                    opacity: (1 - progress) / 0.6
+                }}
+            ></div>
+        </>
     );
 }

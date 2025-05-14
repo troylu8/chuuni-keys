@@ -2,7 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import StartTimeProvider from "../providers/start-time";
 import KeyUnit from "./key-unit";
 import PausedProvider, { usePaused } from "../providers/paused";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import DeltaProvider, { useDelta } from "../providers/delta";
 
 export default function Game() {
     
@@ -10,7 +11,11 @@ export default function Game() {
         <>
             <StartTimeProvider>
                 <PausedProvider>
-                    <GameInner />
+                    <PauseMenu />
+                    <DeltaProvider>
+                        <Keyboard />
+                        <AccuracyBar />
+                    </DeltaProvider>
                 </PausedProvider>
             </StartTimeProvider>
             
@@ -22,7 +27,8 @@ export default function Game() {
     );
 }
 
-function GameInner() {
+
+function PauseMenu() {
     const [paused, togglePaused] = usePaused();
     
     useEffect(() => {
@@ -35,29 +41,23 @@ function GameInner() {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         }
-    })
+    }, []);
     
     return (
         <>
-            { paused && <PauseMenu /> }
-            <Keyboard />
+            { paused && 
+                <div 
+                    className="
+                        fixed left-0 right-0 top-0 bottom-0 z-10
+                        flex flex-col justify-center items-center gap-3
+                    "
+                >
+                    <button> resume </button>
+                    <button> restart </button>
+                    <button> quit </button>
+                </div>
+            }
         </>
-    )
-}
-
-function PauseMenu() {
-    
-    return (
-        <div 
-            className="
-                fixed left-0 right-0 top-0 bottom-0 z-10
-                flex flex-col justify-center items-center gap-3
-            "
-        >
-            <button> resume </button>
-            <button> restart </button>
-            <button> quit </button>
-        </div>
     )
 }
 
@@ -67,4 +67,33 @@ function Keyboard() {
             <KeyUnit keyCode=" " hitringEvent=":space"> spc </KeyUnit>
         </div>
     );
+}
+
+function AccuracyBar() {
+    const [_, addDeltaListener] = useDelta();
+    const [deltas, setDeltas] = useState<number[]>([]);
+    
+    useEffect(() => {
+        const unlisten = addDeltaListener(delta => {
+            setDeltas(prev => [...prev, delta]);
+            
+            setTimeout(() => {
+                setDeltas(prev => {
+                    const next = [...prev];
+                    next.shift();
+                    return next;
+                });
+            }, 500);
+        });
+        
+        return unlisten;
+    }, []);
+    
+    return (
+        <div>
+            {
+                deltas.map(d => <p>{d}</p>)
+            }
+        </div>
+    )
 }
