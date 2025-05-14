@@ -1,5 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState, ReactNode } from "react"
+import { useAbsoluteStartTime } from "../providers/start-time";
+import { usePaused } from "../providers/paused";
 
 
 const HITRING_DURATION_MS = 600
@@ -11,23 +13,27 @@ type Props = Readonly<{
     children?: string,
     labelCentered?: boolean
 }>
-export default function KeyIcon( { keyCode, hitringEvent, children, labelCentered }: Props ) {
-    
+export default function KeyUnit( { keyCode, hitringEvent, children, labelCentered }: Props ) {
+    const absoluteStartTime = useAbsoluteStartTime();
+    const [paused] = usePaused();
     const [pressed, setPressed] = useState(false);
     const [hitrings, setHitrings] = useState<[number, ReactNode][]>([]);
     
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key !== keyCode) return;
+            if (!paused && e.key !== keyCode) return; 
             
             setPressed(true);
             
-            if (hitrings.length == 0) return console.log("early");
+            if (hitrings.length == 0) return console.log("none!");
             
-            // const delta = hitrings[0][0] - Date.no
+            console.log(Date.now() - absoluteStartTime, hitrings[0][0]);
+            const delta = Date.now() - absoluteStartTime - hitrings[0][0];
+            
+            console.log("diff: ", delta);
         }
         function handleKeyUp(e: KeyboardEvent) {
-            if (e.key === keyCode) setPressed(false);
+            if (!paused && e.key === keyCode) setPressed(false);
         }
         
         window.addEventListener("keydown", handleKeyDown);
@@ -42,13 +48,19 @@ export default function KeyIcon( { keyCode, hitringEvent, children, labelCentere
         }
         
         const unlisten = listen(hitringEvent, e => {
-            console.log("got hitringevent", e);
+            console.log("got hitringevent", e, absoluteStartTime);
+            
+            if (absoluteStartTime == 0) return; // received an event before start time was set
+            
+            const hitTime = e.payload as number;
+            
             setHitrings(prev => [
                 ...prev, 
                 [
-                    e.payload as number,
+                    hitTime,
                     <Hitring 
-                        key={e.payload as number}
+                        key={hitTime}
+                        durationSecs={(absoluteStartTime + hitTime - Date.now()) / 1000}
                         onEnd={popHitring}
                     />
                 ]
@@ -59,9 +71,10 @@ export default function KeyIcon( { keyCode, hitringEvent, children, labelCentere
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
             unlisten.then(unlisten => unlisten());
-            console.log("unloaded listeners");
         }
-    }, [])
+    }, [absoluteStartTime, hitrings, paused]);
+    
+    
     
     return (
         <div 
@@ -79,13 +92,19 @@ export default function KeyIcon( { keyCode, hitringEvent, children, labelCentere
 }
 
 type HitringProps = Readonly<{
+    durationSecs: number,
     onEnd: () => any
 }>
-function Hitring({onEnd}: HitringProps) {
+function Hitring({ durationSecs, onEnd }: HitringProps) {
+    const [paused] = usePaused()
+    
     return (
         <div 
             className="absolute outline-foreground outline-2"
-            style={{animation: `hitring ${HITRING_DURATION_MS / 1000}s linear forwards, fade-in 0.2s ease-in forwards`}}
+            style={{
+                animation: `hitring ${durationSecs}s linear forwards, fade-in 0.2s ease-in forwards`,
+                animationPlayState: paused? "paused" : "running"
+            }}
             onAnimationEnd={e => {
                 if (e.animationName === "hitring") onEnd();
             }}
