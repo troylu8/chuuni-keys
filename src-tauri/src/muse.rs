@@ -101,6 +101,7 @@ impl MuseReader {
                 // add pause duration, if exists, to start time
                 if *absolute_pause_time != 0 {
                     *absolute_start_time += now - *absolute_pause_time;
+                    println!("shifting start time by {}", now - *absolute_pause_time);
                     *absolute_pause_time = 0;
                 }
                 
@@ -113,15 +114,13 @@ impl MuseReader {
             }
             
             while !note_events.is_empty() || !other_events.is_empty() {
-                if !playing.load(Ordering::Relaxed) { return }
+                if !playing.load(Ordering::Relaxed) { return println!("paused so exiting loop") }
                 
-                // TODO hitring duration, resume from time we left off
                 let now = now();
                 
                 let absolute_start_time = *absolute_start_time.lock().unwrap();
                 
-                while let Some(MuseEvent(time, e)) = note_events.front() {
-                    // println!("next event {e} at {}", (*time - hitring_duration_ms) as u128 + absolute_start_time );
+                while let Some(MuseEvent(time, _)) = note_events.front() {
                     if now >= (*time - hitring_duration_ms) as u128 + absolute_start_time {
                         on_event(note_events.pop_front().unwrap());
                     }
@@ -136,6 +135,8 @@ impl MuseReader {
                 }
             }
             
+            // after all events are done
+            println!("all events done, resetting abs. start time", );
             playing.store(false, Ordering::Relaxed);
             *absolute_start_time.lock().unwrap() = 0;
         });

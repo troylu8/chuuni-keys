@@ -2,10 +2,10 @@ import { listen } from "@tauri-apps/api/event";
 import { useState, createContext, useContext, useEffect } from "react";
 
 
-const StartTimeContext = createContext(0);
+const StartTimeContext = createContext<[number, (next: number) => void] | null>(null);
 
 export function useAbsoluteStartTime() {
-    return useContext(StartTimeContext);
+    return useContext(StartTimeContext)!;
 }
 
 type Props = Readonly<{
@@ -24,7 +24,7 @@ export default function StartTimeProvider({ children }: Props) {
     }, []);
     
     return (
-        <StartTimeContext.Provider value={startTime}>
+        <StartTimeContext.Provider value={[startTime, setStartTime]}>
             { children }
         </StartTimeContext.Provider>
     );

@@ -16,18 +16,18 @@ export default function Game() {
             
             <button className="cursor-pointer" onClick={() => {
                 console.log("sending start");
-                invoke("start_chart", {filepath: "charts/my-chart.muse"})
+                invoke("load_chart", {filepath: "charts/my-chart.muse"})
             }} > play </button> 
         </>
     );
 }
 
 function GameInner() {
-    const [paused, setPaused] = usePaused();
+    const [paused, togglePaused] = usePaused();
     
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === "Escape") setPaused(!paused); 
+            if (e.key === "Escape") togglePaused(); 
         }
         
         window.addEventListener("keydown", handleKeyDown);

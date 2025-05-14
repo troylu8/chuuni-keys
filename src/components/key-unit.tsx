@@ -1,11 +1,12 @@
 import { listen } from "@tauri-apps/api/event";
-import { useEffect, useState, ReactNode } from "react"
+import { useEffect, useState, ReactNode, useRef } from "react"
 import { useAbsoluteStartTime } from "../providers/start-time";
 import { usePaused } from "../providers/paused";
 
 
-const HITRING_DURATION_MS = 600
+const HIT_WINDOWS = [50, 150, 300];
 
+const KEY_HEIGHT = 48;
 
 type Props = Readonly<{
     keyCode: string,
@@ -14,14 +15,14 @@ type Props = Readonly<{
     labelCentered?: boolean
 }>
 export default function KeyUnit( { keyCode, hitringEvent, children, labelCentered }: Props ) {
-    const absoluteStartTime = useAbsoluteStartTime();
+    const [absoluteStartTime] = useAbsoluteStartTime();
     const [paused] = usePaused();
     const [pressed, setPressed] = useState(false);
     const [hitrings, setHitrings] = useState<[number, ReactNode][]>([]);
     
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (!paused && e.key !== keyCode) return; 
+            if (paused || e.key !== keyCode) return; 
             
             setPressed(true);
             
@@ -33,7 +34,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             console.log("diff: ", delta);
         }
         function handleKeyUp(e: KeyboardEvent) {
-            if (!paused && e.key === keyCode) setPressed(false);
+            if (e.key === keyCode) setPressed(false);
         }
         
         window.addEventListener("keydown", handleKeyDown);
@@ -60,7 +61,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
                     hitTime,
                     <Hitring 
                         key={hitTime}
-                        durationSecs={(absoluteStartTime + hitTime - Date.now()) / 1000}
+                        absoluteHitTime={absoluteStartTime + hitTime}
                         onEnd={popHitring}
                     />
                 ]
@@ -78,8 +79,9 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
     
     return (
         <div 
+            style={{width: KEY_HEIGHT, height: KEY_HEIGHT}}
             className={`
-                w-12 h-12 outline-foreground outline-2 rounded-xl relative
+                outline-foreground outline-2 rounded-xl relative
                 ${pressed? "bg-foreground text-background" : "bg-background" }
                 flex flex-col-reverse
                 ${labelCentered? "items-center justify-center" : "[&>span]:ml-3"}
@@ -92,21 +94,44 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
 }
 
 type HitringProps = Readonly<{
-    durationSecs: number,
+    absoluteHitTime: number,
     onEnd: () => any
 }>
-function Hitring({ durationSecs, onEnd }: HitringProps) {
-    const [paused] = usePaused()
+function Hitring({ absoluteHitTime, onEnd }: HitringProps) {
+    const [gap, setGap] = useState(30);
+    const [paused] = usePaused();
+    
+    const durationSecs = useRef((absoluteHitTime - Date.now()) / 1000);
+    
+    let rafId = useRef<number | null>(null);
+    
+    useEffect(() => {
+        if (paused && rafId.current != null) cancelAnimationFrame(rafId.current);
+        else if (!paused) {
+            
+            function update() {
+                
+                
+                rafId.current = requestAnimationFrame(update);
+            }
+            rafId.current = requestAnimationFrame(update);
+        }
+        
+    }, [paused])
     
     return (
         <div 
             className="absolute outline-foreground outline-2"
             style={{
-                animation: `hitring ${durationSecs}s linear forwards, fade-in 0.2s ease-in forwards`,
+                animation: `hitring ${durationSecs.current}s linear forwards, fade-in 0.2s ease-in forwards`,
                 animationPlayState: paused? "paused" : "running"
             }}
             onAnimationEnd={e => {
-                if (e.animationName === "hitring") onEnd();
+                if (e.animationName === "hitring") {
+                    
+                    // wait until final hit window is over before removing this 
+                    const callOnEnd = setTimeout(onEnd, HIT_WINDOWS[2] / 2); 
+                }
             }}
         ></div>
     );
