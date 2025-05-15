@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { usePlayback } from "../../providers/playback";
+import { useGameControls } from "../../providers/game-state";
 
 export default function PauseMenu() {
-    const [paused, togglePaused] = usePlayback();
+    const [paused, togglePauseGame, stopGame] = useGameControls();
     
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === "Escape") togglePaused(); 
+            if (e.key === "Escape") togglePauseGame(); 
         }
         
         window.addEventListener("keydown", handleKeyDown);
@@ -14,20 +14,14 @@ export default function PauseMenu() {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         }
-    }, []);
+    }, [paused]);
     
     return (
         <>
             { paused && 
-                <div 
-                    className="
-                        absolute left-0 right-0 top-0 bottom-0 z-10
-                        flex flex-col justify-center items-center gap-3
-                    "
-                >
-                    <button> resume </button>
-                    <button> restart </button>
-                    <button> quit </button>
+                <div className="absolute cover z-10 flex flex-col justify-center items-center gap-3">
+                    <button onClick={togglePauseGame}> resume </button>
+                    <button onClick={stopGame}> quit </button>
                 </div>
             }
         </>

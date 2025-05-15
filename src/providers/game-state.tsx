@@ -2,13 +2,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useState, createContext, useContext, useEffect } from "react";
 import { usePlayback } from "./playback";
-import { Page, usePage } from "./page";
+import { GameInfo, Page, usePage } from "./page";
 
 
-type StartGame = (chartPath: string, audioPath: string) => void;
+
 type TogglePauseGame = () => void;
 type StopGame = () => void;
-const ControlsContext = createContext<[boolean, StartGame, TogglePauseGame, StopGame] | null>(null);
+const ControlsContext = createContext<[boolean, TogglePauseGame, StopGame] | null>(null);
 const StartTimeContext = createContext<[number, (next: number) => void] | null>(null);
 
 export function useGameControls() {
@@ -22,7 +22,7 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function GameStateProvider({ children }: Props) {
-    const [_, setPage] = usePage();
+    const [pageParams, setPage] = usePage();
     
     const [__, loadAudio, setAudioPlaying] = usePlayback();
     
@@ -36,33 +36,37 @@ export default function GameStateProvider({ children }: Props) {
             setStartTime(e.payload as number);
             setAudioPlaying(true);
         });
+        
+        const gameInfo = pageParams[1] as GameInfo;
+        
+        loadAudio(gameInfo.audioPath);
+        invoke("game_start", { chartPath: gameInfo.chartPath } );
+        
         return () => { unlisten.then(unlisten => unlisten()) };
     }, []);
     
-    function startGame(chartPath: string, audioPath: string) {
-        loadAudio(audioPath);
-        invoke("game_start", { filepath: chartPath } );
-    }
-    function togglePauseGame() {
+    async function togglePauseGame() {
         if (paused) {
-            setAudioPlaying(true);
-            invoke("game_resume");
+            console.log("unpausing");
+            await invoke("game_resume");
+            await setAudioPlaying(true);
             setPauseTime(0);
             setStartTime(startTime + Date.now() - pauseTime); // add pause duration to start time
         }
         else {
-            setAudioPlaying(false);
-            invoke("game_pause");
+            console.log("pausing");
+            await invoke("game_pause");
+            await setAudioPlaying(false);
             setPauseTime(Date.now());
         }
     }
     function stopGame() {
         invoke("game_stop");
-        setPage(Page.SONG_SELECT);
+        setPage([Page.SONG_SELECT]);
     }
     
     return (
-        <ControlsContext.Provider value={[paused, startGame, togglePauseGame, stopGame]}>
+        <ControlsContext.Provider value={[paused, togglePauseGame, stopGame]}>
             <StartTimeContext.Provider value={[startTime, setStartTime]}>
                 { children }
             </StartTimeContext.Provider>

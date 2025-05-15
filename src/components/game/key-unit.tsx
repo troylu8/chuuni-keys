@@ -1,7 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState, ReactNode, useRef } from "react"
-import { useAbsoluteStartTime } from "../../providers/game-state";
-import { usePlayback } from "../../providers/playback";
+import { useAbsoluteStartTime, useGameControls } from "../../providers/game-state";
 import { HIT_WINDOWS, useDelta } from "../../providers/delta";
 
 
@@ -17,7 +16,7 @@ type Props = Readonly<{
 }>
 export default function KeyUnit( { keyCode, hitringEvent, children, labelCentered }: Props ) {
     const [absoluteStartTime] = useAbsoluteStartTime();
-    const [paused] = usePlayback();
+    const [paused] = useGameControls();
     const [pressed, setPressed] = useState(false);
     const [hitrings, setHitrings] = useState<[number, ReactNode][]>([]);
     const [broadcastDelta] = useDelta();
@@ -113,7 +112,7 @@ type HitringProps = Readonly<{
 function Hitring({ hitTime, onEnd }: HitringProps) {
     const [absoluteStartTime] = useAbsoluteStartTime();
     const [progress, setProgress] = useState(1);
-    const [paused] = usePlayback();
+    const [paused] = useGameControls();
     
     const absoluteHitTime = absoluteStartTime + hitTime;
     

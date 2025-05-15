@@ -2,7 +2,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useState, createContext, useContext, useRef } from "react";
 
 type LoadAudio = (src: string) => void;
-type SetPlaying = (next: boolean) => void;
+type SetPlaying = (next: boolean) => Promise<void>;
 const PlaybackContext = createContext<[boolean, LoadAudio, SetPlaying] | null>(null);
 
 export function usePlayback() {
@@ -20,11 +20,12 @@ export default function PlaybackProvider({ children }: Props) {
     function loadAudio(src: string) {
         audio.src = convertFileSrc(src);
         audio.load();
+        setPlayingInner(false);
     }
     
-    function setPlaying(playing: boolean) {
+    async function setPlaying(playing: boolean) {
         if (playing) {
-            audio.play();
+            await audio.play();
         }
         else {
             audio.pause();

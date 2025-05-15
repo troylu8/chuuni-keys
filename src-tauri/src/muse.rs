@@ -52,11 +52,11 @@ pub struct MuseReader {
     absolute_pause_time: Arc<Mutex<u128>>,
 }
 impl MuseReader {
-    pub fn new(filepath: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new(chart_path: &str) -> Result<Self, Box<dyn Error>> {
         let mut note_events = VecDeque::new();
         let mut other_events = VecDeque::new();
 
-        for line in fs::read_to_string(filepath)?.trim().split('\n') {
+        for line in fs::read_to_string(chart_path)?.trim().split('\n') {
             if line.contains(":") {
                 note_events.push_back(MuseEvent::from_str(line)?);
             } else {

@@ -1,10 +1,10 @@
 mod muse;
 mod muse_fs;
 
-use std::{fs, path::PathBuf, sync::Mutex, time::Duration};
-use tauri::{AppHandle, Emitter, Manager, State};
 use muse::{MuseEvent, MuseReader};
 use muse_fs::get_all_songs;
+use std::{fs, path::PathBuf, sync::Mutex, time::Duration};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 #[macro_export]
 macro_rules! clone {
@@ -32,11 +32,15 @@ fn on_muse_event(app: AppHandle) -> impl FnMut(MuseEvent) {
 }
 
 #[tauri::command]
-fn game_start(app: AppHandle, state: State<'_, Mutex<AppState>>, filepath: &str) -> Result<(), String> {
+fn game_start(
+    app: AppHandle,
+    state: State<'_, Mutex<AppState>>,
+    chart_path: &str,
+) -> Result<(), String> {
     let mut state = state.lock().unwrap();
     state.muse_reader = None; // drop old muse reader to stop existing playback
 
-    let muse_reader = MuseReader::new(filepath).map_err(|e| e.to_string())?;
+    let muse_reader = MuseReader::new(chart_path).map_err(|e| e.to_string())?;
     muse_reader.play(
         HITRING_DURATION_MS,
         on_muse_start(app.clone()),
@@ -70,7 +74,6 @@ fn game_stop(state: State<'_, Mutex<AppState>>) {
     state.muse_reader = None;
 }
 
-
 #[derive(Debug, Default)]
 struct AppState {
     muse_reader: Option<MuseReader>,
@@ -79,6 +82,7 @@ struct AppState {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
