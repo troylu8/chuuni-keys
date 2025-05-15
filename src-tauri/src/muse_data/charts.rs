@@ -1,9 +1,4 @@
-use std::{
-    env,
-    error::Error,
-    fs::{self, File},
-    path::PathBuf,
-};
+use std::fs;
 
 use serde::{Deserialize, Serialize};
 
@@ -18,23 +13,13 @@ pub struct MuseMetadata {
     img: Option<String>,
 }
 
-#[derive(Serialize)]
-pub struct GetAllSongsResp {
-    charts_dir: PathBuf,
-    charts: Vec<MuseMetadata>,
-}
 
 #[tauri::command]
-pub fn get_all_songs() -> Result<GetAllSongsResp, String> {
-    match fs::read_dir("charts") {
+pub fn get_all_charts() -> Result<Vec<MuseMetadata>, String> {
+    match fs::read_dir("data/charts") {
         Err(e) => Err(e.to_string()),
-        Ok(iter) => Ok(GetAllSongsResp {
-            charts_dir: match env::current_dir() {
-                Err(e) => return Err(e.to_string()),
-                Ok(path) => path.join("charts"),
-            },
-
-            charts: iter
+        Ok(iter) => Ok(
+            iter
                 .filter_map(|res| res.ok())
                 .filter_map(|file| {
                     if let Ok(contents) = fs::read_to_string(file.path().join("metadata.json")) {
@@ -45,7 +30,7 @@ pub fn get_all_songs() -> Result<GetAllSongsResp, String> {
                     None
                 })
                 .collect(),
-        }),
+        ),
     }
 }
 

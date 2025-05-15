@@ -1,39 +1,17 @@
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
 import filenamify from 'filenamify';
 import { Page, usePage } from "../../providers/page";
+import { ChartMetadata, useUserData } from "../../providers/user-data";
 
 
-type ChartMetadata = {
-    id: string,
-    title: string,
-    artists: string,
-    chart_author: string,
-    audio: string,
-    chart: string,
-    img?: string
-}
-type AllChartsData = {
-    charts: ChartMetadata[]
-    charts_dir: string
-}
 
 export default function SongSelect() {
     
-    const [allCharts, setAllCharts] = useState<AllChartsData | null>(null);
+    const userData = useUserData();
     const [_, setPageParams] = usePage();
     
-    useEffect(() => {
-        invoke<AllChartsData>("get_all_songs")
-        .then(chartsResp => {
-            console.log(chartsResp);
-            setAllCharts(chartsResp);
-        });
-    }, []);
+    if (userData == null) return <p> loading... </p>;
     
-    if (allCharts == null) return <p> loading... </p>;
-    
-    const {charts, charts_dir} = allCharts;
+    const {base_dir, charts} = userData;
 
     return (
         
@@ -53,7 +31,7 @@ export default function SongSelect() {
                         key={metadata.id}
                         metadata={metadata}
                         onClick={() => {
-                            const songFolder = `${charts_dir}\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`;
+                            const songFolder = `${base_dir}\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`;
                             console.log(songFolder + metadata.audio);
                             setPageParams([Page.GAME, {
                                 chartPath: songFolder + metadata.chart,

@@ -1,9 +1,10 @@
 mod muse;
-mod muse_fs;
+mod muse_data;
 
 use muse::{MuseEvent, MuseReader};
-use muse_fs::get_all_songs;
-use std::{fs, path::PathBuf, sync::Mutex, time::Duration};
+use muse_data::get_user_data;
+use muse_data::charts::get_all_charts;
+use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 #[macro_export]
@@ -90,7 +91,8 @@ pub fn run() {
             game_pause,
             game_resume,
             game_stop,
-            get_all_songs
+            get_all_charts,
+            get_user_data
         ])
         .setup(|app| {
             app.manage(Mutex::new(AppState::default()));
