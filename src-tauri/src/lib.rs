@@ -19,10 +19,9 @@ macro_rules! clone {
 
 const HITRING_DURATION_MS: usize = 500;
 
-fn on_muse_start(app: AppHandle) -> impl FnOnce(u128) {
-    move |start_time| {
-        println!("sending start-chart {}", start_time);
-        app.emit("start-chart", start_time).unwrap();
+fn on_muse_start(app: AppHandle) -> impl FnOnce() {
+    move || {
+        app.emit("start-chart", ()).unwrap();
     }
 }
 fn on_muse_event(app: AppHandle) -> impl FnMut(MuseEvent) {
@@ -65,7 +64,7 @@ fn game_pause(state: State<'_, Mutex<AppState>>) {
 fn game_resume(app: AppHandle, state: State<'_, Mutex<AppState>>) {
     let state = state.lock().unwrap();
     if let Some(muse_reader) = &state.muse_reader {
-        muse_reader.play(HITRING_DURATION_MS, |_| {}, on_muse_event(app));
+        muse_reader.play(HITRING_DURATION_MS, || {}, on_muse_event(app));
     }
 }
 

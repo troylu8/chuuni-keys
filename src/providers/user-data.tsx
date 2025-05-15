@@ -29,7 +29,10 @@ export default function UserDataProvider({ children }: Props) {
     const [userData, setUserData] = useState<UserData | null>(null);
     
     useEffect(() => {
-        invoke<UserData>("get_user_data").then(data => console.log(data))
+        invoke<UserData>("get_user_data").then(data => {
+            console.log(data);
+            setUserData(data);
+        })
     }, []);
     
     return (

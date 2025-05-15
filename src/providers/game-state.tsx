@@ -31,10 +31,15 @@ export default function GameStateProvider({ children }: Props) {
     const paused = pauseTime != 0;
     
     useEffect(() => {
-        const unlisten = listen("start-chart", e => {
+        const unlisten = listen("start-chart", () => {
             setPauseTime(0);
-            setStartTime(e.payload as number);
-            setAudioPlaying(true);
+            
+            setAudioPlaying(true)
+            .then(() => {
+                const now = Date.now();
+                console.log("setting start time", now);
+                setStartTime(now);
+            });
         });
         
         const gameInfo = pageParams[1] as GameInfo;
@@ -47,14 +52,17 @@ export default function GameStateProvider({ children }: Props) {
     
     async function togglePauseGame() {
         if (paused) {
-            console.log("unpausing");
             await invoke("game_resume");
             await setAudioPlaying(true);
+            const pauseDuration = Date.now() - pauseTime;
+            console.log("pause duration", pauseDuration);
+            setStartTime(prev => {
+                console.log("new start time", prev + pauseDuration);
+                return prev + pauseDuration;
+            }); // add pause duration to start time
             setPauseTime(0);
-            setStartTime(startTime + Date.now() - pauseTime); // add pause duration to start time
         }
         else {
-            console.log("pausing");
             await invoke("game_pause");
             await setAudioPlaying(false);
             setPauseTime(Date.now());
