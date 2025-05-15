@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState, ReactNode, useRef } from "react"
 import { useAbsoluteStartTime, useGameControls } from "../../providers/game-state";
 import { HIT_WINDOWS, useDelta } from "../../providers/delta";
+import { useSfx } from "../../providers/sfx";
 
 
 
@@ -113,8 +114,10 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
     const [absoluteStartTime] = useAbsoluteStartTime();
     const [progress, setProgress] = useState(1);
     const [paused] = useGameControls();
+    const playSfx = useSfx();
     
     const absoluteHitTime = absoluteStartTime + hitTime;
+    // console.log("abs. hit time = ", absoluteHitTime, " = abs start time ", absoluteStartTime, " + hit time ", hitTime);
     
     const hitringDuration = useRef(absoluteHitTime - Date.now()).current;
     const rafId = useRef<number | null>(null);
@@ -127,9 +130,16 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
             rafId.current = null;
         }
         else if (!paused) {
+            let hitsoundPlayed = false;
             
             function update() {
                 const now = Date.now();
+                
+                if (now >= absoluteHitTime && !hitsoundPlayed) {
+                    playSfx("hitsound.ogg");
+                    hitsoundPlayed = true;
+                    console.log(now - absoluteStartTime);
+                }
                 
                 // if last hit window has passed
                 if (now > absoluteHitTime + HIT_WINDOWS[2] / 2) {
@@ -146,7 +156,12 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
             rafId.current = requestAnimationFrame(update);
         }
         
-    }, [paused]);
+        return () => {
+            if (rafId.current) cancelAnimationFrame(rafId.current);
+            rafId.current = null;
+        }
+        
+    }, [absoluteStartTime, absoluteHitTime, paused]);
     
     const gap = HITRING_MAX_GAP * progress;
     

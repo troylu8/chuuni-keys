@@ -3,6 +3,7 @@ import MainMenu from "./components/main-menu/main-menu";
 import SongSelect from "./components/song-select/song-select";
 import PageProvider, { usePage, Page } from "./providers/page";
 import PlaybackProvider from "./providers/playback";
+import SfxProvider from "./providers/sfx";
 import UserDataProvider from "./providers/user-data";
 import "./styles.css"
 
@@ -11,7 +12,9 @@ export default function App() {
         <UserDataProvider>
             <PageProvider>
                 <PlaybackProvider>
-                    <Main />
+                    <SfxProvider>
+                        <Main />
+                    </SfxProvider>
                 </PlaybackProvider>
             </PageProvider>
         </UserDataProvider>

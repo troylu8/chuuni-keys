@@ -75,7 +75,7 @@ impl MuseReader {
 
     pub fn play<S, E>(&self, hitring_duration_ms: usize, on_start: S, mut on_event: E)
     where
-        S: FnOnce(u128) + Send + 'static,
+        S: FnOnce() + Send + 'static,
         E: FnMut(MuseEvent) + Send + 'static,
     {
         // exit if `playing` was not able to be changed from `false` -> `true`
@@ -116,9 +116,10 @@ impl MuseReader {
                     *absolute_start_time = now;
                 }
 
-                on_start(*absolute_start_time);
             }
-
+            
+            on_start();
+            
             while !note_events.is_empty() || !other_events.is_empty() {
                 if !playing.load(Ordering::Relaxed) {
                     return println!("paused so exiting loop");
