@@ -84,7 +84,6 @@ export default function GameStateProvider({ children }: Props) {
             while (nextEvent = eventQueue.peek()) {
                 if (getPosition() >= nextEvent[0]) {
                     museEmitter.emit(nextEvent[1], nextEvent[0]);
-                    console.log([...eventQueue]);
                     eventQueue.dequeue();
                 }
                 else break;

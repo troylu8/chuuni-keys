@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useDelta, HIT_WINDOWS } from "../../providers/delta";
+import { useDelta, ACCURACY_THRESHOLDS, MISS_THRESHOLD } from "../../providers/score";
 
 export default function AccuracyBar() {
     const [_, addDeltaListener] = useDelta();
@@ -43,7 +43,7 @@ type Props = Readonly<{
     onEnd?: () => void
 }>
 function AccuracyTick({ delta, color, onEnd }: Props) {
-    const percentAlongHitWindow = (delta + HIT_WINDOWS[2] / 2) / HIT_WINDOWS[2] * 100;
+    const percentAlongHitWindow = (delta + MISS_THRESHOLD) / (MISS_THRESHOLD * 2) * 100;
     
     return (
         <div 

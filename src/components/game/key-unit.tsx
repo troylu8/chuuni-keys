@@ -1,6 +1,6 @@
 import { useEffect, useState, ReactNode, useRef } from "react"
 import { HITRING_DURATION, useGameControls, useMuseEvents } from "../../providers/game-state";
-import { HIT_WINDOWS, useDelta } from "../../providers/delta";
+import { ACCURACY_THRESHOLDS, MISS_THRESHOLD, useDelta } from "../../providers/score";
 import { useSfx } from "../../providers/sfx";
 import { usePlayback } from "../../providers/playback";
 
@@ -45,7 +45,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             
             const delta = getPosition() - hitrings[0][0];
             
-            if (Math.abs(delta) <= HIT_WINDOWS[2] / 2) {
+            if (Math.abs(delta) <= MISS_THRESHOLD) {
                 console.log("diff: ", delta);
                 broadcastDelta(delta);
             }
@@ -129,7 +129,7 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
             const pos = getPosition();
             
             // if last hit window has passed
-            if (pos >= hitTime + HIT_WINDOWS[2] / 2) {
+            if (pos >= hitTime + MISS_THRESHOLD) {
                 onEnd();
                 unlisten();
                 return;

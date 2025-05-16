@@ -1,5 +1,5 @@
 import GameStateProvider from "../../providers/game-state";
-import DeltaProvider from "../../providers/delta";
+import DeltaProvider from "../../providers/score";
 import AccuracyBar from "./accuracy-bar";
 import Keyboard from "./keyboard";
 import PauseMenu from "./pause-menu";
