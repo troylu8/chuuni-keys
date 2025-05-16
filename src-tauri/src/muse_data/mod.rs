@@ -2,6 +2,7 @@ use std::{env, path::PathBuf};
 
 use charts::{get_all_charts, MuseMetadata};
 use serde::Serialize;
+use tauri::{AppHandle, Manager};
 
 
 pub mod charts;
@@ -14,12 +15,9 @@ pub struct MuseData {
 }
 
 #[tauri::command]
-pub fn get_user_data() -> Result<MuseData, String> {
+pub fn get_user_data(app: AppHandle) -> Result<MuseData, String> {
     Ok( MuseData {
-        base_dir: match env::current_dir() {
-            Ok(path) => path.join("data"),
-            Err(e) => return Err(e.to_string())
-        },
-        charts: get_all_charts()?
-    } )
+        base_dir: app.path().app_local_data_dir().map_err(|e| e.to_string())?.join("userData"),
+        charts: get_all_charts(app)?
+    })
 }

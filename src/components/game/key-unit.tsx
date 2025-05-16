@@ -1,8 +1,8 @@
-import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState, ReactNode, useRef } from "react"
-import { useAbsoluteStartTime, useGameControls } from "../../providers/game-state";
+import { HITRING_DURATION, useGameControls, useMuseEvents } from "../../providers/game-state";
 import { HIT_WINDOWS, useDelta } from "../../providers/delta";
 import { useSfx } from "../../providers/sfx";
+import { usePlayback } from "../../providers/playback";
 
 
 
@@ -16,8 +16,9 @@ type Props = Readonly<{
     labelCentered?: boolean
 }>
 export default function KeyUnit( { keyCode, hitringEvent, children, labelCentered }: Props ) {
-    const [absoluteStartTime] = useAbsoluteStartTime();
+    const getPosition = usePlayback()[3];
     const [paused] = useGameControls();
+    const addMuseListener = useMuseEvents();
     const [pressed, setPressed] = useState(false);
     const [hitrings, setHitrings] = useState<[number, ReactNode][]>([]);
     const [broadcastDelta] = useDelta();
@@ -38,7 +39,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             
             if (hitrings.length == 0) return console.log("none!");
             
-            const delta = Date.now() - absoluteStartTime - hitrings[0][0];
+            const delta = getPosition() - hitrings[0][0];
             
             if (Math.abs(delta) <= HIT_WINDOWS[2] / 2) {
                 console.log("diff: ", delta);
@@ -57,11 +58,9 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
         
-        const unlisten = listen(hitringEvent, e => {
+        const unlisten = addMuseListener(hitringEvent, time => {
             
-            if (absoluteStartTime == 0) return; // received an event before start time was set
-            
-            const hitTime = e.payload as number;
+            const hitTime = time as number + HITRING_DURATION;
             
             setHitrings(prev => [
                 ...prev, 
@@ -82,9 +81,9 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
-            unlisten.then(unlisten => unlisten());
+            unlisten();
         }
-    }, [absoluteStartTime, hitrings, paused]);
+    }, [hitrings, paused]);
     
     
     
@@ -111,57 +110,42 @@ type HitringProps = Readonly<{
     onEnd: () => any
 }>
 function Hitring({ hitTime, onEnd }: HitringProps) {
-    const [absoluteStartTime] = useAbsoluteStartTime();
+    
+    const addMuseListener = useMuseEvents();
+    
+    const getPosition = usePlayback()[3];
     const [progress, setProgress] = useState(1);
-    const [paused] = useGameControls();
     const playSfx = useSfx();
     
-    const absoluteHitTime = absoluteStartTime + hitTime;
-    // console.log("abs. hit time = ", absoluteHitTime, " = abs start time ", absoluteStartTime, " + hit time ", hitTime);
-    
-    const hitringDuration = useRef(absoluteHitTime - Date.now()).current;
-    const rafId = useRef<number | null>(null);
-    
+    const hitringDuration = useRef(hitTime - getPosition()).current;
     
     useEffect(() => {
         
-        if (paused && rafId.current != null) {
-            cancelAnimationFrame(rafId.current);
-            rafId.current = null;
-        }
-        else if (!paused) {
-            let hitsoundPlayed = false;
+        let hitsoundPlayed = false;
+        
+        const unlisten = addMuseListener("update", () => {
             
-            function update() {
-                const now = Date.now();
+            const pos = getPosition();
                 
-                if (now >= absoluteHitTime && !hitsoundPlayed) {
-                    playSfx("hitsound.ogg");
-                    hitsoundPlayed = true;
-                    console.log(now - absoluteStartTime);
-                }
-                
-                // if last hit window has passed
-                if (now > absoluteHitTime + HIT_WINDOWS[2] / 2) {
-                    cancelAnimationFrame(rafId.current!);
-                    rafId.current = null;
-                    onEnd();
-                    return;
-                }
-                
-                setProgress(Math.max((absoluteHitTime - now) / hitringDuration, 0));
-                
-                if (rafId.current != null) rafId.current = requestAnimationFrame(update);
+            if (pos >= hitTime && !hitsoundPlayed) {
+                playSfx("hitsound.ogg");
+                hitsoundPlayed = true;
+                console.log(pos, hitTime, Date.now());
             }
-            rafId.current = requestAnimationFrame(update);
-        }
+            
+            // if last hit window has passed
+            if (pos >= hitTime + HIT_WINDOWS[2] / 2) {
+                unlisten();
+                onEnd();
+                return;
+            }
+            
+            setProgress(Math.max((hitTime - pos) / hitringDuration, 0));
+        });
         
-        return () => {
-            if (rafId.current) cancelAnimationFrame(rafId.current);
-            rafId.current = null;
-        }
+        return unlisten;
         
-    }, [absoluteStartTime, absoluteHitTime, paused]);
+    }, []);
     
     const gap = HITRING_MAX_GAP * progress;
     

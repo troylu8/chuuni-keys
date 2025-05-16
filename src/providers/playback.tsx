@@ -1,11 +1,12 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useState, createContext, useContext, useRef, useEffect } from "react";
 import { useUserData } from "./user-data";
+import { appLocalDataDir } from "@tauri-apps/api/path";
 
 type LoadAudio = (src: string) => void;
 type SetPlaying = (next: boolean) => Promise<void>;
-type GetProgress = () => number;
-const PlaybackContext = createContext<[boolean, LoadAudio, SetPlaying, GetProgress] | null>(null);
+type GetCurrentTime = () => number;
+const PlaybackContext = createContext<[boolean, LoadAudio, SetPlaying, GetCurrentTime] | null>(null);
 
 export function usePlayback() {
     return useContext(PlaybackContext)!;
@@ -22,9 +23,6 @@ export default function PlaybackProvider({ children }: Props) {
     
     useEffect(() => {
         audio.preload = "auto";
-        // initialize audio with a random audio file bc it reduces start lag for some reason TODO replace with bg music?
-        if (userData)
-            audio.src = convertFileSrc(`${userData.base_dir}\\sfx\\hitsound.ogg`);
     }, [userData]);
     
     function loadAudio(src: string) {
@@ -44,12 +42,12 @@ export default function PlaybackProvider({ children }: Props) {
         }
     }
     
-    function getProgress() {
-        return audio.currentTime / audio.duration;
+    function getCurrentTime() {
+        return audio.currentTime * 1000;
     }
     
     return (
-        <PlaybackContext.Provider value={[playing, loadAudio, setPlaying, getProgress]}>
+        <PlaybackContext.Provider value={[playing, loadAudio, setPlaying, getCurrentTime]}>
             { children }
         </PlaybackContext.Provider>
     );

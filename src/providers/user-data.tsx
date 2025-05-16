@@ -11,7 +11,7 @@ export type ChartMetadata = {
     img?: string
 }
 type UserData = {
-    base_dir: string,
+    base_dir: string
     charts: ChartMetadata[]
 }
 
@@ -32,7 +32,7 @@ export default function UserDataProvider({ children }: Props) {
         invoke<UserData>("get_user_data").then(data => {
             console.log(data);
             setUserData(data);
-        })
+        });
     }, []);
     
     return (
