@@ -4,12 +4,15 @@ import { useDelta, ACCURACY_THRESHOLDS, MISS_THRESHOLD } from "../../providers/s
 export default function AccuracyBar() {
     const [_, addDeltaListener] = useDelta();
     
+    const [praise, setPraise] = useState("");
     const [deltas, setDeltas] = useState<[number, number][]>([]);
     
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {
-            if (delta != "miss") {
+            if (delta == "miss") setPraise("");
+            else {
                 setDeltas(prev => [...prev, [Math.random(), delta]]);
+                setPraise(delta < ACCURACY_THRESHOLDS[0]? "perfect" : "good");
             }
         });
         
@@ -29,6 +32,7 @@ export default function AccuracyBar() {
             absolute left-1/2 -translate-x-1/2 bottom-3
             w-25 h-[2px] rounded-full bg-foreground
         ">
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-5 text-xl"> {praise} </div>
             <AccuracyTick delta={0} color="var(--foreground)" />
             {
                 deltas.map(([id, delta]) => <AccuracyTick key={id} delta={delta} color="var(--foreground)" onEnd={popDelta} />)

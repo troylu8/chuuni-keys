@@ -1,7 +1,6 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext } from "react";
 import { useUserData } from "./user-data";
-import Queue from "yocto-queue";
 
 type PlaySfx = (filename: string, volume?: number) => Promise<void> | undefined;
 const SfxContext = createContext<PlaySfx | null>(null);

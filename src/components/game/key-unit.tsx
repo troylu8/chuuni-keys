@@ -39,7 +39,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             if (e.key !== keyCode) return; 
             
             setPressed(true);
-            playSfx("hitsound.ogg", 0.1);
+            playSfx("hitsound.ogg");
             
             if (hitrings.length == 0) return console.log("none!");
             

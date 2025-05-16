@@ -4,7 +4,6 @@ export enum Page {
     MAIN_MENU,
     SONG_SELECT,
     GAME,
-    GAME_STATS
 }
 
 export type GameInfo = {chartPath: string, audioPath: string, imgPath?: string };

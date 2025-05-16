@@ -1,12 +1,14 @@
-import { readTextFile, BaseDirectory } from '@tauri-apps/plugin-fs';
+import { readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import Queue from 'yocto-queue';
-import { useState, createContext, useContext, useEffect, useRef, useCallback } from "react";
+import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
 import { GameInfo, Page, usePage } from "./page";
-import { useUserData } from './user-data';
 
 export const HITRING_DURATION = 400;
+
+export enum GameState { LOADING, STARTED, ENDED };
+const GameStateContext = createContext<[GameState, (next: GameState) => any] | null>(null);
 
 type TogglePauseGame = () => void;
 type StopGame = () => void;
@@ -15,6 +17,10 @@ const ControlsContext = createContext<[boolean, TogglePauseGame, StopGame] | nul
 type RemoveMuseListener = () => void;
 type AddMuseListener = (event: string, listener: (params: any) => any) => RemoveMuseListener;
 const MuseEventsContext = createContext<AddMuseListener | null>(null);
+
+export function useGameState() {
+    return useContext(GameStateContext)!;
+}
 
 export function useGameControls() {
     return useContext(ControlsContext)!;
@@ -33,6 +39,8 @@ function toMuseEvent(str: string): MuseEvent {
 }
 
 
+
+
 type Props = Readonly<{
     children: React.ReactNode;
 }>
@@ -40,7 +48,7 @@ export default function GameStateProvider({ children }: Props) {
     const [pageParams, setPage] = usePage();
     
     const [playing, loadAudio, setAudioPlaying, getPosition] = usePlayback();
-    const [gameStarted, setGameStarted] = useState(false);
+    const [gameState, setGameState] = useState(GameState.LOADING);
     
     const museEmitter = useRef(new EventEmitter()).current;
     
@@ -59,15 +67,18 @@ export default function GameStateProvider({ children }: Props) {
                 eventQueue.enqueue(toMuseEvent(line));
             }
             
-            setGameStarted(true);
+            setGameState(GameState.STARTED);
             setAudioPlaying(true);
         });
         
+        return () => {
+            eventQueue.clear();
+        }
     }, []);
     
     // game loop
     useEffect(() => {
-        if (!gameStarted) return;
+        if (gameState != GameState.STARTED) return;
         if (!playing) return stop();
         
         function stop() {
@@ -83,8 +94,17 @@ export default function GameStateProvider({ children }: Props) {
             let nextEvent;
             while (nextEvent = eventQueue.peek()) {
                 if (getPosition() >= nextEvent[0]) {
-                    museEmitter.emit(nextEvent[1], nextEvent[0]);
-                    eventQueue.dequeue();
+                    
+                    if (nextEvent[1] == "end") {
+                        console.log(nextEvent);
+                        setGameState(GameState.ENDED);
+                        eventQueue.clear();
+                    }
+                    else {
+                        museEmitter.emit(nextEvent[1], nextEvent[0]);
+                        eventQueue.dequeue();
+                    }
+                    
                 }
                 else break;
             }
@@ -94,7 +114,7 @@ export default function GameStateProvider({ children }: Props) {
         rafId.current = requestAnimationFrame(update);
         
         return stop;
-    }, [gameStarted, playing]);
+    }, [gameState, playing]);
     
     async function togglePauseGame() {
         await setAudioPlaying(!playing);
@@ -110,10 +130,12 @@ export default function GameStateProvider({ children }: Props) {
     }
     
     return (
-        <ControlsContext.Provider value={[playing, togglePauseGame, stopGame]}>
-            <MuseEventsContext.Provider value={addEventListener}>
-                { children }
-            </MuseEventsContext.Provider>
-        </ControlsContext.Provider>
+        <GameStateContext.Provider value={[gameState, setGameState]}>
+            <ControlsContext.Provider value={[playing, togglePauseGame, stopGame]}>
+                <MuseEventsContext.Provider value={addEventListener}>
+                    { children }
+                </MuseEventsContext.Provider>
+            </ControlsContext.Provider>
+        </GameStateContext.Provider>
     );
 }
