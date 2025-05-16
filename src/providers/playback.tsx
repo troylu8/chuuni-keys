@@ -5,7 +5,8 @@ import { useUserData } from "./user-data";
 type LoadAudio = (src: string) => void;
 type SetPlaying = (next: boolean) => Promise<void>;
 type GetCurrentTime = () => number;
-const PlaybackContext = createContext<[boolean, LoadAudio, SetPlaying, GetCurrentTime] | null>(null);
+type SeekAudio = (ms: number) => void;
+const PlaybackContext = createContext<[boolean, LoadAudio, SetPlaying, GetCurrentTime, SeekAudio] | null>(null);
 
 export function usePlayback() {
     return useContext(PlaybackContext)!;
@@ -45,8 +46,12 @@ export default function PlaybackProvider({ children }: Props) {
         return audio.currentTime * 1000;
     }
     
+    function seekAudio(ms: number) {
+        audio.currentTime = ms / 1000;
+    }
+    
     return (
-        <PlaybackContext.Provider value={[playing, loadAudio, setPlaying, getCurrentTime]}>
+        <PlaybackContext.Provider value={[playing, loadAudio, setPlaying, getCurrentTime, seekAudio]}>
             { children }
         </PlaybackContext.Provider>
     );

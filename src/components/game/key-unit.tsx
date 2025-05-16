@@ -62,7 +62,11 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
         
-        const unlisten = addMuseListener(hitringEvent, time => {
+        const unlistenStart = addMuseListener("start", () => {
+            setHitrings([]);
+            console.log("clearing hitrings");
+        });
+        const unlistenHitring = addMuseListener(hitringEvent, time => {
             
             const hitTime = time as number + HITRING_DURATION;
             
@@ -85,7 +89,8 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
-            unlisten();
+            unlistenStart();
+            unlistenHitring();
         }
     }, [hitrings, playing]);
     
