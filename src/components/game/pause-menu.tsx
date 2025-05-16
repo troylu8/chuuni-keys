@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useGameControls } from "../../providers/game-state";
 
 export default function PauseMenu() {
-    const [paused, togglePauseGame, stopGame] = useGameControls();
+    const [playing, togglePauseGame, stopGame] = useGameControls();
     
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
@@ -14,12 +14,12 @@ export default function PauseMenu() {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         }
-    }, [paused]);
+    }, [playing]);
     
     return (
         <>
-            { paused && 
-                <div className="absolute cover z-10 flex flex-col justify-center items-center gap-3">
+            { !playing && 
+                <div className="absolute cover flex flex-col justify-center items-center gap-3 z-20">
                     <button onClick={togglePauseGame}> resume </button>
                     <button onClick={stopGame}> quit </button>
                 </div>

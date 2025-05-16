@@ -1,7 +1,6 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useState, createContext, useContext, useRef, useEffect } from "react";
 import { useUserData } from "./user-data";
-import { appLocalDataDir } from "@tauri-apps/api/path";
 
 type LoadAudio = (src: string) => void;
 type SetPlaying = (next: boolean) => Promise<void>;

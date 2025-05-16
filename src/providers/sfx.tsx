@@ -1,8 +1,9 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { createContext, useContext, useRef } from "react";
 import { useUserData } from "./user-data";
+import Queue from "yocto-queue";
 
-type PlaySfx = (filename: string) => Promise<void> | undefined;
+type PlaySfx = (filename: string, volume?: number) => Promise<void> | undefined;
 const SfxContext = createContext<PlaySfx | null>(null);
 
 export function useSfx() {
@@ -15,16 +16,15 @@ type Props = Readonly<{
 export default function SfxProvider({ children }: Props) {
     const userData =  useUserData();
     
-    const lastPlayed = useRef("");
-    const audio = useRef(new Audio()).current;
     
-    function playSfx(filename: string) {
+    
+    function playSfx(filename: string, volume: number = 1) {
         if (!userData) return;
         
-        if (lastPlayed.current != filename) {
-            audio.src = convertFileSrc(`${userData.base_dir}\\sfx\\${filename}`);
-            lastPlayed.current = filename;
-        }
+        const audio = new Audio(convertFileSrc(`${userData.base_dir}\\sfx\\${filename}`));
+        audio.volume = volume;
+        audio.addEventListener("ended", () => audio.remove());
+        
         return audio.play();
     }
     

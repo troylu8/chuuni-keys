@@ -12,18 +12,21 @@ const KEY_HEIGHT = 48;
 type Props = Readonly<{
     keyCode: string,
     hitringEvent: string,
-    children?: string,
+    children?: ReactNode,
     labelCentered?: boolean
 }>
 export default function KeyUnit( { keyCode, hitringEvent, children, labelCentered }: Props ) {
     const getPosition = usePlayback()[3];
-    const [paused] = useGameControls();
+    const [playing] = useGameControls();
     const addMuseListener = useMuseEvents();
     const [pressed, setPressed] = useState(false);
     const [hitrings, setHitrings] = useState<[number, ReactNode][]>([]);
     const [broadcastDelta] = useDelta();
+    const playSfx = useSfx();
     
     useEffect(() => {
+        if (!playing) return;
+        
         function popHitring() {
             setHitrings(prev => {
                 const next = [...prev];
@@ -33,9 +36,10 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
         }
         
         function handleKeyDown(e: KeyboardEvent) {
-            if (paused || e.key !== keyCode) return; 
+            if (e.key !== keyCode) return; 
             
             setPressed(true);
+            playSfx("hitsound.ogg", 0.1);
             
             if (hitrings.length == 0) return console.log("none!");
             
@@ -83,7 +87,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             window.removeEventListener("keyup", handleKeyUp);
             unlisten();
         }
-    }, [hitrings, paused]);
+    }, [hitrings, playing]);
     
     
     
@@ -115,28 +119,19 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
     
     const getPosition = usePlayback()[3];
     const [progress, setProgress] = useState(1);
-    const playSfx = useSfx();
     
     const hitringDuration = useRef(hitTime - getPosition()).current;
     
     useEffect(() => {
         
-        let hitsoundPlayed = false;
-        
         const unlisten = addMuseListener("update", () => {
             
             const pos = getPosition();
-                
-            if (pos >= hitTime && !hitsoundPlayed) {
-                playSfx("hitsound.ogg");
-                hitsoundPlayed = true;
-                console.log(pos, hitTime, Date.now());
-            }
             
             // if last hit window has passed
             if (pos >= hitTime + HIT_WINDOWS[2] / 2) {
-                unlisten();
                 onEnd();
+                unlisten();
                 return;
             }
             

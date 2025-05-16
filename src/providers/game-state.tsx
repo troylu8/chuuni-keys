@@ -39,7 +39,8 @@ type Props = Readonly<{
 export default function GameStateProvider({ children }: Props) {
     const [pageParams, setPage] = usePage();
     
-    const [paused, loadAudio, setAudioPlaying, getPosition] = usePlayback();
+    const [playing, loadAudio, setAudioPlaying, getPosition] = usePlayback();
+    const [gameStarted, setGameStarted] = useState(false);
     
     const museEmitter = useRef(new EventEmitter()).current;
     
@@ -53,41 +54,51 @@ export default function GameStateProvider({ children }: Props) {
         loadAudio(audioPath);
         readTextFile(chartPath)
         .then(contents => {
+            eventQueue.clear();
             for (const line of contents.trim().split("\n")) {
                 eventQueue.enqueue(toMuseEvent(line));
             }
-            console.log(eventQueue);
             
-            // start game loop
-            function update() {
-                
-                museEmitter.emit("update");
-                
-                // send all ready muse events
-                let nextEvent;
-                while (nextEvent = eventQueue.peek()) {
-                    if (getPosition() >= nextEvent[0]) {
-                        museEmitter.emit(nextEvent[1], nextEvent[0]);
-                        eventQueue.dequeue();
-                    }
-                    else break;
-                }
-                
-                if (rafId.current) rafId.current = requestAnimationFrame(update);
-            }
-            rafId.current = requestAnimationFrame(update);
-            
+            setGameStarted(true);
             setAudioPlaying(true);
         });
         
-        return () => {
+    }, []);
+    
+    // game loop
+    useEffect(() => {
+        if (!gameStarted) return;
+        if (!playing) return stop();
+        
+        function stop() {
             if (rafId.current) cancelAnimationFrame(rafId.current);
             rafId.current = null;
         }
-    }, []);
+        
+        function update() {
+            
+            museEmitter.emit("update");
+            
+            // send all ready muse events
+            let nextEvent;
+            while (nextEvent = eventQueue.peek()) {
+                if (getPosition() >= nextEvent[0]) {
+                    museEmitter.emit(nextEvent[1], nextEvent[0]);
+                    console.log([...eventQueue]);
+                    eventQueue.dequeue();
+                }
+                else break;
+            }
+            
+            if (rafId.current) rafId.current = requestAnimationFrame(update);
+        }
+        rafId.current = requestAnimationFrame(update);
+        
+        return stop;
+    }, [gameStarted, playing]);
     
     async function togglePauseGame() {
-        await setAudioPlaying(!paused);
+        await setAudioPlaying(!playing);
     }
     function stopGame() {
         setPage([Page.SONG_SELECT]);
@@ -95,11 +106,12 @@ export default function GameStateProvider({ children }: Props) {
     
     function addEventListener(event: string, listener: (time: number) => any) {
         museEmitter.addListener(event, listener);
+        museEmitter.setMaxListeners(200);
         return () => { museEmitter.removeListener(event, listener); }
     }
     
     return (
-        <ControlsContext.Provider value={[paused, togglePauseGame, stopGame]}>
+        <ControlsContext.Provider value={[playing, togglePauseGame, stopGame]}>
             <MuseEventsContext.Provider value={addEventListener}>
                 { children }
             </MuseEventsContext.Provider>

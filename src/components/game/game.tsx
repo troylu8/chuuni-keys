@@ -3,6 +3,7 @@ import DeltaProvider from "../../providers/delta";
 import AccuracyBar from "./accuracy-bar";
 import Keyboard from "./keyboard";
 import PauseMenu from "./pause-menu";
+import Background from "./background";
 
 export default function Game() {
     
@@ -10,6 +11,7 @@ export default function Game() {
         <GameStateProvider>
             <div className="fixed cover">
                 <PauseMenu />
+                <Background />
                 <DeltaProvider>
                     <Keyboard />
                     <AccuracyBar />
