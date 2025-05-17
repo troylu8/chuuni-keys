@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { GameInfo, Page, usePage } from "../../providers/page";
+import { GamePaths, Page, usePage } from "../../providers/page";
 import { useStats } from "../../providers/score";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 
@@ -52,7 +52,7 @@ export default function Results() {
         setPage([Page.SONG_SELECT]); 
         
         if (!params) return;
-        const { leaderboardPath } = params as GameInfo;
+        const { leaderboardPath } = params as GamePaths;
         
         writeTextFile(
             leaderboardPath, 

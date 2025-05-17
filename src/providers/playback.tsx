@@ -2,6 +2,8 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useState, createContext, useContext, useRef, useEffect } from "react";
 import { useUserData } from "./user-data";
 
+const OFFSET = 55;
+
 type LoadAudio = (src: string) => void;
 type SetPlaying = (next: boolean) => Promise<void>;
 type GetCurrentTime = () => number;
@@ -43,7 +45,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     function getCurrentTime() {
-        return audio.currentTime * 1000;
+        return audio.currentTime * 1000 + OFFSET;
     }
     
     function seekAudio(ms: number) {

@@ -2,14 +2,16 @@ import { useState, createContext, useContext } from "react";
 
 export enum Page {
     MAIN_MENU,
+    EDIT_MENU,
     SONG_SELECT,
     GAME,
+    EDITOR,
 }
 
-export type GameInfo = {chartPath: string, audioPath: string, imgPath?: string, leaderboardPath: string};
-export type GameStats = {};
+export type GamePaths = {chartPath: string, audioPath: string, imgPath?: string, leaderboardPath: string};
+export type IsEditing = boolean
 
-export type PageParams = [Page] | [Page, GameInfo | GameStats];
+export type PageParams = [Page] | [Page, GamePaths | IsEditing];
 
 const PageContext = createContext<[PageParams, (next: PageParams) => void] | null>(null);
 

@@ -1,3 +1,5 @@
+import EditMenu from "./components/edit-menu/edit-menu";
+import Editor from "./components/editor/editor";
 import Game from "./components/game/game";
 import MainMenu from "./components/main-menu/main-menu";
 import SongSelect from "./components/song-select/song-select";
@@ -26,8 +28,10 @@ function Main() {
     return (
         <>
             {page == Page.MAIN_MENU && <MainMenu />}
+            {page == Page.EDIT_MENU && <EditMenu />}
             {page == Page.SONG_SELECT && <SongSelect />}
             {page == Page.GAME && <Game />}
+            {page == Page.EDITOR && <Editor />}
         </>
     )
 }

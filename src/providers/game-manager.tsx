@@ -2,7 +2,7 @@ import { readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
-import { GameInfo, Page, usePage } from "./page";
+import { GamePaths, Page, usePage } from "./page";
 
 export const HITRING_DURATION = 300;
 
@@ -59,11 +59,10 @@ export default function GameManager({ children }: Props) {
         eventsRef.current = [];
     }
     
-    const rafId = useRef<number | null>(null);
     
     useEffect(() => {
         
-        const { audioPath, chartPath } = pageParams[1] as GameInfo;
+        const { audioPath, chartPath } = pageParams[1] as GamePaths;
         
         loadAudio(audioPath);
         readTextFile(chartPath)
@@ -80,19 +79,16 @@ export default function GameManager({ children }: Props) {
     
     // game loop
     useEffect(() => {
-        if (gameState != GameState.STARTED) return;
-        if (!playing) return stop();
+        if (gameState != GameState.STARTED || !playing) return;
         
-        
-        function stop() {
-            if (rafId.current) cancelAnimationFrame(rafId.current);
-            rafId.current = null;
-        }
+        let intervalId = setInterval(update, 0);
         
         museEmitter.emit("start");
+        
         function update() {
             
-            museEmitter.emit("update");
+            museEmitter.emit("update", getPosition());
+            
             
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
@@ -112,11 +108,9 @@ export default function GameManager({ children }: Props) {
                 else break;
             }
             
-            if (rafId.current) rafId.current = requestAnimationFrame(update);
         }
-        rafId.current = requestAnimationFrame(update);
         
-        return stop;
+        return () => clearInterval(intervalId);
     }, [gameState, playing]);
     
     async function togglePauseGame() {

@@ -1,7 +1,7 @@
 import { useState, createContext, useContext, useRef, useCallback, useEffect } from "react";
 import { writeTextFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 import { useMuseEvents } from "./game-manager";
-import { GameInfo, usePage } from "./page";
+import { GamePaths, usePage } from "./page";
 
 /** e.g. hit the note within `+25` or `-25` ms for a `perfect`   */
 export const ACCURACY_THRESHOLDS = [25, 100];

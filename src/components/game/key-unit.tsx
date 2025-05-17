@@ -129,18 +129,20 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
     
     const hitringDuration = useRef(hitTime - getPosition()).current;
     
+    
+    
     useEffect(() => {
         let played = false;
         
-        const unlisten = addMuseListener("update", () => {
+        const unlisten = addMuseListener("update", updatePos => {
             
             const pos = getPosition();
             
             if (pos >= hitTime && !played) {
                 playSfx("hitsound")
-                ?.then(() => console.log(getPosition(), hitTime))
+                ?.then(() => console.log(hitTime, updatePos, getPosition()))
                 played = true;
-                onEnd();
+                // onEnd();
             }
             
             // if last hit window has passed

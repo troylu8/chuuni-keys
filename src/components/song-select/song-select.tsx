@@ -1,5 +1,5 @@
 import filenamify from 'filenamify';
-import { Page, usePage } from "../../providers/page";
+import { GamePaths, Page, usePage } from "../../providers/page";
 import { ChartMetadata, useUserData } from "../../providers/user-data";
 
 
@@ -7,7 +7,7 @@ import { ChartMetadata, useUserData } from "../../providers/user-data";
 export default function SongSelect() {
     
     const userdata = useUserData();
-    const [_, setPageParams] = usePage();
+    const [[_, editing], setPageParams] = usePage();
     
     if (userdata == null) return <p> loading... </p>;
     
@@ -33,12 +33,16 @@ export default function SongSelect() {
                         onClick={() => {
                             const songFolder = `${base_dir}\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`;
                             console.log(songFolder + metadata.audio);
-                            setPageParams([Page.GAME, {
-                                chartPath: songFolder + metadata.chart,
-                                audioPath: songFolder + metadata.audio,
-                                imgPath: metadata.img && songFolder + metadata.img,
-                                leaderboardPath: songFolder + "leaderboard.csv"
-                            }])
+                            
+                            setPageParams([
+                                editing === true? Page.EDITOR : Page.GAME, 
+                                {
+                                    chartPath: songFolder + metadata.chart,
+                                    audioPath: songFolder + metadata.audio,
+                                    imgPath: metadata.img && songFolder + metadata.img,
+                                    leaderboardPath: songFolder + "leaderboard.csv"
+                                }
+                            ])
                         }} 
                     />
                 )}
