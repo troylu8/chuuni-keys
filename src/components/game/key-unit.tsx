@@ -16,7 +16,7 @@ type Props = Readonly<{
     labelCentered?: boolean
 }>
 export default function KeyUnit( { keyCode, hitringEvent, children, labelCentered }: Props ) {
-    const getPosition = usePlayback()[3];
+    const {getPosition} = usePlayback();
     const [playing] = useGameControls();
     const addMuseListener = useMuseEvents();
     const [pressed, setPressed] = useState(false);
@@ -123,7 +123,7 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
     
     const addMuseListener = useMuseEvents();
     
-    const getPosition = usePlayback()[3];
+    const { getPosition } = usePlayback();
     const [progress, setProgress] = useState(1);
     const playSfx = useSfx();
     

@@ -3,7 +3,7 @@ import DeltaProvider, { useStats } from "../../providers/score";
 import AccuracyBar from "./accuracy-bar";
 import Keyboard from "./keyboard";
 import PauseMenu from "./pause-menu";
-import Background from "./background";
+import Background from "../background";
 import Combo from "./combo";
 import Results from "./results";
 

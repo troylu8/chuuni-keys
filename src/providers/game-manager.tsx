@@ -46,7 +46,7 @@ type Props = Readonly<{
 export default function GameManager({ children }: Props) {
     const [pageParams, setPage] = usePage();
     
-    const [playing, loadAudio, setAudioPlaying, getPosition, seekAudio] = usePlayback();
+    const aud = usePlayback();
     const [gameState, setGameState] = useState(GameState.LOADING);
     
     const museEmitter = useRef(new EventEmitter()).current;
@@ -64,7 +64,7 @@ export default function GameManager({ children }: Props) {
         
         const { audioPath, chartPath } = pageParams[1] as GamePaths;
         
-        loadAudio(audioPath);
+        aud.loadAudio(audioPath);
         readTextFile(chartPath)
         .then(contents => {
             resetEvents();
@@ -72,54 +72,51 @@ export default function GameManager({ children }: Props) {
                 eventsRef.current.push(toMuseEvent(line));
             }
             setGameState(GameState.STARTED);
-            setAudioPlaying(true);
+            aud.setPlaying(true);
         });
         
     }, []);
     
     // game loop
     useEffect(() => {
-        if (gameState != GameState.STARTED || !playing) return;
+        if (gameState != GameState.STARTED || !aud.playing) return;
         
         let intervalId = setInterval(update, 0);
         
-        museEmitter.emit("start");
+        if (i.current == 0) museEmitter.emit("start");
         
         function update() {
             
-            museEmitter.emit("update", getPosition());
+            museEmitter.emit("update", aud.getPosition());
             
             
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];
-                if (getPosition() >= nextEvent[0]) {
-                    
-                    if (nextEvent[1] == "end") {
-                        setGameState(GameState.ENDED);
-                        resetEvents();
-                    }
-                    else {
-                        museEmitter.emit(nextEvent[1], nextEvent[0]);
-                        i.current++;
-                    }
-                    
+                if (aud.getPosition() >= nextEvent[0]) {
+                    museEmitter.emit(nextEvent[1], nextEvent[0]);
+                    i.current++;
                 }
                 else break;
             }
             
+            if (i.current == eventsRef.current.length) {
+                resetEvents();
+                clearInterval(intervalId);
+                setTimeout(() => setGameState(GameState.ENDED), 3000);
+            }
         }
         
         return () => clearInterval(intervalId);
-    }, [gameState, playing]);
+    }, [gameState, aud.playing]);
     
     async function togglePauseGame() {
-        await setAudioPlaying(!playing);
+        await aud.setPlaying(!aud.playing);
     }
     function restartGame() {
         i.current = 0;
-        seekAudio(0);
-        setAudioPlaying(true);
+        aud.seek(0);
+        aud.setPlaying(true);
     }
     function stopGame() {
         setPage([Page.SONG_SELECT]);
@@ -133,7 +130,7 @@ export default function GameManager({ children }: Props) {
     
     return (
         <GameStateContext.Provider value={[gameState, setGameState]}>
-            <ControlsContext.Provider value={[playing, togglePauseGame, restartGame, stopGame]}>
+            <ControlsContext.Provider value={[aud.playing, togglePauseGame, restartGame, stopGame]}>
                 <MuseEventsContext.Provider value={addEventListener}>
                     { children }
                 </MuseEventsContext.Provider>

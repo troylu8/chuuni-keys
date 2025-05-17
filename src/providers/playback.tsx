@@ -4,11 +4,15 @@ import { useUserData } from "./user-data";
 
 const OFFSET = 55;
 
-type LoadAudio = (src: string) => void;
-type SetPlaying = (next: boolean) => Promise<void>;
-type GetCurrentTime = () => number;
-type SeekAudio = (ms: number) => void;
-const PlaybackContext = createContext<[boolean, LoadAudio, SetPlaying, GetCurrentTime, SeekAudio] | null>(null);
+type Playback = {
+    playing: boolean,
+    loadAudio: (src: string) => number,
+    setPlaying: (next: boolean) => Promise<void>,
+    getPosition: () => number,
+    getDuration: () => number,
+    seek: (ms: number) => void
+}
+const PlaybackContext = createContext<Playback | null>(null);
 
 export function usePlayback() {
     return useContext(PlaybackContext)!;
@@ -31,6 +35,7 @@ export default function PlaybackProvider({ children }: Props) {
         audio.src = convertFileSrc(src);
         audio.load();
         setPlayingInner(false);
+        return audio.duration * 1000;
     }
     
     async function setPlaying(playing: boolean) {
@@ -44,16 +49,20 @@ export default function PlaybackProvider({ children }: Props) {
         }
     }
     
-    function getCurrentTime() {
+    function getPosition() {
         return audio.currentTime * 1000 + OFFSET;
     }
     
-    function seekAudio(ms: number) {
+    function seek(ms: number) {
         audio.currentTime = ms / 1000;
     }
     
+    function getDuration() {
+        return audio.currentTime * 1000;
+    }
+    
     return (
-        <PlaybackContext.Provider value={[playing, loadAudio, setPlaying, getCurrentTime, seekAudio]}>
+        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, getPosition, seek, getDuration}}>
             { children }
         </PlaybackContext.Provider>
     );
