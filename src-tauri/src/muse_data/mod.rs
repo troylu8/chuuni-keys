@@ -17,7 +17,7 @@ pub struct MuseData {
 #[tauri::command]
 pub fn get_user_data(app: AppHandle) -> Result<MuseData, String> {
     Ok( MuseData {
-        base_dir: app.path().app_local_data_dir().map_err(|e| e.to_string())?.join("userData"),
+        base_dir: app.path().app_local_data_dir().map_err(|e| e.to_string())?.join("userdata"),
         charts: get_all_charts(app)?
     })
 }

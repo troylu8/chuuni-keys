@@ -18,7 +18,7 @@ pub struct MuseMetadata {
 #[tauri::command]
 pub fn get_all_charts(app: AppHandle) -> Result<Vec<MuseMetadata>, String> {
     let app_data_local = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
-    match fs::read_dir(app_data_local.join("userData/charts")) {
+    match fs::read_dir(app_data_local.join("userdata/charts")) {
         Err(e) => Err(e.to_string()),
         Ok(iter) => Ok(
             iter

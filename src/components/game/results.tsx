@@ -1,6 +1,7 @@
-import { useEffect } from "react";
-import { Page, usePage } from "../../providers/page";
+import { useEffect, useState } from "react";
+import { GameInfo, Page, usePage } from "../../providers/page";
 import { useStats } from "../../providers/score";
+import { writeTextFile } from "@tauri-apps/plugin-fs";
 
 const SCORE_WEIGHTS = {
     perfect: 3,
@@ -20,8 +21,10 @@ function calculateLetter(accuracy: number, fullCombo: boolean) {
 }
 
 export default function Results() {
-    const [_, setPage] = usePage();
-    const { perfect, good, miss, avgDelta, maxCombo } = useStats();
+    const [[_, params], setPage] = usePage();
+    const { perfect, good, miss, maxCombo } = useStats();
+    
+    const [] = useState("");
     
     const fullCombo = miss == 0;
     
@@ -32,18 +35,35 @@ export default function Results() {
             good * SCORE_WEIGHTS["good"] + 
             miss * SCORE_WEIGHTS["miss"]
         ) / maxScore;
+    const accuracyPercent = (accuracy * 100).toFixed(3);
+    
+    const letter = calculateLetter(accuracy, fullCombo);
     
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === "Escape") setPage([Page.SONG_SELECT]); 
+            if (e.key === "Escape") handleToSongSelect();
         }
         window.addEventListener("keydown", handleKeyDown);
         return () => { window.removeEventListener("keydown", handleKeyDown); }
-    }, []);
+    }, [params]);
+    
+    
+    function handleToSongSelect() {
+        setPage([Page.SONG_SELECT]); 
+        
+        if (!params) return;
+        const { leaderboardPath } = params as GameInfo;
+        
+        writeTextFile(
+            leaderboardPath, 
+            `${Date.now()},${accuracyPercent},${maxCombo},${letter}${fullCombo? ",FC" : ""}\n`,
+            {append: true}
+        );
+    }
     
     return (
         <div className="absolute cover flex flex-col justify-center items-center gap-3 z-20">
-            <p className="text-9xl"> {calculateLetter(accuracy, fullCombo)} </p>
+            <p className="text-9xl"> {letter} </p>
             <p>
                 <span> {perfect} </span> /
                 <span> {good} </span> /
@@ -51,14 +71,14 @@ export default function Results() {
             </p>
             <div className="grid grid-cols-2 gap-3 ">
                 <p className="text-end"> accuracy </p>
-                <p> { (accuracy * 100).toFixed(3) }% </p>
+                <p> { accuracyPercent }% </p>
                 
                 <p className="text-end"> max combo </p>
                 <p> { maxCombo }x </p>
             </div>
             
             <button 
-                onClick={() => setPage([Page.SONG_SELECT])}
+                onClick={() => handleToSongSelect()}
                 className="self-center"
             > back to song select </button>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useGameControls } from "../../providers/game-state";
+import { useGameControls } from "../../providers/game-manager";
 
 export default function PauseMenu() {
     const [playing, togglePauseGame, restartGame, stopGame] = useGameControls();

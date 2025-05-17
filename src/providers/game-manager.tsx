@@ -1,11 +1,10 @@
 import { readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
-import Queue from 'yocto-queue';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
 import { GameInfo, Page, usePage } from "./page";
 
-export const HITRING_DURATION = 400;
+export const HITRING_DURATION = 300;
 
 export enum GameState { LOADING, STARTED, ENDED };
 const GameStateContext = createContext<[GameState, (next: GameState) => any] | null>(null);
@@ -44,7 +43,7 @@ function toMuseEvent(str: string): MuseEvent {
 type Props = Readonly<{
     children: React.ReactNode;
 }>
-export default function GameStateProvider({ children }: Props) {
+export default function GameManager({ children }: Props) {
     const [pageParams, setPage] = usePage();
     
     const [playing, loadAudio, setAudioPlaying, getPosition, seekAudio] = usePlayback();
@@ -148,3 +147,4 @@ export default function GameStateProvider({ children }: Props) {
         </GameStateContext.Provider>
     );
 }
+

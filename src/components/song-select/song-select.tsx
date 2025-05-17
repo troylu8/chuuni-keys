@@ -6,12 +6,12 @@ import { ChartMetadata, useUserData } from "../../providers/user-data";
 
 export default function SongSelect() {
     
-    const userData = useUserData();
+    const userdata = useUserData();
     const [_, setPageParams] = usePage();
     
-    if (userData == null) return <p> loading... </p>;
+    if (userdata == null) return <p> loading... </p>;
     
-    const {base_dir, charts} = userData;
+    const {base_dir, charts} = userdata;
 
     return (
         
@@ -36,7 +36,8 @@ export default function SongSelect() {
                             setPageParams([Page.GAME, {
                                 chartPath: songFolder + metadata.chart,
                                 audioPath: songFolder + metadata.audio,
-                                imgPath: metadata.img && songFolder + metadata.img
+                                imgPath: metadata.img && songFolder + metadata.img,
+                                leaderboardPath: songFolder + "leaderboard.csv"
                             }])
                         }} 
                     />

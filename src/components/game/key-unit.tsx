@@ -1,5 +1,5 @@
 import { useEffect, useState, ReactNode, useRef } from "react"
-import { HITRING_DURATION, useGameControls, useMuseEvents } from "../../providers/game-state";
+import { HITRING_DURATION, useGameControls, useMuseEvents } from "../../providers/game-manager";
 import { ACCURACY_THRESHOLDS, MISS_THRESHOLD, useDelta } from "../../providers/score";
 import { useSfx } from "../../providers/sfx";
 import { usePlayback } from "../../providers/playback";
@@ -39,7 +39,7 @@ export default function KeyUnit( { keyCode, hitringEvent, children, labelCentere
             if (e.key !== keyCode) return; 
             
             setPressed(true);
-            playSfx("hitsound.ogg");
+            playSfx("hitsound");
             
             if (hitrings.length == 0) return console.log("none!");
             
@@ -120,18 +120,28 @@ type HitringProps = Readonly<{
 }>
 function Hitring({ hitTime, onEnd }: HitringProps) {
     
+    
     const addMuseListener = useMuseEvents();
     
     const getPosition = usePlayback()[3];
     const [progress, setProgress] = useState(1);
+    const playSfx = useSfx();
     
     const hitringDuration = useRef(hitTime - getPosition()).current;
     
     useEffect(() => {
+        let played = false;
         
         const unlisten = addMuseListener("update", () => {
             
             const pos = getPosition();
+            
+            if (pos >= hitTime && !played) {
+                playSfx("hitsound")
+                ?.then(() => console.log(getPosition(), hitTime))
+                played = true;
+                onEnd();
+            }
             
             // if last hit window has passed
             if (pos >= hitTime + MISS_THRESHOLD) {

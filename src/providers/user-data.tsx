@@ -26,7 +26,7 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function UserDataProvider({ children }: Props) {
-    const [userData, setUserData] = useState<UserData | null>(null);
+    const [userdata, setUserData] = useState<UserData | null>(null);
     
     useEffect(() => {
         invoke<UserData>("get_user_data").then(data => {
@@ -36,7 +36,7 @@ export default function UserDataProvider({ children }: Props) {
     }, []);
     
     return (
-        <UserDataContext.Provider value={userData}>
+        <UserDataContext.Provider value={userdata}>
             { children }
         </UserDataContext.Provider>
     );

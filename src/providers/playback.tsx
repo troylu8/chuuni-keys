@@ -16,14 +16,14 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function PlaybackProvider({ children }: Props) {
-    const userData = useUserData();
+    const userdata = useUserData();
     const [playing, setPlayingInner] = useState(false);
     
     const audio = useRef(new Audio()).current;
     
     useEffect(() => {
         audio.preload = "auto";
-    }, [userData]);
+    }, [userdata]);
     
     function loadAudio(src: string) {
         audio.src = convertFileSrc(src);

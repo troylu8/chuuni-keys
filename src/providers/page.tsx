@@ -6,7 +6,7 @@ export enum Page {
     GAME,
 }
 
-export type GameInfo = {chartPath: string, audioPath: string, imgPath?: string };
+export type GameInfo = {chartPath: string, audioPath: string, imgPath?: string, leaderboardPath: string};
 export type GameStats = {};
 
 export type PageParams = [Page] | [Page, GameInfo | GameStats];

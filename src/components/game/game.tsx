@@ -1,4 +1,4 @@
-import GameStateProvider, { GameState, useGameState } from "../../providers/game-state";
+import GameManager, { GameState, useGameState } from "../../providers/game-manager";
 import DeltaProvider, { useStats } from "../../providers/score";
 import AccuracyBar from "./accuracy-bar";
 import Keyboard from "./keyboard";
@@ -9,9 +9,9 @@ import Results from "./results";
 
 export default function Game() {
     return (
-        <GameStateProvider>
+        <GameManager>
             <GameInner />
-        </GameStateProvider>
+        </GameManager>
     );
 }
 
