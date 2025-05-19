@@ -6,7 +6,7 @@ const OFFSET = 55;
 
 type Playback = {
     playing: boolean,
-    loadAudio: (src: string) => number,
+    loadAudio: (src: string) => void,
     setPlaying: (next: boolean) => Promise<void>,
     getPosition: () => number,
     getDuration: () => number,
@@ -29,13 +29,16 @@ export default function PlaybackProvider({ children }: Props) {
     
     useEffect(() => {
         audio.preload = "auto";
+        
+        const onEnded = () => setPlayingInner(false);
+        audio.addEventListener("ended", onEnded);
+        return () => { audio.removeEventListener("ended", onEnded); }
     }, [userdata]);
     
     function loadAudio(src: string) {
         audio.src = convertFileSrc(src);
         audio.load();
         setPlayingInner(false);
-        return audio.duration * 1000;
     }
     
     async function setPlaying(playing: boolean) {
@@ -58,7 +61,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     function getDuration() {
-        return audio.currentTime * 1000;
+        return audio.duration * 1000;
     }
     
     return (

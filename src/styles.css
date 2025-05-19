@@ -10,13 +10,6 @@
     --color-background: var(--background);
 }
 
-.cover {
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-}
-
 body {
     background-color: var(--background);
 }
@@ -47,4 +40,28 @@ button {
     100% {
         opacity: 0;
     }
+}
+
+.cover {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.seek-bar-tick {
+    position: absolute;
+    width: 3px;
+    height: 20px;
+    border-radius: 999px;
+    top: 50%;
+    translate: -50% -50%;
+}
+
+.inspector-tick {
+    position: absolute;
+    width: 3px;
+    border-radius: 999px;
+    bottom: 0;
+    translate: -50% 0;
 }
