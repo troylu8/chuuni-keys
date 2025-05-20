@@ -35,28 +35,3 @@ pub fn get_all_charts(app: AppHandle) -> Result<Vec<MuseMetadata>, String> {
         ),
     }
 }
-
-fn gen_id() -> String {
-    let mut res = [' '; 10];
-
-    for i in 0..res.len() {
-        res[i] = to_base64_symbol(rand::random::<u8>() & 63)
-    }
-
-    res.iter().collect()
-}
-fn to_base64_symbol(num: u8) -> char {
-    if num < 10 {
-        ('0' as u8 + num) as char
-    } else if num < 36 {
-        (num - 10 + 'a' as u8) as char
-    } else if num < 62 {
-        (num - 36 + 'A' as u8) as char
-    } else if num == 62 {
-        '-'
-    } else if num == 63 {
-        '_'
-    } else {
-        panic!("cant convert num > 63 to a base64 symbol")
-    }
-}

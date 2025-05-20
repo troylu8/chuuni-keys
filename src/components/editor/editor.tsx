@@ -3,54 +3,74 @@ import { usePlayback } from "../../providers/playback";
 import Background from "../background";
 import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
+import Timing from "./timing";
+import Details from "./details";
+import Notes from "./notes";
+import { MuseEvent, readChartFile, toMuseEvent } from "../../providers/game-manager";
+
+enum Tab { NOTES, TIMING, DETAILS };
 
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
     const { audioPath, chartPath } = params as GamePaths;
     
+    const [tab, setTab] = useState(Tab.TIMING);
+    
     const aud = usePlayback();
+    useEffect(() => aud.loadAudio(audioPath), [audioPath]);
     const [position, setPositionInner] = useState(0);
     function setPosition(pos: number) {
         setPositionInner(pos);
         aud.seek(pos);
     }
-    
-    
-    useEffect(() => aud.loadAudio(audioPath), [audioPath]);
-    
     useEffect(() => {
         if (!aud.playing) return;
         
-        const intervalId = setInterval(update, 0)
-        
-        function update() {
-            setPositionInner(aud.getPosition());
-        }
-        
+        const update = () => setPositionInner(aud.getPosition());
+        const intervalId = setInterval(update, 0);
         return () => { clearInterval(intervalId); }
     }, [aud.playing]);
+    
+    const [bpm, setBPM] = useState<number | null>(null);
+    const [offset, setOffset] = useState<number | null>(null);
+    const eventsRef = useRef<MuseEvent[]>([]);
+    useEffect(() => {
+        readChartFile(chartPath).then(({bpm, offset: off, events}) => {
+            
+            setBPM(bpm);
+            setOffset(off);
+            eventsRef.current = events;
+        });
+    }, [chartPath]);
     
     return (
         <>
             <Background />
             <div className="absolute cover m-1">
                 
-                {/* top row buttons */}
+                {/* top row */}
                 <div className="absolute top-0 left-0 right-0 flex flex-col gap-2">
-                    <div className="flex">
+                    
+                    <div className="flex gap-1">
                         <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> quit </MuseButton>
+                        <MuseButton> save </MuseButton>
                         <div className="grow flex flex-row-reverse gap-1">
-                            <MuseButton> save </MuseButton>
-                            <MuseButton> details </MuseButton>
+                            <MuseButton onClick={() => setTab(Tab.DETAILS)}> details </MuseButton>
+                            <MuseButton onClick={() => setTab(Tab.TIMING)}> timing </MuseButton>
+                            <MuseButton onClick={() => setTab(Tab.NOTES)}> notes </MuseButton>
                         </div>
                     </div>
                     
                     <Inspector />
                 </div>
                 
+                { tab == Tab.NOTES && <Notes />}
+                { tab == Tab.TIMING && <Timing bpm={bpm} offset={offset} setBPM={setBPM} setOffset={setOffset} />}
+                { tab == Tab.DETAILS && <Details />}
+                
+                {/* bottom row */}
                 <div className="absolute bottom-0 left-0 right-0 flex gap-2 items-center">
                     
-                    {/* bottom inspector row */}
                     <div className="min-w-20 max-w-20">
                         <MuseButton onClick={() => aud.setPlaying(!aud.playing)}> 
                             {aud.playing? "pause" : "play"} 
@@ -65,8 +85,6 @@ export default function Editor() {
                         onClick={setPosition}
                     />
                 </div>
-                
-                
                 
             </div>
         </>

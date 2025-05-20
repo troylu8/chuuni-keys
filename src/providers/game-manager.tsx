@@ -30,14 +30,24 @@ export function useMuseEvents() {
     return useContext(MuseEventsContext)!;
 }
 
-type MuseEvent = [number, string];
+export type MuseEvent = [number, string];
 function toMuseEvent(str: string): MuseEvent {
     const arr = str.trim().split(" ");
-    return (arr[1].startsWith(":"))?
-        [Number(arr[0]) - HITRING_DURATION, arr[1]] :   // send hitring events before the actual hit
-        [Number(arr[0]), arr[1]];
+    return [Number(arr[0]), arr[1]];
 }
-
+export async function readChartFile(path: string) {
+    const contents = await readTextFile(path);
+    const lines = contents.trim().split("\n");
+    
+    const bpm = Number(lines[0].split(' ')[0]);
+    const offset = Number(lines[0].split(' ')[1]);
+    const events = [];
+    for (let i = 1; i < lines.length; i++) {
+        events.push(toMuseEvent(lines[i]));
+    }
+    
+    return { bpm, offset, events };
+}
 
 
 type Props = Readonly<{
@@ -65,16 +75,19 @@ export default function GameManager({ children }: Props) {
         const { audioPath, chartPath } = pageParams[1] as GamePaths;
         
         aud.loadAudio(audioPath);
-        readTextFile(chartPath)
-        .then(contents => {
+        readChartFile(chartPath).then(({offset, events}) => {
             resetEvents();
-            for (const line of contents.trim().split("\n")) {
-                eventsRef.current.push(toMuseEvent(line));
+            
+            for (const event of events) {
+                if (event[1].includes(":")) event[0] -= HITRING_DURATION;
+                event[0] += offset;
             }
+            eventsRef.current = events;
+            console.log(eventsRef);
+            
             setGameState(GameState.STARTED);
             aud.setPlaying(true);
         });
-        
     }, []);
     
     // game loop
