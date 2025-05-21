@@ -1,15 +1,12 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useState, createContext, useContext, useRef, useEffect } from "react";
-import { useUserData } from "./user-data";
-
-const OFFSET = 55;
 
 type Playback = {
     playing: boolean,
     loadAudio: (src: string) => void,
     setPlaying: (next: boolean) => Promise<void>,
     getPosition: () => number,
-    getDuration: () => number,
+    duration: number,
     seek: (ms: number) => void
 }
 const PlaybackContext = createContext<Playback | null>(null);
@@ -22,22 +19,27 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function PlaybackProvider({ children }: Props) {
-    const userdata = useUserData();
     const [playing, setPlayingInner] = useState(false);
+    const [duration, setDuration] = useState(0);
     
-    const audio = useRef(new Audio()).current;
+    const audioRef = useRef(new Audio());
     
     useEffect(() => {
-        audio.preload = "auto";
-        
         const onEnded = () => setPlayingInner(false);
-        audio.addEventListener("ended", onEnded);
-        return () => { audio.removeEventListener("ended", onEnded); }
-    }, [userdata]);
+        audioRef.current.addEventListener("ended", onEnded);
+        
+        const onLoadedMetadata = () => setDuration(audioRef.current.duration * 1000);
+        audioRef.current.addEventListener("loadedmetadata", onLoadedMetadata);
+        
+        return () => { 
+            audioRef.current.removeEventListener("ended", onEnded); 
+            audioRef.current.removeEventListener("loadedmetadata", onLoadedMetadata); 
+        }
+    }, []);
     
     function loadAudio(src: string) {
-        audio.src = convertFileSrc(src);
-        audio.load();
+        audioRef.current.src = convertFileSrc(src);
+        audioRef.current.load();
         setPlayingInner(false);
     }
     
@@ -45,27 +47,23 @@ export default function PlaybackProvider({ children }: Props) {
         setPlayingInner(playing);
         
         if (playing) {
-            await audio.play();
+            await audioRef.current.play();
         }
         else {
-            audio.pause();
+            audioRef.current.pause();
         }
     }
     
     function getPosition() {
-        return audio.currentTime * 1000 + OFFSET;
+        return audioRef.current.currentTime * 1000;
     }
     
     function seek(ms: number) {
-        audio.currentTime = ms / 1000;
-    }
-    
-    function getDuration() {
-        return audio.duration * 1000;
+        audioRef.current.currentTime = ms / 1000;
     }
     
     return (
-        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, getPosition, seek, getDuration}}>
+        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, getPosition, seek, duration}}>
             { children }
         </PlaybackContext.Provider>
     );

@@ -6,7 +6,7 @@ import Inspector from "./inspector";
 import Timing from "./timing";
 import Details from "./details";
 import Notes from "./notes";
-import { MuseEvent, readChartFile, toMuseEvent } from "../../providers/game-manager";
+import { MuseEvent, readChartFile } from "../../providers/game-manager";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
@@ -17,6 +17,7 @@ export default function Editor() {
     const [tab, setTab] = useState(Tab.TIMING);
     
     const aud = usePlayback();
+    
     useEffect(() => aud.loadAudio(audioPath), [audioPath]);
     const [position, setPositionInner] = useState(0);
     function setPosition(pos: number) {
@@ -49,7 +50,7 @@ export default function Editor() {
             <div className="absolute cover m-1">
                 
                 {/* top row */}
-                <div className="absolute top-0 left-0 right-0 flex flex-col gap-2">
+                <div className="absolute top-0 left-0 right-0 flex flex-col gap-6">
                     
                     <div className="flex gap-1">
                         <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> quit </MuseButton>
@@ -61,10 +62,10 @@ export default function Editor() {
                         </div>
                     </div>
                     
-                    <Inspector />
+                    <Inspector bpm={bpm} offset={offset} position={position} duration={aud.duration} />
                 </div>
                 
-                { tab == Tab.NOTES && <Notes />}
+                {/* { tab == Tab.NOTES && <Notes />} */}
                 { tab == Tab.TIMING && <Timing bpm={bpm} offset={offset} setBPM={setBPM} setOffset={setOffset} />}
                 { tab == Tab.DETAILS && <Details />}
                 
@@ -81,7 +82,7 @@ export default function Editor() {
                     
                     <SeekBar 
                         position={position} 
-                        duration={aud.getDuration()}  
+                        duration={aud.duration}  
                         onClick={setPosition}
                     />
                 </div>
