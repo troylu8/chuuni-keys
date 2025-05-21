@@ -129,8 +129,6 @@ function Hitring({ hitTime, onEnd }: HitringProps) {
     
     const hitringDuration = useRef(hitTime - getPosition()).current;
     
-    
-    
     useEffect(() => {
         let played = false;
         

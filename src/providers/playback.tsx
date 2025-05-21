@@ -22,24 +22,28 @@ export default function PlaybackProvider({ children }: Props) {
     const [playing, setPlayingInner] = useState(false);
     const [duration, setDuration] = useState(0);
     
-    const audioRef = useRef(new Audio());
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    function audio() {
+        if (!audioRef.current) audioRef.current = new Audio();
+        return audioRef.current;
+    }
     
     useEffect(() => {
         const onEnded = () => setPlayingInner(false);
-        audioRef.current.addEventListener("ended", onEnded);
+        audio().addEventListener("ended", onEnded);
         
-        const onLoadedMetadata = () => setDuration(audioRef.current.duration * 1000);
-        audioRef.current.addEventListener("loadedmetadata", onLoadedMetadata);
+        const onLoadedMetadata = () => setDuration(audio().duration * 1000);
+        audio().addEventListener("loadedmetadata", onLoadedMetadata);
         
         return () => { 
-            audioRef.current.removeEventListener("ended", onEnded); 
-            audioRef.current.removeEventListener("loadedmetadata", onLoadedMetadata); 
+            audio().removeEventListener("ended", onEnded); 
+            audio().removeEventListener("loadedmetadata", onLoadedMetadata); 
         }
     }, []);
     
     function loadAudio(src: string) {
-        audioRef.current.src = convertFileSrc(src);
-        audioRef.current.load();
+        audio().src = convertFileSrc(src);
+        audio().load();
         setPlayingInner(false);
     }
     
@@ -47,19 +51,19 @@ export default function PlaybackProvider({ children }: Props) {
         setPlayingInner(playing);
         
         if (playing) {
-            await audioRef.current.play();
+            await audio().play();
         }
         else {
-            audioRef.current.pause();
+            audio().pause();
         }
     }
     
     function getPosition() {
-        return audioRef.current.currentTime * 1000;
+        return audio().currentTime * 1000;
     }
     
     function seek(ms: number) {
-        audioRef.current.currentTime = ms / 1000;
+        audio().currentTime = ms / 1000;
     }
     
     return (

@@ -32,8 +32,6 @@ export default function SongSelect() {
                         metadata={metadata}
                         onClick={() => {
                             const songFolder = `${base_dir}\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`;
-                            console.log(songFolder + metadata.audio);
-                            
                             setPageParams([
                                 editing === true? Page.EDITOR : Page.GAME, 
                                 {
