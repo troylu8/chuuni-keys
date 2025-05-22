@@ -1,5 +1,5 @@
 import filenamify from 'filenamify';
-import { GamePaths, Page, usePage } from "../../providers/page";
+import { ChartParams, Page, usePage } from "../../providers/page";
 import { ChartMetadata, useUserData } from "../../providers/user-data";
 
 
@@ -12,6 +12,15 @@ export default function SongSelect() {
     if (userdata == null) return <p> loading... </p>;
     
     const {base_dir, charts} = userdata;
+    
+    function toChartParams(metadata: ChartMetadata): ChartParams {
+        const songFolder = `${base_dir}\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`;
+        metadata.chart = songFolder + metadata.chart;
+        metadata.audio = songFolder + metadata.audio;
+        metadata.img = metadata.img && songFolder + metadata.img;
+        (metadata as ChartParams).leaderboard = songFolder + "leaderboard.csv";
+        return metadata as ChartParams;
+    }
 
     return (
         
@@ -31,15 +40,9 @@ export default function SongSelect() {
                         key={metadata.id}
                         metadata={metadata}
                         onClick={() => {
-                            const songFolder = `${base_dir}\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`;
                             setPageParams([
                                 editing === true? Page.EDITOR : Page.GAME, 
-                                {
-                                    chartPath: songFolder + metadata.chart,
-                                    audioPath: songFolder + metadata.audio,
-                                    imgPath: metadata.img && songFolder + metadata.img,
-                                    leaderboardPath: songFolder + "leaderboard.csv"
-                                }
+                                toChartParams(metadata)
                             ])
                         }} 
                     />

@@ -13,6 +13,12 @@ export default function Inspector({ bpm, offset, position, duration }: Props) {
     const MS_PER_BEAT = bpm &&  60 / bpm * 1000;
     const PX_PER_BEAT = MS_PER_BEAT && MS_PER_BEAT * PX_PER_MS;
     
+    const ABS_OFFSET_PX = offset && offset * PX_PER_MS!;
+    function diffToNextBeat(absPx: number) {
+        if (absPx < ABS_OFFSET_PX!) return ABS_OFFSET_PX! - absPx;
+        return absPx % PX_PER_BEAT! == 0? 0 : PX_PER_BEAT! - absPx % PX_PER_BEAT!
+    }
+    
     const contRef = useRef<HTMLDivElement | null>(null);
     const [width, setWidth] = useState(0);
     useEffect(() => {
@@ -20,22 +26,27 @@ export default function Inspector({ bpm, offset, position, duration }: Props) {
         onResize();
         window.addEventListener("resize", onResize);
         return () => { window.removeEventListener("resize", onResize); }
-    }, []);
+    }, [position]);
     
+    // regarding horizontal bar
     const absCenterPx = position * PX_PER_MS;
+    const absStartPx = absCenterPx - Math.min(absCenterPx, width/2);
     const startPx = width/2 - Math.min(absCenterPx, width/2);
     const endPx = width/2 + Math.min(duration * PX_PER_MS - absCenterPx, width/2);
     
-    
-    const absStartPx = absCenterPx - Math.min(absCenterPx, width/2);
-    const firstBeatPx = PX_PER_BEAT && startPx + diffToNext(absStartPx, PX_PER_BEAT);
+    const firstBeatPx = PX_PER_BEAT && startPx + diffToNextBeat(absStartPx);
     const ticks = [];
     if (firstBeatPx) {
         for (let px = firstBeatPx; px <= endPx; px += PX_PER_BEAT) {
             const absPx = (px - startPx + absStartPx)
             const ms = absPx / PX_PER_MS;
-            console.log(ms);
-            ticks.push(<div key={px} style={{left: px}} className="inspector-tick bg-black h-3"></div>);
+            ticks.push(
+                <div 
+                    key={px} 
+                    style={{left: px}} 
+                    className="inspector-tick h-3 bg-foreground">
+                </div>
+            );
         }
     }
     
@@ -52,6 +63,3 @@ export default function Inspector({ bpm, offset, position, duration }: Props) {
     );
 }
 
-function diffToNext(num: number, n: number) {
-    return num % n == 0? 0 : n - num % n;
-}

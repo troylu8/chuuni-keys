@@ -6,6 +6,7 @@ export type ChartMetadata = {
     title: string,
     artists: string,
     chart_author: string,
+    bpm?: number,
     audio: string,
     chart: string,
     img?: string

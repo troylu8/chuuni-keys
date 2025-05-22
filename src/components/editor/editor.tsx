@@ -1,28 +1,32 @@
-import { GamePaths, Page, usePage } from "../../providers/page";
+import { ChartParams, Page, usePage } from "../../providers/page";
 import { usePlayback } from "../../providers/playback";
 import Background from "../background";
 import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
 import Timing from "./timing";
 import Details from "./details";
-import Notes from "./notes";
 import { MuseEvent, readChartFile } from "../../providers/game-manager";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
+const MS_PER_SCROLL = 3;
+const MS_PER_ARROW = 5000;
+
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
-    const { audioPath, chartPath } = params as GamePaths;
+    const { audio, chart, bpm: savedBPM } = params as ChartParams;
     
     const [tab, setTab] = useState(Tab.TIMING);
     
     const aud = usePlayback();
     
-    useEffect(() => aud.loadAudio(audioPath), [audioPath]);
+    useEffect(() => aud.loadAudio(audio), [audio]);
     const [position, setPositionInner] = useState(0);
-    function setPosition(pos: number) {
-        setPositionInner(pos);
-        aud.seek(pos);
+    function setPosition(setter: (prev: number) => number) {
+        setPositionInner(prev => {
+            aud.seek(setter(prev));
+            return aud.getPosition();
+        });
     }
     useEffect(() => {
         if (!aud.playing) return;
@@ -32,18 +36,49 @@ export default function Editor() {
         return () => { clearInterval(intervalId); }
     }, [aud.playing]);
     
-    const [bpm, setBPM] = useState<number | null>(null);
+    const [bpm, setBPM] = useState<number | null>(savedBPM ?? null);
     const [offset, setOffset] = useState<number | null>(null);
     const eventsRef = useRef<MuseEvent[]>([]);
     useEffect(() => {
-        readChartFile(chartPath).then(({bpm, offset: off, events}) => {
+        readChartFile(chart).then(events => {
+            const offset = events.length == 0? null : events[0][0];
+            setOffset(offset);
             
-            setBPM(bpm);
-            setOffset(off);
             eventsRef.current = events;
+            if (offset != null) {
+                for (const event of eventsRef.current) {
+                    event[0] -= offset;
+                }
+            }
         });
-    }, [chartPath]);
+    }, [chart]);
     
+    // controls
+    useEffect(() => {
+        function onScroll(e: WheelEvent) {
+            setPosition(prev => prev + e.deltaY * MS_PER_SCROLL);
+        }
+        window.addEventListener("wheel", onScroll);
+        
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === " ")              
+                aud.togglePlaying()
+            else if (e.key === "ArrowLeft") 
+                setPosition(prev => prev - MS_PER_ARROW);
+            else if (e.key === "ArrowRight") 
+                setPosition(prev => prev + MS_PER_ARROW);
+            else if (e.key === ",")
+                setPosition(prev => prev - 1);
+            else if (e.key === ".")
+                setPosition(prev => prev + 1);
+        }
+        window.addEventListener("keydown", onKeyDown);
+        
+        return () => { 
+            window.removeEventListener("wheel", onScroll); 
+            window.removeEventListener("keydown", onKeyDown); 
+        }
+    }, []);
     return (
         <>
             <Background />
@@ -62,7 +97,12 @@ export default function Editor() {
                         </div>
                     </div>
                     
-                    <Inspector bpm={bpm} offset={offset} position={position} duration={aud.duration} />
+                    <Inspector 
+                        bpm={bpm} 
+                        offset={offset} 
+                        position={position} 
+                        duration={aud.duration} 
+                    />
                 </div>
                 
                 {/* { tab == Tab.NOTES && <Notes />} */}
@@ -73,7 +113,7 @@ export default function Editor() {
                 <div className="absolute bottom-0 left-0 right-0 flex gap-2 items-center">
                     
                     <div className="min-w-20 max-w-20">
-                        <MuseButton onClick={() => aud.setPlaying(!aud.playing)}> 
+                        <MuseButton onClick={() => aud.togglePlaying()}> 
                             {aud.playing? "pause" : "play"} 
                         </MuseButton>
                     </div>
@@ -83,7 +123,7 @@ export default function Editor() {
                     <SeekBar 
                         position={position} 
                         duration={aud.duration}  
-                        onClick={setPosition}
+                        onClick={pos => setPosition(() => pos)}
                     />
                 </div>
                 

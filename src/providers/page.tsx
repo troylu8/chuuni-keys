@@ -1,4 +1,5 @@
 import { useState, createContext, useContext } from "react";
+import { ChartMetadata } from "./user-data";
 
 export enum Page {
     MAIN_MENU,
@@ -8,10 +9,9 @@ export enum Page {
     EDITOR,
 }
 
-export type GamePaths = {chartPath: string, audioPath: string, imgPath?: string, leaderboardPath: string};
 export type IsEditing = boolean
-
-export type PageParams = [Page] | [Page, GamePaths | IsEditing];
+export type ChartParams = ChartMetadata & {leaderboard: string}
+export type PageParams = [Page] | [Page, ChartParams | IsEditing];
 
 const PageContext = createContext<[PageParams, (next: PageParams) => void] | null>(null);
 

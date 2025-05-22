@@ -2,7 +2,7 @@ import { readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
-import { GamePaths, Page, usePage } from "./page";
+import { ChartParams, Page, usePage } from "./page";
 
 export const HITRING_DURATION = 300;
 
@@ -37,16 +37,7 @@ function toMuseEvent(str: string): MuseEvent {
 }
 export async function readChartFile(path: string) {
     const contents = await readTextFile(path);
-    const lines = contents.trim().split("\n");
-    
-    const bpm = Number(lines[0].split(' ')[0]);
-    const offset = Number(lines[0].split(' ')[1]);
-    const events = [];
-    for (let i = 1; i < lines.length; i++) {
-        events.push(toMuseEvent(lines[i]));
-    }
-    
-    return { bpm, offset, events };
+    return contents.trim().split("\n").map(toMuseEvent);
 }
 
 
@@ -72,15 +63,14 @@ export default function GameManager({ children }: Props) {
     
     useEffect(() => {
         
-        const { audioPath, chartPath } = pageParams[1] as GamePaths;
+        const { audio, chart } = pageParams[1] as ChartParams;
         
-        aud.loadAudio(audioPath);
-        readChartFile(chartPath).then(({offset, events}) => {
+        aud.loadAudio(audio);
+        readChartFile(chart).then(events => {
             resetEvents();
             
             for (const event of events) {
                 if (event[1].includes(":")) event[0] -= HITRING_DURATION;
-                event[0] += offset;
             }
             eventsRef.current = events;
             console.log(eventsRef);
@@ -124,7 +114,7 @@ export default function GameManager({ children }: Props) {
     }, [gameState, aud.playing]);
     
     async function togglePauseGame() {
-        await aud.setPlaying(!aud.playing);
+        await aud.togglePlaying();
     }
     function restartGame() {
         i.current = 0;

@@ -5,6 +5,7 @@ type Playback = {
     playing: boolean,
     loadAudio: (src: string) => void,
     setPlaying: (next: boolean) => Promise<void>,
+    togglePlaying: () => Promise<void>,
     getPosition: () => number,
     duration: number,
     seek: (ms: number) => void
@@ -57,6 +58,20 @@ export default function PlaybackProvider({ children }: Props) {
             audio().pause();
         }
     }
+    function togglePlaying() {
+        return new Promise<void>(resolve => {
+            setPlayingInner(prev => {
+                if (prev) {
+                    audio().pause();
+                    resolve();
+                }
+                else 
+                    audio().play().then(resolve);
+                
+                return !prev;
+            });
+        });
+    }
     
     function getPosition() {
         return audio().currentTime * 1000;
@@ -67,7 +82,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     return (
-        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, getPosition, seek, duration}}>
+        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, togglePlaying, getPosition, seek, duration}}>
             { children }
         </PlaybackContext.Provider>
     );
