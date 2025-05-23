@@ -9,8 +9,6 @@ import { MuseEvent, readChartFile } from "../../providers/game-manager";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
-const MS_PER_SCROLL = 3;
-
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
     const { audio, chart, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as ChartParams;
@@ -57,9 +55,35 @@ export default function Editor() {
     // controls
     useEffect(() => {
         function onScroll(e: WheelEvent) {
-            setPosition(prev => prev + e.deltaY * MS_PER_SCROLL);
+            if (offset == null || bpm == null) return;
+            setPosition(ms => {
+                
+                
+                const MS_PER_BEAT = 60 / bpm * 1000;
+                if (e.deltaY < 0) {
+                    return snapLeft(ms, offset, MS_PER_BEAT / (snaps + 1));
+                }
+                else {
+                    return snapRight(ms, offset, MS_PER_BEAT / (snaps + 1));
+                }
+            });
         }
         window.addEventListener("wheel", onScroll);
+        
+        function snapLeft(ms: number, offset: number, size: number) {
+            const beat = (ms - offset) / size;
+            if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
+                return Math.round(beat - 1) * size + offset;
+            
+            return Math.floor(beat) * size + offset;
+        }
+        function snapRight(ms: number, offset: number, size: number) {
+            const beat = (ms - offset) / size;
+            if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
+                return Math.round(beat + 1) * size + offset;
+            
+            return Math.ceil(beat) * size + offset;
+        }
         
         function onKeyDown(e: KeyboardEvent) {
             if (e.key === " ")              
@@ -68,26 +92,16 @@ export default function Editor() {
                 setPosition(ms => {
                     if (offset == null || bpm == null) return ms;
                     if (ms <= offset) return 0;
-                    
                     const MS_PER_BEAT = 60 / bpm * 1000;
-                    const beat = (ms - offset) / MS_PER_BEAT;
-                    if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
-                        return Math.round(beat - 1) * MS_PER_BEAT + offset;
-                    
-                    return Math.floor(beat) * MS_PER_BEAT + offset;
+                    return snapLeft(ms, offset, MS_PER_BEAT);
                 });
             }
             else if (e.key === "ArrowRight") {
                 setPosition(ms => {
                     if (offset == null || bpm == null) return ms;
                     if (ms < offset) return offset;
-                    
                     const MS_PER_BEAT = 60 / bpm * 1000;
-                    const beat = (ms - offset) / MS_PER_BEAT;
-                    if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
-                        return Math.round(beat + 1) * MS_PER_BEAT + offset;
-                    
-                    return Math.ceil(beat) * MS_PER_BEAT + offset;
+                    return snapRight(ms, offset, MS_PER_BEAT);
                 });
             }
             else if (e.key === ",")
@@ -101,7 +115,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [bpm, offset]);
+    }, [bpm, offset, snaps]);
     return (
         <>
             <Background />
