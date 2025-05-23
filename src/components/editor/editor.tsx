@@ -10,11 +10,10 @@ import { MuseEvent, readChartFile } from "../../providers/game-manager";
 enum Tab { NOTES, TIMING, DETAILS };
 
 const MS_PER_SCROLL = 3;
-const MS_PER_ARROW = 5000;
 
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
-    const { audio, chart, bpm: savedBPM } = params as ChartParams;
+    const { audio, chart, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as ChartParams;
     
     const [tab, setTab] = useState(Tab.TIMING);
     
@@ -38,6 +37,8 @@ export default function Editor() {
     
     const [bpm, setBPM] = useState<number | null>(savedBPM ?? null);
     const [offset, setOffset] = useState<number | null>(null);
+    const [measureSize, setMeasureSize] = useState<number | null>(savedMeasureSize ?? null);
+    const [snaps, setSnaps] = useState<number>(savedSnaps);
     const eventsRef = useRef<MuseEvent[]>([]);
     useEffect(() => {
         readChartFile(chart).then(events => {
@@ -63,10 +64,32 @@ export default function Editor() {
         function onKeyDown(e: KeyboardEvent) {
             if (e.key === " ")              
                 aud.togglePlaying()
-            else if (e.key === "ArrowLeft") 
-                setPosition(prev => prev - MS_PER_ARROW);
-            else if (e.key === "ArrowRight") 
-                setPosition(prev => prev + MS_PER_ARROW);
+            else if (e.key === "ArrowLeft") {
+                setPosition(ms => {
+                    if (offset == null || bpm == null) return ms;
+                    if (ms <= offset) return 0;
+                    
+                    const MS_PER_BEAT = 60 / bpm * 1000;
+                    const beat = (ms - offset) / MS_PER_BEAT;
+                    if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
+                        return Math.round(beat - 1) * MS_PER_BEAT + offset;
+                    
+                    return Math.floor(beat) * MS_PER_BEAT + offset;
+                });
+            }
+            else if (e.key === "ArrowRight") {
+                setPosition(ms => {
+                    if (offset == null || bpm == null) return ms;
+                    if (ms < offset) return offset;
+                    
+                    const MS_PER_BEAT = 60 / bpm * 1000;
+                    const beat = (ms - offset) / MS_PER_BEAT;
+                    if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
+                        return Math.round(beat + 1) * MS_PER_BEAT + offset;
+                    
+                    return Math.ceil(beat) * MS_PER_BEAT + offset;
+                });
+            }
             else if (e.key === ",")
                 setPosition(prev => prev - 1);
             else if (e.key === ".")
@@ -78,7 +101,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, []);
+    }, [bpm, offset]);
     return (
         <>
             <Background />
@@ -100,13 +123,26 @@ export default function Editor() {
                     <Inspector 
                         bpm={bpm} 
                         offset={offset} 
+                        measureSize={measureSize}
+                        snaps={snaps}
                         position={position} 
                         duration={aud.duration} 
                     />
                 </div>
                 
                 {/* { tab == Tab.NOTES && <Notes />} */}
-                { tab == Tab.TIMING && <Timing bpm={bpm} offset={offset} setBPM={setBPM} setOffset={setOffset} />}
+                { tab == Tab.TIMING && 
+                    <Timing 
+                        bpm={bpm} 
+                        offset={offset} 
+                        measureSize={measureSize}
+                        snaps={snaps}
+                        setBPM={setBPM} 
+                        setOffset={setOffset} 
+                        setMeasureSize={setMeasureSize}
+                        setSnaps={setSnaps}
+                    />
+                }
                 { tab == Tab.DETAILS && <Details />}
                 
                 {/* bottom row */}
@@ -130,6 +166,13 @@ export default function Editor() {
             </div>
         </>
     );
+}
+
+export function roundUp(n: number, size: number) {
+    return Math.ceil(n / size) * size;
+}
+export function roundDown(n: number, size: number) {
+    return Math.floor(n / size) * size;
 }
 
 function timeDisplay(ms: number) {

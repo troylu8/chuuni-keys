@@ -7,6 +7,8 @@ export type ChartMetadata = {
     artists: string,
     chart_author: string,
     bpm?: number,
+    measure_size?: number,
+    snaps_per_beat: number,
     audio: string,
     chart: string,
     img?: string

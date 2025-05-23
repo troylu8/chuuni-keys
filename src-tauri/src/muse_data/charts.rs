@@ -9,7 +9,11 @@ pub struct MuseMetadata {
     title: String,
     artists: String,
     chart_author: String,
+    
     bpm: Option<f32>,
+    measure_size: Option<usize>,
+    snaps_per_beat: usize,
+    
     audio: String,
     chart: String,
     img: Option<String>,

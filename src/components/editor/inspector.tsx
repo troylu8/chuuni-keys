@@ -2,21 +2,28 @@ import { useEffect, useRef, useState } from "react";
 
 const PX_PER_MS = 0.1;
 
+function diffToNext(num: number, start: number, size: number) {
+
+}
+
 type Props = Readonly<{
     bpm: number | null
     offset: number | null
+    measureSize: number | null
+    snaps: number
     position: number
     duration: number
 }>
-export default function Inspector({ bpm, offset, position, duration }: Props) {
+export default function Inspector({ bpm, offset, measureSize, snaps, position, duration }: Props) {
     
     const MS_PER_BEAT = bpm &&  60 / bpm * 1000;
     const PX_PER_BEAT = MS_PER_BEAT && MS_PER_BEAT * PX_PER_MS;
     
     const ABS_OFFSET_PX = offset && offset * PX_PER_MS!;
     function diffToNextBeat(absPx: number) {
-        if (absPx < ABS_OFFSET_PX!) return ABS_OFFSET_PX! - absPx;
-        return absPx % PX_PER_BEAT! == 0? 0 : PX_PER_BEAT! - absPx % PX_PER_BEAT!
+        const pxAfterOffset = absPx - ABS_OFFSET_PX!;
+        if (pxAfterOffset < 0) return -pxAfterOffset;
+        return pxAfterOffset % PX_PER_BEAT! == 0? 0 : PX_PER_BEAT! - pxAfterOffset % PX_PER_BEAT!
     }
     
     const contRef = useRef<HTMLDivElement | null>(null);
@@ -37,16 +44,18 @@ export default function Inspector({ bpm, offset, position, duration }: Props) {
     const firstBeatPx = PX_PER_BEAT && startPx + diffToNextBeat(absStartPx);
     const ticks = [];
     if (firstBeatPx) {
+        let beat = Math.ceil((absStartPx + diffToNextBeat(absStartPx) - ABS_OFFSET_PX!) / PX_PER_BEAT);
         for (let px = firstBeatPx; px <= endPx; px += PX_PER_BEAT) {
             const absPx = (px - startPx + absStartPx)
             const ms = absPx / PX_PER_MS;
             ticks.push(
                 <div 
                     key={px} 
-                    style={{left: px}} 
+                    style={{left: px, height: beat % measureSize! == 0? 12 : 8}} 
                     className="inspector-tick h-3 bg-foreground">
                 </div>
             );
+            beat++;
         }
     }
     
