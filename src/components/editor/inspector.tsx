@@ -1,4 +1,6 @@
+import { Tree } from "functional-red-black-tree";
 import { useEffect, useRef, useState } from "react";
+import { MuseEvent } from "../../providers/game-manager";
 
 const PX_PER_MS = 0.1;
 
@@ -9,8 +11,9 @@ type Props = Readonly<{
     snaps: number
     position: number
     duration: number
+    events: Tree<number, MuseEvent> | null
 }>
-export default function Inspector({ bpm, offset, measureSize, snaps, position, duration }: Props) {
+export default function Inspector({ bpm, offset, measureSize, snaps, position, duration, events }: Props) {
     
     const MS_PER_BEAT = bpm &&  60 / bpm * 1000;
     const PX_PER_BEAT = MS_PER_BEAT && MS_PER_BEAT * PX_PER_MS;
@@ -35,6 +38,7 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
     // regarding horizontal bar
     const absCenterPx = position * PX_PER_MS;
     const absStartPx = absCenterPx - Math.min(absCenterPx, width/2);
+    // absEndPx TODO
     const startPx = width/2 - Math.min(absCenterPx, width/2);
     const endPx = width/2 + Math.min(duration * PX_PER_MS - absCenterPx, width/2);
     
@@ -73,6 +77,13 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
             snap++;
         }
     }
+    
+    const visibleEvents = [];
+    events?.forEach(
+        (_, event) => visibleEvents.push(event),
+        // start ms from absstartpx TODO
+        // end ms ...
+    )
     
     return (
         <div ref={contRef} className="relative w-full">

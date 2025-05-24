@@ -6,6 +6,7 @@ import Inspector from "./inspector";
 import Timing from "./timing";
 import Details from "./details";
 import { MuseEvent, readChartFile } from "../../providers/game-manager";
+import createTree, { Tree } from "functional-red-black-tree";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
@@ -37,22 +38,28 @@ export default function Editor() {
     const [offset, setOffset] = useState<number | null>(null);
     const [measureSize, setMeasureSize] = useState<number | null>(savedMeasureSize ?? null);
     const [snaps, setSnaps] = useState<number>(savedSnaps);
-    const eventsRef = useRef<MuseEvent[]>([]);
+    
+    const [events, setEvents] = useState<Tree<number, MuseEvent> | null>(null);
     useEffect(() => {
         readChartFile(chart).then(events => {
+            let tree = createTree<number, MuseEvent>();
+            
             const offset = events.length == 0? null : events[0][0];
             setOffset(offset);
             
-            eventsRef.current = events;
             if (offset != null) {
-                for (const event of eventsRef.current) {
+                for (const event of events) {
                     event[0] -= offset;
+                    tree = tree.insert(event[0], event);
                 }
             }
+            
+            setEvents(tree);
         });
     }, [chart]);
     
-    // controls
+    
+    // keybinds
     useEffect(() => {
         function onScroll(e: WheelEvent) {
             if (offset == null || bpm == null) return;
@@ -116,6 +123,7 @@ export default function Editor() {
             window.removeEventListener("keydown", onKeyDown); 
         }
     }, [bpm, offset, snaps]);
+    
     return (
         <>
             <Background />
@@ -141,6 +149,7 @@ export default function Editor() {
                         snaps={snaps}
                         position={position} 
                         duration={aud.duration} 
+                        events={events}
                     />
                 </div>
                 

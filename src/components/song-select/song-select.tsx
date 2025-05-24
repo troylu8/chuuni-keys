@@ -14,12 +14,13 @@ export default function SongSelect() {
     const {base_dir, charts} = userdata;
     
     function toChartParams(metadata: ChartMetadata): ChartParams {
-        const songFolder = `${base_dir}\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`;
-        metadata.chart = songFolder + metadata.chart;
-        metadata.audio = songFolder + metadata.audio;
-        metadata.img = metadata.img && songFolder + metadata.img;
-        (metadata as ChartParams).leaderboard = songFolder + "leaderboard.csv";
-        return metadata as ChartParams;
+        const params = {...metadata} as ChartParams;
+        const songFolder = `${base_dir}\\charts\\${params.id} ${filenamify(params.title, {replacement: '_'})}\\`;
+        params.chart = songFolder + params.chart;
+        params.audio = songFolder + params.audio;
+        params.img = params.img && songFolder + params.img;
+        params.leaderboard = songFolder + "leaderboard.csv";
+        return params;
     }
 
     return (
