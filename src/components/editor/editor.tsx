@@ -10,6 +10,8 @@ import createTree, { Tree } from "functional-red-black-tree";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
+
+
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
     const { audio, chart, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as ChartParams;
@@ -47,11 +49,8 @@ export default function Editor() {
             const offset = events.length == 0? null : events[0][0];
             setOffset(offset);
             
-            if (offset != null) {
-                for (const event of events) {
-                    event[0] -= offset;
-                    tree = tree.insert(event[0], event);
-                }
+            for (const event of events) {
+                tree = tree.insert(event[0], event);
             }
             
             setEvents(tree);

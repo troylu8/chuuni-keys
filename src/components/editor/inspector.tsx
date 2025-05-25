@@ -4,6 +4,10 @@ import { MuseEvent } from "../../providers/game-manager";
 
 const PX_PER_MS = 0.1;
 
+function toInspectorDisplay(event: string) {
+    return (event.startsWith(":")) ? event.substring(1) : event;
+}
+
 type Props = Readonly<{
     bpm: number | null
     offset: number | null
@@ -38,18 +42,19 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
     // regarding horizontal bar
     const absCenterPx = position * PX_PER_MS;
     const absStartPx = absCenterPx - Math.min(absCenterPx, width/2);
-    // absEndPx TODO
+    const absEndPx = Math.min(absCenterPx + width/2, duration * PX_PER_MS);
     const startPx = width/2 - Math.min(absCenterPx, width/2);
     const endPx = width/2 + Math.min(duration * PX_PER_MS - absCenterPx, width/2);
     
-    const ticks = [];
+    const inspectorElements = [];
     if (PX_PER_BEAT) {
         const firstBeatPx = startPx + diffToNext(absStartPx, PX_PER_BEAT);
         let beat = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_BEAT) - ABS_OFFSET_PX!) / PX_PER_BEAT);
         for (let px = firstBeatPx; px <= endPx; px += PX_PER_BEAT) {
             // const absPx = (px - startPx + absStartPx)
+            
             // const ms = absPx / PX_PER_MS;
-            ticks.push(
+            inspectorElements.push(
                 <div 
                     key={px} 
                     style={{left: px, height: beat % measureSize! == 0? 12 : 8}} 
@@ -65,10 +70,9 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
         let snap = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_SNAP) - ABS_OFFSET_PX!) / PX_PER_SNAP);
         for (let px = firstSnapPx; px <= endPx; px += PX_PER_SNAP) {
             if (snap % (snaps + 1) != 0) {
-                ticks.push(
+                inspectorElements.push(
                     <div 
-                        aria-label={"" +snap}
-                        key={px + "snap"} 
+                        key={px} 
                         style={{left: px}} 
                         className="inspector-tick h-1.5 bg-red-500">
                     </div>
@@ -78,12 +82,38 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
         }
     }
     
-    const visibleEvents = [];
+    const allCols: [number, string[]][] = [];
+    let prevMs = -1;
     events?.forEach(
-        (_, event) => visibleEvents.push(event),
-        // start ms from absstartpx TODO
-        // end ms ...
-    )
+        (_, event) => {
+            // absMs => absPx => localPx
+            const ms = event[0];
+            const absPx = ms * PX_PER_MS;
+            const px = absPx - absStartPx + startPx;
+            
+            if (ms != prevMs) {
+                allCols.push([px, [toInspectorDisplay(event[1])]]);
+            }
+            else {
+                allCols[allCols.length-1][1].push(toInspectorDisplay(event[1]))
+            }
+            
+            prevMs = ms;
+        },
+        absStartPx / PX_PER_MS,
+        absEndPx / PX_PER_MS
+    );
+    for (const [px, events] of allCols) {
+        inspectorElements.push(
+            <div 
+                key={px + "col"} 
+                style={{left: px}} 
+                className="inspector-tick top-1 flex flex-col items-center"
+            >
+                { events.map(e => <p className="h-2">{e}</p>) }
+            </div>
+        )
+    }
     
     return (
         <div ref={contRef} className="relative w-full">
@@ -93,8 +123,13 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
             ></div>
             <div className="inspector-tick left-1/2 bg-blue-500 h-5"></div>
             
-            { ticks }
+            { inspectorElements }
         </div>
     );
 }
-
+// ticks.push(<div 
+//                         key={px + event[1]} 
+//                         style={{left: px}} 
+//                         className="inspector-tick top-3 flex flex-col"
+//                     > {currCol} </div>
+//                 );
