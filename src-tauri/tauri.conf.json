@@ -13,8 +13,8 @@
         "windows": [
             {
                 "title": "muse",
-                "width": 400,
-                "height": 300
+                "width": 625,
+                "height": 320
             }
         ],
         "security": {

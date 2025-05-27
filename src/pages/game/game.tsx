@@ -1,11 +1,12 @@
 import GameManager, { GameState, useGameState } from "../../providers/game-manager";
-import DeltaProvider, { useStats } from "../../providers/score";
+import DeltaProvider from "../../providers/score";
 import AccuracyBar from "./accuracy-bar";
-import Keyboard from "./keyboard";
+import KeyboardLayout from "../../components/keyboard-layout";
 import PauseMenu from "./pause-menu";
-import Background from "../background";
+import Background from "../../components/background";
 import Combo from "./combo";
 import Results from "./results";
+import KeyUnitGame from "./key-unit-game";
 
 export default function Game() {
     return (
@@ -27,9 +28,18 @@ function GameInner() {
                 { gameState == GameState.STARTED &&
                     <>
                         <PauseMenu />
-                        <Keyboard />
                         <AccuracyBar />
                         <Combo />
+                        
+                        <KeyboardLayout keyComponent={key => 
+                            <KeyUnitGame 
+                                key={key} 
+                                keyCode={key} 
+                                hitringEvent={":" + key}    
+                            >
+                                { key }
+                            </KeyUnitGame>
+                        } />
                     </>
                 }
                 { gameState == GameState.ENDED && <Results /> }

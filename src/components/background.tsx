@@ -1,21 +1,21 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { GamePaths, usePage } from "../providers/page";
+import {  usePage } from "../providers/page";
+import { ChartMetadata } from "../providers/user-data";
 
 
 export default function Background() {
     const [pageParams] = usePage();
     
-    const { imgPath } = pageParams[1] as GamePaths;
+    const { img } = pageParams[1] as ChartMetadata;
     
     return (
         <>
-            { imgPath &&
+            { img &&
                 <div className="fixed cover">
                     <img 
-                        src={convertFileSrc(imgPath)}
-                        className="w-full h-full object-cover"
+                        src={convertFileSrc(img)}
+                        className="w-full h-full object-cover brightness-50"
                     ></img>
-                    
                 </div>
             }
         </>

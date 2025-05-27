@@ -1,6 +1,6 @@
 import { ChartParams, Page, usePage } from "../../providers/page";
 import { usePlayback } from "../../providers/playback";
-import Background from "../background";
+import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
 import Timing from "./timing";

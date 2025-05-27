@@ -4,6 +4,7 @@ import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
 import { ChartParams, Page, usePage } from "./page";
 
+export const ACTIVATION_DURATION = 2000;
 export const HITRING_DURATION = 300;
 
 export enum GameState { LOADING, STARTED, ENDED };
@@ -89,8 +90,7 @@ export default function GameManager({ children }: Props) {
         if (i.current == 0) museEmitter.emit("start");
         
         function update() {
-            
-            museEmitter.emit("update", aud.getPosition());
+            museEmitter.emit("pos-change", aud.getPosition());
             
             
             // send all ready muse events

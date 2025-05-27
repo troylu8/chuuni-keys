@@ -1,8 +1,8 @@
-import EditMenu from "./components/edit-menu/edit-menu";
-import Editor from "./components/editor/editor";
-import Game from "./components/game/game";
-import MainMenu from "./components/main-menu/main-menu";
-import SongSelect from "./components/song-select/song-select";
+import EditMenu from "./pages/edit-menu/edit-menu";
+import Editor from "./pages/editor/editor";
+import Game from "./pages/game/game";
+import MainMenu from "./pages/main-menu/main-menu";
+import SongSelect from "./pages/song-select/song-select";
 import PageProvider, { usePage, Page } from "./providers/page";
 import PlaybackProvider from "./providers/playback";
 import SfxProvider from "./providers/sfx";

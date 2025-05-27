@@ -108,9 +108,16 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
             <div 
                 key={px + "col"} 
                 style={{left: px}} 
-                className="inspector-tick top-1 flex flex-col items-center"
+                className="absolute -translate-x-1/2 top-1 flex flex-col items-center font-mono [&>p]:h-3 [&>p]:leading-3"
             >
-                { events.map(e => <p className="h-2">{e}</p>) }
+                { events.length <= 3 ? 
+                    events.map(e => <p>{e}</p>) :
+                    <>
+                        <p> { events[0] } </p>
+                        <p> { events[1] } </p>
+                        <p> +{ events.length - 2 } </p>
+                    </>
+                }
             </div>
         )
     }
