@@ -8,18 +8,18 @@ import { KeyUnit } from "../../components/key-unit";
 
 type Props = Readonly<{
     keyCode: string,
-    hitringEvent: string,
+    museEvent: string,
     children?: ReactNode,
     labelCentered?: boolean
 }>
-export default function KeyUnitGame( { keyCode, hitringEvent, children, labelCentered }: Props ) {
+export default function KeyUnitGame( { keyCode, museEvent, children, labelCentered }: Props ) {
     const { getPosition } = usePlayback();
     const [ playing ] = useGameControls();
     const addMuseListener = useMuseEvents();
     const [ pressed, setPressed ] = useState(false);
     
     /** `[hittime, progress]` */
-    const [ hitrings, setHitTimes ] = useState<[number, number][]>([]);
+    const [ hitTimes, setHitTimes ] = useState<[number, number][]>([]);
     const [ broadcastDelta ] = useDelta();
     const playSfx = useSfx();
     
@@ -40,9 +40,9 @@ export default function KeyUnitGame( { keyCode, hitringEvent, children, labelCen
             setPressed(true);
             playSfx("hitsound");
             
-            if (hitrings.length == 0) return console.log("none!");
+            if (hitTimes.length == 0) return console.log("none!");
             
-            const delta = getPosition() - hitrings[0][0];
+            const delta = getPosition() - hitTimes[0][0];
             
             if (Math.abs(delta) <= MISS_THRESHOLD) {
                 console.log("diff: ", delta);
@@ -54,12 +54,12 @@ export default function KeyUnitGame( { keyCode, hitringEvent, children, labelCen
             }
             popHitTime();
         }
-        function handleKeyUp(e: KeyboardEvent) {
-            if (e.key === keyCode) setPressed(false);
-        }
+        window.addEventListener("keydown", handleKeyDown);
+        
         
         const unlistenPos = addMuseListener("pos-change", pos => {
-            if (hitrings.length != 0 && pos > hitrings[0][0] + MISS_THRESHOLD) {
+            if (hitTimes.length != 0 && pos > hitTimes[0][0] + MISS_THRESHOLD) {
+                console.log("disappeared at ", pos);
                 popHitTime();
                 broadcastDelta("miss");
             }
@@ -67,16 +67,11 @@ export default function KeyUnitGame( { keyCode, hitringEvent, children, labelCen
             // recalculate progresses
             setHitTimes(prev => prev.map(([hitTime]) => [hitTime, (hitTime - pos) / HITRING_DURATION]));
         });
-        
-        window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("keyup", handleKeyUp);
         return () => {
-            unlistenPos(); 
             window.removeEventListener("keydown", handleKeyDown);
-            window.removeEventListener("keyup", handleKeyUp);
-            
+            unlistenPos(); 
         }
-    }, [hitrings, playing]);
+    }, [hitTimes, playing]);
     
     useEffect(() => {
         
@@ -84,13 +79,18 @@ export default function KeyUnitGame( { keyCode, hitringEvent, children, labelCen
             setHitTimes([]);
             console.log("clearing hitrings");
         });
-        const unlistenHitring = addMuseListener(hitringEvent, time => {
-            const hitTime = time as number + HITRING_DURATION;
+        const unlistenHitring = addMuseListener(museEvent, (_, hitTime) => {
+            console.log("got", museEvent, hitTime);
             setHitTimes(prev => [...prev, [hitTime, 1]]);
         });
+        function handleKeyUp(e: KeyboardEvent) {
+            if (e.key === keyCode) setPressed(false);
+        }
+        window.addEventListener("keyup", handleKeyUp);
         return () => { 
             unlistenStart();
             unlistenHitring();
+            window.removeEventListener("keyup", handleKeyUp);
         }
     }, []);
     
@@ -99,7 +99,8 @@ export default function KeyUnitGame( { keyCode, hitringEvent, children, labelCen
             pressed={pressed} 
             label={children} 
             labelCentered={labelCentered} 
-            hitProgresses={hitrings.map(([_, progress]) => progress)}
+            hitProgresses={hitTimes.map(([_, progress]) => progress)}
+            activated={hitTimes.length != 0}
         />
     );
 }

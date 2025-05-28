@@ -7,8 +7,8 @@ import { ChartParams, Page, usePage } from "./page";
 export const ACTIVATION_DURATION = 2000;
 export const HITRING_DURATION = 300;
 
-export enum GameState { LOADING, STARTED, ENDED };
-const GameStateContext = createContext<[GameState, (next: GameState) => any] | null>(null);
+export enum GameStage { LOADING, STARTED, ENDED };
+const GameStageContext = createContext<[GameStage, (next: GameStage) => any] | null>(null);
 
 type TogglePauseGame = () => void;
 type RestartGame = () => void;
@@ -16,11 +16,11 @@ type StopGame = () => void;
 const ControlsContext = createContext<[boolean, TogglePauseGame, RestartGame, StopGame] | null>(null);
 
 type RemoveMuseListener = () => void;
-type AddMuseListener = (event: string, listener: (params: any) => any) => RemoveMuseListener;
+type AddMuseListener = (event: string, listener: (...params: any[]) => any) => RemoveMuseListener;
 const MuseEventsContext = createContext<AddMuseListener | null>(null);
 
-export function useGameState() {
-    return useContext(GameStateContext)!;
+export function useGameStage() {
+    return useContext(GameStageContext)!;
 }
 
 export function useGameControls() {
@@ -31,7 +31,7 @@ export function useMuseEvents() {
     return useContext(MuseEventsContext)!;
 }
 
-export type MuseEvent = [number, string];
+export type MuseEvent = [number, string, number?];
 function toMuseEvent(str: string): MuseEvent {
     const arr = str.trim().split(" ");
     return [Number(arr[0]), arr[1]];
@@ -49,55 +49,63 @@ export default function GameManager({ children }: Props) {
     const [pageParams, setPage] = usePage();
     
     const aud = usePlayback();
-    const [gameState, setGameState] = useState(GameState.LOADING);
+    const [gameStage, setGameStage] = useState(GameStage.LOADING);
     
     const museEmitter = useRef(new EventEmitter()).current;
     
-    const eventsRef = useRef<MuseEvent[]>([]);
     const i = useRef(0);
+    const eventsRef = useRef<MuseEvent[]>([]);
     function resetEvents() {
-        console.log("reset");
         i.current = 0;
         eventsRef.current = [];
     }
     
-    
+    // initialize
     useEffect(() => {
-        
         const { audio, chart } = pageParams[1] as ChartParams;
         
         aud.loadAudio(audio);
         readChartFile(chart).then(events => {
             resetEvents();
             
+            const otherEvents: MuseEvent[] = [];
+            const noteEvents: MuseEvent[] = [];          // arr of [activation time, :key, hit time]
             for (const event of events) {
-                if (event[1].includes(":")) event[0] -= HITRING_DURATION;
+                if (event[1].includes(":")) {
+                    noteEvents.push([Math.max(event[0] - ACTIVATION_DURATION, 0), event[1], event[0]]);
+                }
+                else {
+                    otherEvents.push(event);
+                }
             }
-            eventsRef.current = events;
-            console.log(eventsRef);
-            
-            setGameState(GameState.STARTED);
+            eventsRef.current = joinEvents(otherEvents, noteEvents);
+            console.log(eventsRef, otherEvents, noteEvents);
+            setGameStage(GameStage.STARTED);
             aud.setPlaying(true);
         });
     }, []);
     
+    
     // game loop
     useEffect(() => {
-        if (gameState != GameState.STARTED || !aud.playing) return;
+        if (gameStage != GameStage.STARTED || !aud.playing) return;
+        
+        
+        if (i.current == 0) {
+            museEmitter.emit("start");
+            console.log(eventsRef);
+        }
         
         let intervalId = setInterval(update, 0);
-        
-        if (i.current == 0) museEmitter.emit("start");
-        
         function update() {
             museEmitter.emit("pos-change", aud.getPosition());
-            
             
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];
                 if (aud.getPosition() >= nextEvent[0]) {
-                    museEmitter.emit(nextEvent[1], nextEvent[0]);
+                    console.log("emitting", nextEvent);
+                    museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
                     i.current++;
                 }
                 else break;
@@ -106,12 +114,15 @@ export default function GameManager({ children }: Props) {
             if (i.current == eventsRef.current.length) {
                 resetEvents();
                 clearInterval(intervalId);
-                setTimeout(() => setGameState(GameState.ENDED), 3000);
+                console.log("ending soon at", aud.getPosition());
+                setTimeout(() => setGameStage(GameStage.ENDED), 5000);
+                
+                //TODO why doesnt last ring appear?
             }
         }
         
         return () => clearInterval(intervalId);
-    }, [gameState, aud.playing]);
+    }, [gameStage, aud.playing]);
     
     async function togglePauseGame() {
         await aud.togglePlaying();
@@ -125,20 +136,38 @@ export default function GameManager({ children }: Props) {
         setPage([Page.SONG_SELECT]);
     }
     
-    function addEventListener(event: string, listener: (time: number) => any) {
+    function addMuseListener(event: string, listener: (...params: any[]) => any) {
         museEmitter.addListener(event, listener);
         museEmitter.setMaxListeners(200);
         return () => { museEmitter.removeListener(event, listener); }
     }
     
     return (
-        <GameStateContext.Provider value={[gameState, setGameState]}>
+        <GameStageContext.Provider value={[gameStage, setGameStage]}>
             <ControlsContext.Provider value={[aud.playing, togglePauseGame, restartGame, stopGame]}>
-                <MuseEventsContext.Provider value={addEventListener}>
+                <MuseEventsContext.Provider value={addMuseListener}>
                     { children }
                 </MuseEventsContext.Provider>
             </ControlsContext.Provider>
-        </GameStateContext.Provider>
+        </GameStageContext.Provider>
     );
 }
 
+function joinEvents(a: MuseEvent[], b: MuseEvent[]) {
+    const res = [];
+    let p1 = 0;
+    let p2 = 0;
+    
+    while (p1 < a.length || p2 < b.length) {
+        if (p2 == b.length || (p1 < a.length && a[p1][0] < b[p2][0])) {
+            res.push(a[p1]);
+            p1++;
+        }
+        else {
+            res.push(b[p2]);
+            p2++;
+        }
+    }
+    
+    return res;
+}

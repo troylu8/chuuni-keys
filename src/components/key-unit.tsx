@@ -22,7 +22,7 @@ export function KeyUnit( { activated, pressed, label, labelCentered, hitProgress
             `}
         >
             <span className="text-lg"> { label } </span>
-            { hitProgresses.map(p => <Hitring key={p} progress={p} />) }
+            { hitProgresses.map((p, i) => <Hitring key={i} progress={p} />) }
         </div>
     )
 }

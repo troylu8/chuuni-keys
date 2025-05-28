@@ -1,4 +1,4 @@
-import GameManager, { GameState, useGameState } from "../../providers/game-manager";
+import GameManager, { GameStage, useGameStage as useGameStage } from "../../providers/game-manager";
 import DeltaProvider from "../../providers/score";
 import AccuracyBar from "./accuracy-bar";
 import KeyboardLayout from "../../components/keyboard-layout";
@@ -17,15 +17,15 @@ export default function Game() {
 }
 
 function GameInner() {
-    const [gameState] = useGameState();
+    const [gameStage] = useGameStage();
     
     return (
         <div className="fixed cover">
             <Background />
-            { gameState == GameState.LOADING && <p> loading... </p> }
+            { gameStage == GameStage.LOADING && <p> loading... </p> }
             
             <DeltaProvider>
-                { gameState == GameState.STARTED &&
+                { gameStage == GameStage.STARTED &&
                     <>
                         <PauseMenu />
                         <AccuracyBar />
@@ -35,14 +35,14 @@ function GameInner() {
                             <KeyUnitGame 
                                 key={key} 
                                 keyCode={key} 
-                                hitringEvent={":" + key}    
+                                museEvent={":" + key}    
                             >
                                 { key }
                             </KeyUnitGame>
                         } />
                     </>
                 }
-                { gameState == GameState.ENDED && <Results /> }
+                { gameStage == GameStage.ENDED && <Results /> }
             </DeltaProvider>
         </div>
     )
