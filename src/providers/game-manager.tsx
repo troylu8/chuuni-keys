@@ -4,7 +4,7 @@ import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
 import { ChartParams, Page, usePage } from "./page";
 
-export const ACTIVATION_DURATION = 2000;
+export const ACTIVATION_DURATION = 800;
 export const HITRING_DURATION = 300;
 
 export enum GameStage { LOADING, STARTED, ENDED };
@@ -79,7 +79,6 @@ export default function GameManager({ children }: Props) {
                 }
             }
             eventsRef.current = joinEvents(otherEvents, noteEvents);
-            console.log(eventsRef, otherEvents, noteEvents);
             setGameStage(GameStage.STARTED);
             aud.setPlaying(true);
         });
@@ -93,7 +92,6 @@ export default function GameManager({ children }: Props) {
         
         if (i.current == 0) {
             museEmitter.emit("start");
-            console.log(eventsRef);
         }
         
         let intervalId = setInterval(update, 0);
@@ -104,7 +102,6 @@ export default function GameManager({ children }: Props) {
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];
                 if (aud.getPosition() >= nextEvent[0]) {
-                    console.log("emitting", nextEvent);
                     museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
                     i.current++;
                 }
@@ -112,12 +109,11 @@ export default function GameManager({ children }: Props) {
             }
             
             if (i.current == eventsRef.current.length) {
-                resetEvents();
-                clearInterval(intervalId);
-                console.log("ending soon at", aud.getPosition());
-                setTimeout(() => setGameStage(GameStage.ENDED), 5000);
-                
-                //TODO why doesnt last ring appear?
+                setTimeout(() => {
+                    resetEvents();
+                    clearInterval(intervalId);
+                    setGameStage(GameStage.ENDED);
+                }, 5000);
             }
         }
         

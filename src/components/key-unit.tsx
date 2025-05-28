@@ -18,7 +18,7 @@ export function KeyUnit( { activated, pressed, label, labelCentered, hitProgress
                 flex flex-col-reverse rounded-xl relative
                 ${pressed? "bg-foreground text-background" : "bg-background opacity-25" }
                 ${labelCentered? "items-center justify-center" : "[&>span]:ml-3"}
-                ${activated && "opacity-100"}
+                ${activated && "opacity-100 transition-opacity"}
             `}
         >
             <span className="text-lg"> { label } </span>

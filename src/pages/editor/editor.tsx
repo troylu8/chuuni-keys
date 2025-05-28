@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
 import Timing from "./timing";
 import Details from "./details";
-import { MuseEvent, readChartFile } from "../../providers/game-manager";
+import { ACTIVATION_DURATION, MuseEvent, readChartFile } from "../../providers/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
+import Notes from "./notes";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
@@ -152,7 +153,7 @@ export default function Editor() {
                     />
                 </div>
                 
-                {/* { tab == Tab.NOTES && <Notes />} */}
+                { tab == Tab.NOTES && events && <Notes events={events} position={position} />}
                 { tab == Tab.TIMING && 
                     <Timing 
                         bpm={bpm} 

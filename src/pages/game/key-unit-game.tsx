@@ -59,7 +59,6 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
         
         const unlistenPos = addMuseListener("pos-change", pos => {
             if (hitTimes.length != 0 && pos > hitTimes[0][0] + MISS_THRESHOLD) {
-                console.log("disappeared at ", pos);
                 popHitTime();
                 broadcastDelta("miss");
             }
@@ -80,7 +79,6 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
             console.log("clearing hitrings");
         });
         const unlistenHitring = addMuseListener(museEvent, (_, hitTime) => {
-            console.log("got", museEvent, hitTime);
             setHitTimes(prev => [...prev, [hitTime, 1]]);
         });
         function handleKeyUp(e: KeyboardEvent) {

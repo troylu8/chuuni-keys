@@ -1,10 +1,10 @@
 import { ReactNode } from "react";
 
 const KEYBOARD_LAYOUT = [
-    "z".split("")
-    // "qwertyuiop".split(""),
-    // "asdfghjkl".split(""),
-    // "zxcvbnm,".split("")
+    // "z".split("")
+    "qwertyuiop".split(""),
+    "asdfghjkl".split(""),
+    "zxcvbnm,".split("")
 ]
 
 type Props = Readonly<{
