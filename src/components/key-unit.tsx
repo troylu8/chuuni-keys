@@ -10,7 +10,7 @@ type Props = Readonly<{
     labelCentered?: boolean
     hitProgresses: number[]
 }>
-export function KeyUnit( { activated, pressed, label, labelCentered, hitProgresses }: Props ) {
+export function KeyUnit( { pressed, label, labelCentered, hitProgresses, activated = hitProgresses.length != 0 }: Props ) {
     return (
         <div 
             style={{width: KEY_SIZE, height: KEY_SIZE}}
@@ -45,7 +45,7 @@ function Hitring({ progress }: HitringProps) {
                     left: -gap,
                     right: -gap,
                     borderRadius: (2 * gap + KEY_SIZE) * 0.25,  // total size * 0.25
-                    opacity: (1 - progress) / 0.6
+                    opacity: (1 - progress) / 0.8
                 }}
             ></div>
         </>

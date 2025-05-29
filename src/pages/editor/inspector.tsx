@@ -111,7 +111,7 @@ export default function Inspector({ bpm, offset, measureSize, snaps, position, d
                 className="absolute -translate-x-1/2 top-1 flex flex-col items-center font-mono [&>p]:h-3 [&>p]:leading-3"
             >
                 { events.length <= 3 ? 
-                    events.map(e => <p key={e}>{e}</p>) :
+                    events.map((e, i) => <p key={i}>{e}</p>) : //TODO fix
                     <>
                         <p> { events[0] } </p>
                         <p> { events[1] } </p>

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
 import Timing from "./timing";
 import Details from "./details";
-import { ACTIVATION_DURATION, MuseEvent, readChartFile } from "../../providers/game-manager";
+import { MuseEvent, readChartFile } from "../../providers/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
 import Notes from "./notes";
 
@@ -45,7 +45,8 @@ export default function Editor() {
     const [events, setEvents] = useState<Tree<number, MuseEvent> | null>(null);
     useEffect(() => {
         readChartFile(chart).then(events => {
-            let tree = createTree<number, MuseEvent>();
+            console.log("chart", chart);
+            let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             const offset = events.length == 0? null : events[0][0];
             setOffset(offset);
@@ -56,15 +57,15 @@ export default function Editor() {
             
             setEvents(tree);
         });
+        
     }, [chart]);
     
     
-    // keybinds
     useEffect(() => {
         function onScroll(e: WheelEvent) {
             if (offset == null || bpm == null) return;
             setPosition(ms => {
-                
+                aud.setPlaying(false);
                 
                 const MS_PER_BEAT = 60 / bpm * 1000;
                 if (e.deltaY < 0) {
@@ -115,6 +116,24 @@ export default function Editor() {
                 setPosition(prev => prev - 1);
             else if (e.key === ".")
                 setPosition(prev => prev + 1);
+            else if ("qwertyuiopasdfghjklzxcvbnm,".includes(e.key)) {
+                const pos = aud.getPosition();
+                setEvents(prev => {
+                    if (!prev) return null;
+                    
+                    const iter = prev.ge(pos);
+                    while (iter.valid && iter.key == pos) {
+                        // if this key exists at this time, remove it
+                        if (iter.value![1] == ":" + e.key) {
+                            return iter.remove();
+                        }
+                        iter.next();
+                    }
+                    
+                    // key didnt exist at this time, so add it
+                    return prev.insert(pos, [pos, ":" + e.key]);
+                });
+            }
         }
         window.addEventListener("keydown", onKeyDown);
         
@@ -127,12 +146,11 @@ export default function Editor() {
     return (
         <>
             <Background />
-            <div className="absolute cover m-1">
+            <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
-                <div className="absolute top-0 left-0 right-0 flex flex-col gap-6">
-                    
-                    <div className="flex gap-1">
+                <nav className="flex flex-col gap-5 mb-8">
+                    <div className="relative flex gap-1">
                         <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> quit </MuseButton>
                         <MuseButton> save </MuseButton>
                         <div className="grow flex flex-row-reverse gap-1">
@@ -151,26 +169,27 @@ export default function Editor() {
                         duration={aud.duration} 
                         events={events}
                     />
+                </nav>
+                
+                <div className="relative grow">
+                    { tab == Tab.NOTES && events && <Notes events={events} position={position} />}
+                    { tab == Tab.TIMING && 
+                        <Timing 
+                            bpm={bpm} 
+                            offset={offset} 
+                            measureSize={measureSize}
+                            snaps={snaps}
+                            setBPM={setBPM} 
+                            setOffset={setOffset} 
+                            setMeasureSize={setMeasureSize}
+                            setSnaps={setSnaps}
+                        />
+                    }
+                    { tab == Tab.DETAILS && <Details />}
                 </div>
                 
-                { tab == Tab.NOTES && events && <Notes events={events} position={position} />}
-                { tab == Tab.TIMING && 
-                    <Timing 
-                        bpm={bpm} 
-                        offset={offset} 
-                        measureSize={measureSize}
-                        snaps={snaps}
-                        setBPM={setBPM} 
-                        setOffset={setOffset} 
-                        setMeasureSize={setMeasureSize}
-                        setSnaps={setSnaps}
-                    />
-                }
-                { tab == Tab.DETAILS && <Details />}
-                
                 {/* bottom row */}
-                <div className="absolute bottom-0 left-0 right-0 flex gap-2 items-center">
-                    
+                <nav className="flex gap-2 items-center">
                     <div className="min-w-20 max-w-20">
                         <MuseButton onClick={() => aud.togglePlaying()}> 
                             {aud.playing? "pause" : "play"} 
@@ -184,7 +203,7 @@ export default function Editor() {
                         duration={aud.duration}  
                         onClick={pos => setPosition(() => pos)}
                     />
-                </div>
+                </nav>
                 
             </div>
         </>

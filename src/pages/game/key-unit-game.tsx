@@ -98,7 +98,6 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
             label={children} 
             labelCentered={labelCentered} 
             hitProgresses={hitTimes.map(([_, progress]) => progress)}
-            activated={hitTimes.length != 0}
         />
     );
 }
