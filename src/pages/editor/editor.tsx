@@ -39,18 +39,15 @@ export default function Editor() {
     }, [aud.playing]);
     
     const [bpm, setBPM] = useState<number | null>(savedBPM ?? null);
-    const [offset, setOffset] = useState<number | null>(null);
     const [measureSize, setMeasureSize] = useState<number | null>(savedMeasureSize ?? null);
     const [snaps, setSnaps] = useState<number>(savedSnaps);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent> | null>(null);
+    const offset = events && (events.begin.value?.[0] ?? null);
     useEffect(() => {
         readChartFile(chart).then(events => {
-            console.log("chart", chart);
+            console.log("events", events);
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
-            
-            const offset = events.length == 0? null : events[0][0];
-            setOffset(offset);
             
             for (const event of events) {
                 tree = tree.insert(event[0], event);
@@ -64,16 +61,16 @@ export default function Editor() {
     
     useEffect(() => {
         function onScroll(e: WheelEvent) {
-            if (offset == null || bpm == null) return;
+            if (bpm == null) return;
             setPosition(ms => {
                 aud.setPlaying(false);
                 
                 const MS_PER_BEAT = 60 / bpm * 1000;
                 if (e.deltaY < 0) {
-                    return snapLeft(ms, offset, MS_PER_BEAT / (snaps + 1));
+                    return snapLeft(ms, offset ?? 0, MS_PER_BEAT / (snaps + 1));
                 }
                 else {
-                    return snapRight(ms, offset, MS_PER_BEAT / (snaps + 1));
+                    return snapRight(ms, offset ?? 0, MS_PER_BEAT / (snaps + 1));
                 }
             });
         }
@@ -205,11 +202,9 @@ export default function Editor() {
                     { tab == Tab.TIMING && 
                         <Timing 
                             bpm={bpm} 
-                            offset={offset} 
                             measureSize={measureSize}
                             snaps={snaps}
                             setBPM={setBPM} 
-                            setOffset={setOffset} 
                             setMeasureSize={setMeasureSize}
                             setSnaps={setSnaps}
                         />

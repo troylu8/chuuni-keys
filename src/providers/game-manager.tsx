@@ -38,7 +38,7 @@ function toMuseEvent(str: string): MuseEvent {
 }
 export async function readChartFile(path: string) {
     const contents = await readTextFile(path);
-    return contents.trim().split("\n").map(toMuseEvent);
+    return contents === '' ? [] : contents.trim().split("\n").map(toMuseEvent);
 }
 
 

@@ -3,6 +3,7 @@ import { ChartMetadata } from "./user-data";
 
 export enum Page {
     MAIN_MENU,
+    SETTINGS,
     EDIT_MENU,
     SONG_SELECT,
     GAME,

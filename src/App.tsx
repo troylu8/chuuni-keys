@@ -1,3 +1,5 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
 import EditMenu from "./pages/edit-menu/edit-menu";
 import Editor from "./pages/editor/editor";
 import Game from "./pages/game/game";
@@ -8,14 +10,18 @@ import PlaybackProvider from "./providers/playback";
 import SfxProvider from "./providers/sfx";
 import UserDataProvider from "./providers/user-data";
 import "./styles.css"
+import Settings from "./pages/settings/settings";
+import SettingsProvider from "./providers/settings";
 
-export default function App() {
+function App() {
     return (
         <UserDataProvider>
             <PageProvider>
                 <PlaybackProvider>
                     <SfxProvider>
-                        <Main />
+                        <SettingsProvider>
+                            <Main />
+                        </SettingsProvider>
                     </SfxProvider>
                 </PlaybackProvider>
             </PageProvider>
@@ -28,6 +34,7 @@ function Main() {
     return (
         <>
             {page == Page.MAIN_MENU && <MainMenu />}
+            {page == Page.SETTINGS && <Settings />}
             {page == Page.EDIT_MENU && <EditMenu />}
             {page == Page.SONG_SELECT && <SongSelect />}
             {page == Page.GAME && <Game />}
@@ -35,3 +42,9 @@ function Main() {
         </>
     )
 }
+
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>,
+);

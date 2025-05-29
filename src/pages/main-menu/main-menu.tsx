@@ -9,6 +9,7 @@ export default function MainMenu() {
         <div className="absolute cover flex flex-col justify-center items-center gap-3">
             <button onClick={() => setPageParams([Page.SONG_SELECT])}> play </button>
             <button onClick={() => setPageParams([Page.EDIT_MENU])}> edit </button>
+            <button onClick={() => setPageParams([Page.SETTINGS])}> settings </button>
             <button onClick={async () => await exit(0)}> quit </button>
         </div>
     );
