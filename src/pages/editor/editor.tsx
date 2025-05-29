@@ -8,6 +8,7 @@ import Details from "./details";
 import { MuseEvent, readChartFile } from "../../providers/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
 import Notes from "./notes";
+import { writeTextFile } from "@tauri-apps/plugin-fs";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
@@ -121,6 +122,8 @@ export default function Editor() {
                 setEvents(prev => {
                     if (!prev) return null;
                     
+                    setSaved(false);
+                    
                     const iter = prev.ge(pos);
                     while (iter.valid && iter.key == pos) {
                         // if this key exists at this time, remove it
@@ -143,16 +146,42 @@ export default function Editor() {
         }
     }, [bpm, offset, snaps]);
     
+    
+    const [saved, setSaved] = useState(true);
+    const [savePopupVisible, setSavePopupVisible] = useState(false);
+    
+    async function handleSave() {
+        if (!events) return;
+        
+        const res = [];
+        for (const event of events.values) {
+            res.push(event.join(" "));
+        }
+        
+        await writeTextFile(chart, res.join("\n"));
+        setSaved(true);
+    }
+    async function handleQuit() {
+        if (saved) return setPageParams([Page.MAIN_MENU]);
+        setSavePopupVisible(true);
+    }
+    
     return (
         <>
             <Background />
+            { savePopupVisible && 
+                <SaveChangesPopup 
+                    onClose={() => setSavePopupVisible(false)}
+                    saveChanges={handleSave}
+                />
+            }
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
                 <nav className="flex flex-col gap-5 mb-8">
                     <div className="relative flex gap-1">
-                        <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> quit </MuseButton>
-                        <MuseButton> save </MuseButton>
+                        <MuseButton onClick={handleQuit}> quit </MuseButton>
+                        <MuseButton onClick={handleSave}> save {!saved && "*"} </MuseButton>
                         <div className="grow flex flex-row-reverse gap-1">
                             <MuseButton onClick={() => setTab(Tab.DETAILS)}> details </MuseButton>
                             <MuseButton onClick={() => setTab(Tab.TIMING)}> timing </MuseButton>
@@ -208,6 +237,31 @@ export default function Editor() {
             </div>
         </>
     );
+}
+
+type SaveChangesProps = Readonly<{
+    onClose: () => any
+    saveChanges: () => Promise<void>
+}>
+function SaveChangesPopup({ onClose, saveChanges }: SaveChangesProps) {
+    const [_, setPageParams] = usePage();
+    return (
+        <div className="
+            fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex flex-col
+            border-2 border-foreground bg-background rounded-md z-50 p-2 gap-2
+        ">
+            <div className="flex justify-between">
+                <h1 className="text-center grow"> you have unsaved changes! </h1>
+                <MuseButton onClick={onClose}> x </MuseButton>
+            </div>
+            <div className="flex gap-3">
+                <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> discard changes </MuseButton>
+                <MuseButton onClick={() => 
+                    saveChanges().then(() => setPageParams([Page.MAIN_MENU]))
+                }> save and quit </MuseButton>
+            </div>
+        </div>
+    )
 }
 
 export function roundUp(n: number, size: number) {
