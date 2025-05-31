@@ -3,7 +3,7 @@ import { useState, createContext, useContext, useRef, useEffect } from "react";
 
 type Playback = {
     playing: boolean,
-    loadAudio: (src: string) => void,
+    loadAudio: (src: string, loop?: boolean) => void,
     setPlaying: (next: boolean) => Promise<void>,
     togglePlaying: () => Promise<void>,
     getPosition: () => number,
@@ -42,9 +42,10 @@ export default function PlaybackProvider({ children }: Props) {
         }
     }, []);
     
-    function loadAudio(src: string) {
+    function loadAudio(src: string, loop?: boolean) {
         audio().src = convertFileSrc(src);
         audio().load();
+        audio().loop = loop ?? false;
         setPlayingInner(false);
     }
     

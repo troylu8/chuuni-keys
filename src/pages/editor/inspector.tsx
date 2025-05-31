@@ -7,6 +7,9 @@ const PX_PER_MS = 0.1;
 function toInspectorDisplay(event: string) {
     return (event.startsWith(":")) ? event.substring(1) : event;
 }
+export function getBeatDuration(bpm: number) {
+    return 60 / bpm * 1000;
+}
 
 type Props = Readonly<{
     bpm: number | null
@@ -19,7 +22,7 @@ type Props = Readonly<{
 }>
 export default function Inspector({ bpm, offset, measureSize, snaps, position, duration, events }: Props) {
     
-    const MS_PER_BEAT = bpm &&  60 / bpm * 1000;
+    const MS_PER_BEAT = bpm && getBeatDuration(bpm);
     const PX_PER_BEAT = MS_PER_BEAT && MS_PER_BEAT * PX_PER_MS;
     const PX_PER_SNAP = PX_PER_BEAT && PX_PER_BEAT / (snaps + 1);
     

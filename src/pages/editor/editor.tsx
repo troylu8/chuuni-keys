@@ -9,10 +9,9 @@ import { MuseEvent, readChartFile } from "../../providers/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
 import Notes from "./notes";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
+import MuseButton from "../../components/muse-button";
 
 enum Tab { NOTES, TIMING, DETAILS };
-
-
 
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
@@ -311,19 +310,3 @@ function SeekBar({ position, duration, onClick }: SeekBarProps) {
 }
 
 
-type Props = Readonly<{
-    children: React.ReactNode
-    onClick?: () => any
-}>
-function MuseButton({ children, onClick }: Props) {
-    return (
-        <button 
-            onClick={onClick} 
-            className="
-                px-2 text-background bg-foreground rounded-md             
-            "
-        >
-            { children }
-        </button>
-    )
-}

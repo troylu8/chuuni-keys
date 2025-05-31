@@ -1,17 +1,22 @@
+import { useState } from "react";
 import { Page, usePage } from "../../providers/page";
 import { useSettings } from "../../providers/settings";
+import TimingEditor from "./timing-editor";
+import MuseButton from "../../components/muse-button";
 
 export default function Settings() {
     const [_, setPageParams] = usePage();
     const [settings, setSettings] = useSettings(); 
+    const [timingEditorVisible, setTimingEditorVisible] = useState(false);
+    
+    if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;
     
     return (
         <div className="absolute cover flex flex-col gap-3 p-3">
-            <button onClick={() => setPageParams([Page.MAIN_MENU])}> back to main menu </button>
+            <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> back to main menu </MuseButton>
             <h1> settings </h1>
-            <button > adjust custom offset { settings.offset } </button>
-            <p>{settings.activation_duration}</p>
-            <p>{settings.hitring_duration}</p>
+            <MuseButton onClick={() => setTimingEditorVisible(true)} > edit note timing </MuseButton>
+            <p> (other settings here) </p>
         </div>
     );
 }
