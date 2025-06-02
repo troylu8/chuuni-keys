@@ -17,8 +17,10 @@ const StatsContext = createContext<Stats | null>(null);
 type Delta = number | "miss";
 
 export function getPraise(delta: Delta) {
-    if (delta == "miss" || delta > MISS_THRESHOLD) return "miss";
-    if (delta > ACCURACY_THRESHOLDS[1]) return "good";
+    if (delta == "miss") return "miss";
+    delta = Math.abs(delta);
+    if (delta > MISS_THRESHOLD) return "miss";
+    if (delta > ACCURACY_THRESHOLDS[0]) return "good";
     return "perfect";
 }
 

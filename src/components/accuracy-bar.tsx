@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useDelta, MISS_THRESHOLD, getPraise } from "../providers/score";
 
-export default function AccuracyBar() {
+type Props = Readonly<{
+    showRawDeltas?: boolean
+}>
+export default function AccuracyBar({showRawDeltas}: Props) {
     const [_, addDeltaListener] = useDelta();
     
     const [praise, setPraise] = useState("");
@@ -9,11 +12,13 @@ export default function AccuracyBar() {
     
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {
-            const praise = getPraise(delta);
-            if (praise != "miss")
-                setDeltas(prev => [...prev, [Math.random(), delta as number]]);
-            
-            setPraise(praise);
+            if (delta == "miss") setPraise("miss");
+            else {
+                setPraise(showRawDeltas? "" + Math.round(delta) : getPraise(delta));
+                if (Math.abs(delta) < MISS_THRESHOLD) {
+                    setDeltas(prev => [...prev, [Math.random(), delta as number]]);
+                }
+            }
         });
         
         return unlisten;
@@ -38,12 +43,12 @@ export default function AccuracyBar() {
     );
 }
 
-type Props = Readonly<{
+type AccuracyTickProps = Readonly<{
     delta: number,
     color: string,
     onEnd?: () => void
 }>
-function AccuracyTick({ delta, color, onEnd }: Props) {
+function AccuracyTick({ delta, color, onEnd }: AccuracyTickProps) {
     const percentAlongHitWindow = (delta + MISS_THRESHOLD) / (MISS_THRESHOLD * 2) * 100;
     
     return (

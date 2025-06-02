@@ -35,7 +35,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
         }
-    }, []);
+    }, [onHit]);
     
     return (
         <div 

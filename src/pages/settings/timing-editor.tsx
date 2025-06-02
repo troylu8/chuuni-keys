@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePlayback } from "../../providers/playback";
 import { useSettings } from "../../providers/settings";
 import { appLocalDataDir } from "@tauri-apps/api/path";
@@ -56,8 +56,6 @@ type MetronomeProps = Readonly<{
 function Metronome({ msSinceLastBeat }: MetronomeProps) {
     const [broadcastDelta] = useDelta();
     
-    const test = useRef([0, 0]);
-    
     const msTilNextBeat = MS_PER_BEAT - msSinceLastBeat;
     const hitProgresses = [];
     
@@ -67,20 +65,17 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
         if (progress > 1) break;
         hitProgresses.push(progress);
     }
-    test.current = [msTilNextBeat, msSinceLastBeat];
     
     return (
         <div className="flex flex-col gap-20 items-center">
+            
             <KeyUnit 
-                keyCode="z" 
-                onHit={() => {
-                    console.log(test.current);
-                    broadcastDelta(Math.min(test.current[0], test.current[1]))
-                }} 
-                label="z" 
-                hitProgresses={hitProgresses} 
+                keyCode="z"
+                label="z"
+                onHit={() => broadcastDelta( msTilNextBeat < msSinceLastBeat ? -msTilNextBeat : msSinceLastBeat )}
+                hitProgresses={hitProgresses}
             />
-            <AccuracyBar />
+            <AccuracyBar showRawDeltas />
         </div>
     );
 }
