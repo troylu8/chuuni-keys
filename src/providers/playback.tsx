@@ -1,14 +1,21 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { useState, createContext, useContext, useRef, useEffect } from "react";
+import { useState, createContext, useContext, useRef, useEffect, useCallback } from "react";
+import { Howl } from 'howler';
+import { EventEmitter } from "events";
+
+type PosUpdateListener = (pos: number) => any
+type PosUpdateUnlisten = () => void
 
 type Playback = {
     playing: boolean,
-    loadAudio: (src: string, loop?: boolean) => void,
+    playNewAudio: (src: string, loop?: boolean) => void,
     setPlaying: (next: boolean) => Promise<void>,
     togglePlaying: () => Promise<void>,
     getPosition: () => number,
     duration: number,
-    seek: (ms: number) => void
+    seek: (ms: number) => void,
+    clearAudio: () => void,
+    addPosUpdateListener: (listener: PosUpdateListener) => PosUpdateUnlisten
 }
 const PlaybackContext = createContext<Playback | null>(null);
 
@@ -16,74 +23,84 @@ export function usePlayback() {
     return useContext(PlaybackContext)!;
 }
 
+
 type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function PlaybackProvider({ children }: Props) {
+    const [howl, setHowlInner] = useState<Howl | null>(null);
     const [playing, setPlayingInner] = useState(false);
     const [duration, setDuration] = useState(0);
     
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    function audio() {
-        if (!audioRef.current) audioRef.current = new Audio();
-        return audioRef.current;
-    }
+    const posEmitter = useRef(new EventEmitter()).current;
+    const intervalIdRef = useRef<number | null>(null);
     
-    useEffect(() => {
-        const onEnded = () => setPlayingInner(false);
-        audio().addEventListener("ended", onEnded);
-        
-        const onLoadedMetadata = () => setDuration(audio().duration * 1000);
-        audio().addEventListener("loadedmetadata", onLoadedMetadata);
-        
-        return () => { 
-            audio().removeEventListener("ended", onEnded); 
-            audio().removeEventListener("loadedmetadata", onLoadedMetadata); 
-        }
-    }, []);
-    
-    function loadAudio(src: string, loop?: boolean) {
-        audio().src = convertFileSrc(src);
-        audio().load();
-        audio().loop = loop ?? false;
-        setPlayingInner(false);
-    }
-    
-    async function setPlaying(playing: boolean) {
-        setPlayingInner(playing);
-        
-        if (playing) {
-            await audio().play();
-        }
-        else {
-            audio().pause();
-        }
-    }
-    function togglePlaying() {
-        return new Promise<void>(resolve => {
-            setPlayingInner(prev => {
-                if (prev) {
-                    audio().pause();
-                    resolve();
-                }
-                else 
-                    audio().play().then(resolve);
+    function setHowl(next: Howl | null, play?: boolean) {
+        setHowlInner(prev => {
+            prev?.off();
+            prev?.pause();
+            if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+            console.log("paused prev, howl is now", next);
+            
+            if (next) {
+                next.on("end", () => {
+                    if (!next.loop())
+                        setPlayingInner(false);
+                });
+                next.once("load", () => {
+                    console.log("set duration");
+                    setDuration(next.duration() * 1000)
+                });
                 
-                return !prev;
-            });
+                intervalIdRef.current = setInterval(() => {
+                    if (next.playing())
+                        posEmitter.emit("pos-update", next.seek() * 1000);
+                }, 0);
+                
+                if (play) next.play();
+            }
+            
+            setPlayingInner(play ?? false);
+            return next;
         });
     }
     
+    function playNewAudio(src: string, loop?: boolean) {
+        clearAudio();
+        setHowl(new Howl({src: convertFileSrc(src), loop}), true);
+    }
+    
+    async function setPlaying(playing: boolean) {
+        if (!howl) return;
+        
+        setPlayingInner(playing);
+        
+        if (playing)    howl.play()
+        else            howl.pause()
+    }
+    async function togglePlaying() {
+        setPlaying(!playing);
+    }
+    
     function getPosition() {
-        return audio().currentTime * 1000;
+        return howl? howl.seek() * 1000 : 0;
     }
     
     function seek(ms: number) {
-        audio().currentTime = ms / 1000;
+        howl?.seek(ms / 1000);
+    }
+    
+    function clearAudio() {
+        setHowl(null);
+    }
+    
+    function addPosUpdateListener(listener: PosUpdateListener) {
+        posEmitter.addListener("pos-update", listener);
+        return () => posEmitter.removeListener("pos-update", listener);
     }
     
     return (
-        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, togglePlaying, getPosition, seek, duration}}>
+        <PlaybackContext.Provider value={{playing, playNewAudio, setPlaying, togglePlaying, getPosition, seek, duration, clearAudio, addPosUpdateListener}}>
             { children }
         </PlaybackContext.Provider>
     );

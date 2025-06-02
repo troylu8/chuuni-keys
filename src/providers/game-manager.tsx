@@ -5,7 +5,7 @@ import { usePlayback } from "./playback";
 import { ChartParams, Page, usePage } from "./page";
 
 export const ACTIVATION_DURATION = 800;
-export const HITRING_DURATION = 300;
+export const HITRING_DURATION = 400;
 
 export enum GameStage { LOADING, STARTED, ENDED };
 const GameStageContext = createContext<[GameStage, (next: GameStage) => any] | null>(null);
@@ -64,7 +64,7 @@ export default function GameManager({ children }: Props) {
     useEffect(() => {
         const { audio, chart } = pageParams[1] as ChartParams;
         
-        aud.loadAudio(audio);
+        aud.playNewAudio(audio);
         readChartFile(chart).then(events => {
             resetEvents();
             
@@ -89,19 +89,13 @@ export default function GameManager({ children }: Props) {
     useEffect(() => {
         if (gameStage != GameStage.STARTED || !aud.playing) return;
         
+        if (i.current == 0) museEmitter.emit("start");
         
-        if (i.current == 0) {
-            museEmitter.emit("start");
-        }
-        
-        let intervalId = setInterval(update, 0);
-        function update() {
-            museEmitter.emit("pos-change", aud.getPosition());
-            
+        const unlisten = aud.addPosUpdateListener(pos => {
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];
-                if (aud.getPosition() >= nextEvent[0]) {
+                if (pos >= nextEvent[0]) {
                     museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
                     i.current++;
                 }
@@ -111,13 +105,13 @@ export default function GameManager({ children }: Props) {
             if (i.current == eventsRef.current.length) {
                 setTimeout(() => {
                     resetEvents();
-                    clearInterval(intervalId);
                     setGameStage(GameStage.ENDED);
                 }, 5000);
             }
-        }
+            
+        });
         
-        return () => clearInterval(intervalId);
+        return unlisten;
     }, [gameStage, aud.playing]);
     
     async function togglePauseGame() {

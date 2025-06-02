@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode, useRef } from "react"
+import { useEffect, useState, ReactNode } from "react"
 import { HITRING_DURATION, useGameControls, useMuseEvents } from "../../providers/game-manager";
 import { MISS_THRESHOLD, useDelta } from "../../providers/score";
 import { useSfx } from "../../providers/sfx";
@@ -13,7 +13,7 @@ type Props = Readonly<{
     labelCentered?: boolean
 }>
 export default function KeyUnitGame( { keyCode, museEvent, children, labelCentered }: Props ) {
-    const { getPosition } = usePlayback();
+    const { getPosition, addPosUpdateListener } = usePlayback();
     const [ playing ] = useGameControls();
     const addMuseListener = useMuseEvents();
     const [ pressed, setPressed ] = useState(false);
@@ -57,7 +57,7 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
         window.addEventListener("keydown", handleKeyDown);
         
         
-        const unlistenPos = addMuseListener("pos-change", pos => {
+        const unlistenPos = addPosUpdateListener(pos => {
             if (hitTimes.length != 0 && pos > hitTimes[0][0] + MISS_THRESHOLD) {
                 popHitTime();
                 broadcastDelta("miss");

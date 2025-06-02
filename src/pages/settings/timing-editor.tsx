@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { usePlayback } from "../../providers/playback";
 import { useSettings } from "../../providers/settings";
 import { appLocalDataDir } from "@tauri-apps/api/path";
+import { KeyUnit } from "../../components/key-unit";
+import { HITRING_DURATION } from "../../providers/game-manager";
+import MuseButton from "../../components/muse-button";
 
 const MS_PER_BEAT = 500;
 const MS_FIRST_BEAT = 450;
@@ -13,46 +16,47 @@ type Props = Readonly<{
 }>
 export default function TimingEditor({ onClose }: Props) {
     const [settings, setSettings] = useSettings();
-    const { getPosition, loadAudio, setPlaying } = usePlayback();
-    const [tilNextBeat, setTilNextBeat] = useState(0);
-    
+    const { playNewAudio, clearAudio, addPosUpdateListener } = usePlayback();
+    const [sinceLastBeat, setSinceLastBeat] = useState(0);
     
     useEffect(() => {
-        let intervalId: number;
-        
         appLocalDataDir().then(applocaldatadir => {
-            loadAudio(applocaldatadir + "\\userdata\\metronome.mp3", true);
-            setPlaying(true).then(() => {
-                intervalId = setInterval(() => {
-                    const pos = getPosition();
-                    if (pos < MS_FIRST_BEAT) 
-                        setTilNextBeat(MS_FIRST_BEAT - pos);
-                    else if (pos > MS_LAST_BEAT) 
-                        setTilNextBeat(MS_PER_LOOP - pos + MS_FIRST_BEAT)
-                    else 
-                        setTilNextBeat(MS_PER_BEAT - ((pos - MS_FIRST_BEAT) % MS_PER_BEAT))
-                }, 0);
-            })
+            playNewAudio(applocaldatadir + "\\userdata\\metronome.mp3", true);
         });
         
-        return () => { 
-            if (intervalId != null) clearInterval(intervalId)
-        }
+        const unlisten = addPosUpdateListener(pos => {
+            setSinceLastBeat((pos < MS_FIRST_BEAT)? pos + MS_PER_LOOP - MS_LAST_BEAT : pos % MS_PER_BEAT);
+        });
+        
+        return unlisten;
     }, []);
     
+    function handleClose() {
+        clearAudio();
+        onClose();
+    }
+    
     return (
-        <div className="grid-cols-2">
-            <Metronome tilNextBeat={tilNextBeat} />
+        <div className="absolute cover flex flex-col items-center justify-center bg-gray-500">
+            <div className="absolute left-1 top-1">
+                <MuseButton onClick={handleClose}> exit </MuseButton>
+            </div>
+            <Metronome msSinceLastBeat={sinceLastBeat} />
         </div>
     );
 }
 
 type MetronomeProps = Readonly<{
-    tilNextBeat: number
+    msSinceLastBeat: number
 }>
-function Metronome({ tilNextBeat }: MetronomeProps) {
+function Metronome({ msSinceLastBeat }: MetronomeProps) {
     return (
-        <div style={{width: (tilNextBeat / MS_PER_BEAT * 100) + "%"}} className="h-3 bg-foreground">
+        <div>
+            <KeyUnit label="spc" hitProgresses={[
+                (MS_PER_BEAT - msSinceLastBeat) / HITRING_DURATION,
+                (MS_PER_BEAT - msSinceLastBeat + MS_PER_BEAT) / HITRING_DURATION,
+                (MS_PER_BEAT - msSinceLastBeat + MS_PER_BEAT + MS_PER_BEAT) / HITRING_DURATION,
+            ]} />
         </div>
-    )
+    );
 }

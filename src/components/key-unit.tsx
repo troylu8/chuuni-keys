@@ -27,7 +27,7 @@ export function KeyUnit( { pressed, label, labelCentered, hitProgresses, activat
     )
 }
 
-const HITRING_MAX_GAP = 30;
+const HITRING_MAX_GAP = 45;
 
 type HitringProps = Readonly<{
     progress: number

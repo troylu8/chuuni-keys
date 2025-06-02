@@ -21,7 +21,7 @@ export default function Editor() {
     
     const aud = usePlayback();
     
-    useEffect(() => aud.loadAudio(audio), [audio]);
+    useEffect(() => aud.playNewAudio(audio), [audio]);
     const [position, setPositionInner] = useState(0);
     function setPosition(setter: (prev: number) => number) {
         setPositionInner(prev => {
