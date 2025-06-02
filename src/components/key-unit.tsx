@@ -1,16 +1,42 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { useSfx } from "../providers/sfx";
 
 
 const KEY_SIZE = 48;
 
 type Props = Readonly<{
+    onHit?: () => any
+    keyCode: string
     activated?: boolean
-    pressed?: boolean
     label?: ReactNode
     labelCentered?: boolean
     hitProgresses: number[]
 }>
-export function KeyUnit( { pressed, label, labelCentered, hitProgresses, activated = hitProgresses.length != 0 }: Props ) {
+export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, activated = hitProgresses.length != 0 }: Props ) {
+    const [ pressed, setPressed ] = useState(false);
+    const playSfx = useSfx();
+    
+    useEffect(() => {
+        
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key !== keyCode) return; 
+            setPressed(true);
+            playSfx("hitsound");
+            if (onHit) onHit();
+        }
+        window.addEventListener("keydown", handleKeyDown);
+        
+        function handleKeyUp(e: KeyboardEvent) {
+            if (e.key === keyCode) setPressed(false);
+        }
+        window.addEventListener("keyup", handleKeyUp);
+        
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        }
+    }, []);
+    
     return (
         <div 
             style={{width: KEY_SIZE, height: KEY_SIZE}}
@@ -24,7 +50,7 @@ export function KeyUnit( { pressed, label, labelCentered, hitProgresses, activat
             <span className="text-lg"> { label } </span>
             { hitProgresses.map((p, i) => <Hitring key={i} progress={p} />) }
         </div>
-    )
+    );
 }
 
 const HITRING_MAX_GAP = 45;

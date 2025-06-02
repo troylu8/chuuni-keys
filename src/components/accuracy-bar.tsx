@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useDelta, ACCURACY_THRESHOLDS, MISS_THRESHOLD } from "../../providers/score";
+import { useDelta, MISS_THRESHOLD, getPraise } from "../providers/score";
 
 export default function AccuracyBar() {
     const [_, addDeltaListener] = useDelta();
@@ -9,11 +9,11 @@ export default function AccuracyBar() {
     
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {
-            if (delta == "miss") setPraise("");
-            else {
-                setDeltas(prev => [...prev, [Math.random(), delta]]);
-                setPraise(delta < ACCURACY_THRESHOLDS[0]? "perfect" : "good");
-            }
+            const praise = getPraise(delta);
+            if (praise != "miss")
+                setDeltas(prev => [...prev, [Math.random(), delta as number]]);
+            
+            setPraise(praise);
         });
         
         return unlisten;
@@ -28,17 +28,14 @@ export default function AccuracyBar() {
     }
     
     return (
-        <div className="
-            absolute left-1/2 -translate-x-1/2 bottom-3
-            w-25 h-[2px] rounded-full bg-foreground
-        ">
+        <div className="relative w-25 h-[2px] rounded-full bg-foreground">
             <div className="absolute left-1/2 -translate-x-1/2 bottom-5 text-xl"> {praise} </div>
             <AccuracyTick delta={0} color="var(--foreground)" />
             {
                 deltas.map(([id, delta]) => <AccuracyTick key={id} delta={delta} color="var(--foreground)" onEnd={popDelta} />)
             }
         </div>
-    )
+    );
 }
 
 type Props = Readonly<{

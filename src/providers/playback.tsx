@@ -40,7 +40,6 @@ export default function PlaybackProvider({ children }: Props) {
             prev?.off();
             prev?.pause();
             if (intervalIdRef.current) clearInterval(intervalIdRef.current);
-            console.log("paused prev, howl is now", next);
             
             if (next) {
                 next.on("end", () => {
@@ -48,7 +47,6 @@ export default function PlaybackProvider({ children }: Props) {
                         setPlayingInner(false);
                 });
                 next.once("load", () => {
-                    console.log("set duration");
                     setDuration(next.duration() * 1000)
                 });
                 

@@ -1,6 +1,6 @@
 import GameManager, { GameStage, useGameStage as useGameStage } from "../../providers/game-manager";
 import DeltaProvider from "../../providers/score";
-import AccuracyBar from "./accuracy-bar";
+import AccuracyBar from "../../components/accuracy-bar";
 import KeyboardLayout from "../../components/keyboard-layout";
 import PauseMenu from "./pause-menu";
 import Background from "../../components/background";
@@ -28,7 +28,9 @@ function GameInner() {
                 { gameStage == GameStage.STARTED &&
                     <>
                         <PauseMenu />
-                        <AccuracyBar />
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
+                            <AccuracyBar />
+                        </div>
                         <Combo />
                         
                         <KeyboardLayout keyComponent={key => 

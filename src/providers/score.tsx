@@ -1,7 +1,4 @@
-import { useState, createContext, useContext, useRef, useCallback, useEffect } from "react";
-import { writeTextFile, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { useMuseEvents } from "./game-manager";
-import { usePage } from "./page";
+import { useState, createContext, useContext, useRef } from "react";
 
 /** e.g. hit the note within `+25` or `-25` ms for a `perfect`   */
 export const ACCURACY_THRESHOLDS = [25, 100];
@@ -17,8 +14,14 @@ export type Stats = {
 }
 const StatsContext = createContext<Stats | null>(null);
 
+type Delta = number | "miss";
 
-export type Delta = number | "miss";
+export function getPraise(delta: Delta) {
+    if (delta == "miss" || delta > MISS_THRESHOLD) return "miss";
+    if (delta > ACCURACY_THRESHOLDS[1]) return "good";
+    return "perfect";
+}
+
 type BroadcastDelta = (delta: Delta) => void;
 type DeltaListener = (delta: Delta) => any;
 type RemoveDeltaListener = () => void;
@@ -50,7 +53,9 @@ export default function DeltaProvider({ children }: Props) {
     const listeners = useRef<Set<DeltaListener>>(new Set()).current;
     
     function broadcastDelta(delta: Delta) {
-        if (delta == "miss") {
+        console.log(delta);
+        
+        if (delta == "miss" || delta > MISS_THRESHOLD) {
             setStats(prev => ({...prev, miss: prev.miss + 1, combo: 0}));
         }
         else {
@@ -72,9 +77,8 @@ export default function DeltaProvider({ children }: Props) {
             }
         }
         
-        for (const listener of listeners) {
+        for (const listener of listeners) 
             listener(delta);
-        }
     }
     
     function addDeltaListener(listener: DeltaListener) {
@@ -82,9 +86,6 @@ export default function DeltaProvider({ children }: Props) {
         
         return () => listeners.delete(listener);
     }
-    
-    
-    
     
     return (
         <StatsContext.Provider value={stats}>

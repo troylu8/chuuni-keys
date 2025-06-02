@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePlayback } from "../../providers/playback";
 import { useSettings } from "../../providers/settings";
 import { appLocalDataDir } from "@tauri-apps/api/path";
 import { KeyUnit } from "../../components/key-unit";
 import { HITRING_DURATION } from "../../providers/game-manager";
 import MuseButton from "../../components/muse-button";
+import AccuracyBar from "../../components/accuracy-bar";
+import DeltaProvider, { useDelta } from "../../providers/score";
 
 const MS_PER_BEAT = 500;
 const MS_FIRST_BEAT = 450;
@@ -16,7 +18,7 @@ type Props = Readonly<{
 }>
 export default function TimingEditor({ onClose }: Props) {
     const [settings, setSettings] = useSettings();
-    const { playNewAudio, clearAudio, addPosUpdateListener } = usePlayback();
+    const { playNewAudio, getPosition, clearAudio, addPosUpdateListener } = usePlayback();
     const [sinceLastBeat, setSinceLastBeat] = useState(0);
     
     useEffect(() => {
@@ -41,7 +43,9 @@ export default function TimingEditor({ onClose }: Props) {
             <div className="absolute left-1 top-1">
                 <MuseButton onClick={handleClose}> exit </MuseButton>
             </div>
-            <Metronome msSinceLastBeat={sinceLastBeat} />
+            <DeltaProvider>
+                <Metronome msSinceLastBeat={sinceLastBeat} />
+            </DeltaProvider>
         </div>
     );
 }
@@ -50,13 +54,33 @@ type MetronomeProps = Readonly<{
     msSinceLastBeat: number
 }>
 function Metronome({ msSinceLastBeat }: MetronomeProps) {
+    const [broadcastDelta] = useDelta();
+    
+    const test = useRef([0, 0]);
+    
+    const msTilNextBeat = MS_PER_BEAT - msSinceLastBeat;
+    const hitProgresses = [];
+    
+    // add hitProgresses until they are > 1
+    for (let i = 0; true; i++) {
+        const progress = (msTilNextBeat + MS_PER_BEAT * i) / HITRING_DURATION;
+        if (progress > 1) break;
+        hitProgresses.push(progress);
+    }
+    test.current = [msTilNextBeat, msSinceLastBeat];
+    
     return (
-        <div>
-            <KeyUnit label="spc" hitProgresses={[
-                (MS_PER_BEAT - msSinceLastBeat) / HITRING_DURATION,
-                (MS_PER_BEAT - msSinceLastBeat + MS_PER_BEAT) / HITRING_DURATION,
-                (MS_PER_BEAT - msSinceLastBeat + MS_PER_BEAT + MS_PER_BEAT) / HITRING_DURATION,
-            ]} />
+        <div className="flex flex-col gap-20 items-center">
+            <KeyUnit 
+                keyCode="z" 
+                onHit={() => {
+                    console.log(test.current);
+                    broadcastDelta(Math.min(test.current[0], test.current[1]))
+                }} 
+                label="z" 
+                hitProgresses={hitProgresses} 
+            />
+            <AccuracyBar />
         </div>
     );
 }
