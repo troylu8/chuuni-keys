@@ -55,7 +55,6 @@ export default function DeltaProvider({ children }: Props) {
     const listeners = useRef<Set<DeltaListener>>(new Set()).current;
     
     function broadcastDelta(delta: Delta) {
-        console.log(delta);
         
         if (delta == "miss" || delta > MISS_THRESHOLD) {
             setStats(prev => ({...prev, miss: prev.miss + 1, combo: 0}));

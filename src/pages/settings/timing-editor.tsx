@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePlayback } from "../../providers/playback";
 import { useSettings } from "../../providers/settings";
 import { appLocalDataDir } from "@tauri-apps/api/path";
@@ -18,7 +18,7 @@ type Props = Readonly<{
 }>
 export default function TimingEditor({ onClose }: Props) {
     const [settings, setSettings] = useSettings();
-    const { playNewAudio, getPosition, clearAudio, addPosUpdateListener } = usePlayback();
+    const { playNewAudio, clearAudio, addPosUpdateListener } = usePlayback();
     const [sinceLastBeat, setSinceLastBeat] = useState(0);
     
     useEffect(() => {
@@ -26,7 +26,7 @@ export default function TimingEditor({ onClose }: Props) {
             playNewAudio(applocaldatadir + "\\userdata\\metronome.mp3", true);
         });
         
-        const unlisten = addPosUpdateListener(pos => {
+        const unlisten = addPosUpdateListener((_, pos) => {
             setSinceLastBeat((pos < MS_FIRST_BEAT)? pos + MS_PER_LOOP - MS_LAST_BEAT : pos % MS_PER_BEAT);
         });
         
@@ -39,10 +39,15 @@ export default function TimingEditor({ onClose }: Props) {
     }
     
     return (
-        <div className="absolute cover flex flex-col items-center justify-center bg-gray-500">
+        <div className="absolute cover flex flex-col items-center justify-center bg-gray-500 gap-10">
             <div className="absolute left-1 top-1">
                 <MuseButton onClick={handleClose}> exit </MuseButton>
             </div>
+            <input 
+                type="number" 
+                value={settings.offset}
+                onChange={e => setSettings("offset", Number(e.target.value))} 
+            />
             <DeltaProvider>
                 <Metronome msSinceLastBeat={sinceLastBeat} />
             </DeltaProvider>

@@ -1,9 +1,10 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { useState, createContext, useContext, useRef, useEffect, useCallback } from "react";
+import { useState, createContext, useContext, useRef } from "react";
 import { Howl } from 'howler';
 import { EventEmitter } from "events";
+import { useSettings } from "./settings";
 
-type PosUpdateListener = (pos: number) => any
+type PosUpdateListener = (pos: number, offset_pos: number) => any
 type PosUpdateUnlisten = () => void
 
 type Playback = {
@@ -11,7 +12,8 @@ type Playback = {
     playNewAudio: (src: string, loop?: boolean) => void,
     setPlaying: (next: boolean) => Promise<void>,
     togglePlaying: () => Promise<void>,
-    getPosition: () => number,
+    getTruePosition: () => number,
+    getOffsetPosition: () => number,
     duration: number,
     seek: (ms: number) => void,
     clearAudio: () => void,
@@ -28,6 +30,8 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function PlaybackProvider({ children }: Props) {
+    const [{ offset }] = useSettings();
+    
     const [howl, setHowlInner] = useState<Howl | null>(null);
     const [playing, setPlayingInner] = useState(false);
     const [duration, setDuration] = useState(0);
@@ -51,8 +55,10 @@ export default function PlaybackProvider({ children }: Props) {
                 });
                 
                 intervalIdRef.current = setInterval(() => {
-                    if (next.playing())
-                        posEmitter.emit("pos-update", next.seek() * 1000);
+                    if (next.playing()) {
+                        const pos = next.seek() * 1000;
+                        posEmitter.emit("pos-update", pos, pos + offset);
+                    }
                 }, 0);
                 
                 if (play) next.play();
@@ -80,8 +86,12 @@ export default function PlaybackProvider({ children }: Props) {
         setPlaying(!playing);
     }
     
-    function getPosition() {
+    function getTruePosition() {
         return howl? howl.seek() * 1000 : 0;
+    }
+    
+    function getOffsetPosition() {
+        return getTruePosition() + offset;
     }
     
     function seek(ms: number) {
@@ -98,7 +108,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     return (
-        <PlaybackContext.Provider value={{playing, playNewAudio, setPlaying, togglePlaying, getPosition, seek, duration, clearAudio, addPosUpdateListener}}>
+        <PlaybackContext.Provider value={{playing, playNewAudio, setPlaying, togglePlaying, getTruePosition, getOffsetPosition, seek, duration, clearAudio, addPosUpdateListener}}>
             { children }
         </PlaybackContext.Provider>
     );

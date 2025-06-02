@@ -26,13 +26,13 @@ export default function Editor() {
     function setPosition(setter: (prev: number) => number) {
         setPositionInner(prev => {
             aud.seek(setter(prev));
-            return aud.getPosition();
+            return aud.getTruePosition();
         });
     }
     useEffect(() => {
         if (!aud.playing) return;
         
-        const update = () => setPositionInner(aud.getPosition());
+        const update = () => setPositionInner(aud.getTruePosition());
         const intervalId = setInterval(update, 0);
         return () => { clearInterval(intervalId); }
     }, [aud.playing]);
@@ -114,7 +114,7 @@ export default function Editor() {
             else if (e.key === ".")
                 setPosition(prev => prev + 1);
             else if ("qwertyuiopasdfghjklzxcvbnm,".includes(e.key)) {
-                const pos = aud.getPosition();
+                const pos = aud.getTruePosition();
                 setEvents(prev => {
                     if (!prev) return null;
                     

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDelta, MISS_THRESHOLD, getPraise } from "../providers/score";
 
 type Props = Readonly<{
@@ -10,6 +10,18 @@ export default function AccuracyBar({showRawDeltas}: Props) {
     const [praise, setPraise] = useState("");
     const [deltas, setDeltas] = useState<[number, number][]>([]);
     
+    const praiseLabelRef = useRef<HTMLParagraphElement | null>(null);
+    
+    function resetPraiseFadeOutAnim() {
+        const praiseLabel = praiseLabelRef.current;
+        if (!praiseLabel) return;
+        
+        // https://stackoverflow.com/questions/6268508/restart-animation-in-css3-any-better-way-than-removing-the-element
+        praiseLabel.style.animation = "none";
+        praiseLabel.offsetHeight;
+        praiseLabel.style.animation = "";
+    }
+    
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {
             if (delta == "miss") setPraise("miss");
@@ -19,6 +31,7 @@ export default function AccuracyBar({showRawDeltas}: Props) {
                     setDeltas(prev => [...prev, [Math.random(), delta as number]]);
                 }
             }
+            resetPraiseFadeOutAnim();
         });
         
         return unlisten;
@@ -34,7 +47,7 @@ export default function AccuracyBar({showRawDeltas}: Props) {
     
     return (
         <div className="relative w-25 h-[2px] rounded-full bg-foreground">
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-5 text-xl"> {praise} </div>
+            <p ref={praiseLabelRef} className="absolute left-1/2 -translate-x-1/2 bottom-5 text-xl anim-fade-out"> {praise} </p>
             <AccuracyTick delta={0} color="var(--foreground)" />
             {
                 deltas.map(([id, delta]) => <AccuracyTick key={id} delta={delta} color="var(--foreground)" onEnd={popDelta} />)

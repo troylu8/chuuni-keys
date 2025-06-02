@@ -1,21 +1,37 @@
 import filenamify from 'filenamify';
 import { ChartParams, Page, usePage } from "../../providers/page";
-import { ChartMetadata, useUserData } from "../../providers/user-data";
+import { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 
-
+export type ChartMetadata = {
+    id: string,
+    title: string,
+    artists: string,
+    chart_author: string,
+    bpm?: number,
+    measure_size?: number,
+    snaps_per_beat: number,
+    audio: string,
+    chart: string,
+    img?: string
+}
 
 export default function SongSelect() {
     
-    const userdata = useUserData();
+    const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
     const [[_, editing], setPageParams] = usePage();
     
-    if (userdata == null) return <p> loading... </p>;
+    useEffect(() => {
+        invoke<ChartMetadata[]>("get_all_charts").then(setCharts);
+    }, []);
     
-    const {base_dir, charts} = userdata;
+    
+    if (charts == null) return <p> loading... </p>;
+    
     
     function toChartParams(metadata: ChartMetadata): ChartParams {
         const params = {...metadata} as ChartParams;
-        const songFolder = `${base_dir}\\charts\\${params.id} ${filenamify(params.title, {replacement: '_'})}\\`;
+        const songFolder = `charts\\${params.id} ${filenamify(params.title, {replacement: '_'})}\\`;
         params.chart = songFolder + params.chart;
         params.audio = songFolder + params.audio;
         params.img = params.img && songFolder + params.img;

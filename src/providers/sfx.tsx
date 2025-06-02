@@ -1,6 +1,6 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { createContext, useContext, useEffect, useRef } from "react";
-import { useUserData } from "./user-data";
+import { appLocalDataDir } from "@tauri-apps/api/path";
 
 
 type PlaySfx = (sfx: string) => void;
@@ -14,20 +14,20 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function SfxProvider({ children }: Props) {
-    const userdata =  useUserData();
     
     const audioMapRef = useRef<Record<string, Howl> | null>(null);
     
     useEffect(() => {
-        if (!userdata) return;
-        audioMapRef.current = {
-            "hitsound": new Howl({src: convertFileSrc(`${userdata.base_dir}\\sfx\\hitsound.ogg`), preload: true})
-        }
-    }, [userdata])
+        appLocalDataDir().then(applocaldata => {
+            audioMapRef.current = {
+                "hitsound": new Howl({src: convertFileSrc(`${applocaldata}\\userdata\\sfx\\hitsound.ogg`), preload: true})
+            }
+        });
+    }, [])
     
     
     function playSfx(sfx: string) {
-        if (!userdata || !audioMapRef.current) return;
+        if (!audioMapRef.current) return;
         audioMapRef.current[sfx]?.play();
     }
     

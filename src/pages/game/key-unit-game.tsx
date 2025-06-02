@@ -12,7 +12,7 @@ type Props = Readonly<{
     labelCentered?: boolean
 }>
 export default function KeyUnitGame( { keyCode, museEvent, children, labelCentered }: Props ) {
-    const { getPosition, addPosUpdateListener } = usePlayback();
+    const { getOffsetPosition, addPosUpdateListener } = usePlayback();
     const [ playing ] = useGameControls();
     const addMuseListener = useMuseEvents();
     
@@ -30,7 +30,7 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     
     function onHit() {
         if (hitTimes.length == 0) return console.log("none!");
-        broadcastDelta(getPosition() - hitTimes[0][0]);
+        broadcastDelta(getOffsetPosition() - hitTimes[0][0]);
         popHitTime();
     }
     useEffect(() => {

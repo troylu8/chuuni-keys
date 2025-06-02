@@ -1,4 +1,4 @@
-import { readTextFile } from '@tauri-apps/plugin-fs';
+import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
@@ -37,7 +37,7 @@ function toMuseEvent(str: string): MuseEvent {
     return [Number(arr[0]), arr[1]];
 }
 export async function readChartFile(path: string) {
-    const contents = await readTextFile(path);
+    const contents = await readTextFile(path, {baseDir: BaseDirectory.AppLocalData});
     return contents === '' ? [] : contents.trim().split("\n").map(toMuseEvent);
 }
 
@@ -91,7 +91,7 @@ export default function GameManager({ children }: Props) {
         
         if (i.current == 0) museEmitter.emit("start");
         
-        const unlisten = aud.addPosUpdateListener(pos => {
+        const unlisten = aud.addPosUpdateListener((_, pos) => {
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];

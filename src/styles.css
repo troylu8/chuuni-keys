@@ -57,3 +57,18 @@ button {
     bottom: 0;
     translate: -50% 0;
 }
+
+.anim-fade-out {
+    animation: fade-out 1.2s ease-out forwards;
+}
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+    30% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}

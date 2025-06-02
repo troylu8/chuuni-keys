@@ -8,24 +8,21 @@ import SongSelect from "./pages/song-select/song-select";
 import PageProvider, { usePage, Page } from "./providers/page";
 import PlaybackProvider from "./providers/playback";
 import SfxProvider from "./providers/sfx";
-import UserDataProvider from "./providers/user-data";
 import "./styles.css"
 import Settings from "./pages/settings/settings";
 import SettingsProvider from "./providers/settings";
 
 function App() {
     return (
-        <UserDataProvider>
+        <SettingsProvider>
             <PageProvider>
                 <PlaybackProvider>
                     <SfxProvider>
-                        <SettingsProvider>
-                            <Main />
-                        </SettingsProvider>
+                        <Main />
                     </SfxProvider>
                 </PlaybackProvider>
             </PageProvider>
-        </UserDataProvider>
+        </SettingsProvider>
     );
 }
 
