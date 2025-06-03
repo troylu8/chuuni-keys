@@ -2,6 +2,7 @@ import filenamify from 'filenamify';
 import { ChartParams, Page, usePage } from "../../providers/page";
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { appLocalDataDir } from '@tauri-apps/api/path';
 
 export type ChartMetadata = {
     id: string,
@@ -29,9 +30,11 @@ export default function SongSelect() {
     if (charts == null) return <p> loading... </p>;
     
     
-    function toChartParams(metadata: ChartMetadata): ChartParams {
+    async function toChartParams(metadata: ChartMetadata): ChartParams {
+        const applocaldata = await appLocalDataDir();
+        
         const params = {...metadata} as ChartParams;
-        const songFolder = `charts\\${params.id} ${filenamify(params.title, {replacement: '_'})}\\`;
+        const songFolder = `${applocaldata}\\userdata\\charts\\${params.id} ${filenamify(params.title, {replacement: '_'})}\\`;
         params.chart = songFolder + params.chart;
         params.audio = songFolder + params.audio;
         params.img = params.img && songFolder + params.img;
@@ -56,10 +59,10 @@ export default function SongSelect() {
                     <ChartEntry 
                         key={metadata.id}
                         metadata={metadata}
-                        onClick={() => {
+                        onClick={async () => {
                             setPageParams([
                                 editing === true? Page.EDITOR : Page.GAME, 
-                                toChartParams(metadata)
+                                await toChartParams(metadata)
                             ])
                         }} 
                     />

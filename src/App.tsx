@@ -1,5 +1,3 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
 import EditMenu from "./pages/edit-menu/edit-menu";
 import Editor from "./pages/editor/editor";
 import Game from "./pages/game/game";
@@ -12,13 +10,13 @@ import "./styles.css"
 import Settings from "./pages/settings/settings";
 import SettingsProvider from "./providers/settings";
 
-function App() {
+export default function App() {
     return (
         <SettingsProvider>
             <PageProvider>
                 <PlaybackProvider>
                     <SfxProvider>
-                        <Main />
+                        <ActivePage />
                     </SfxProvider>
                 </PlaybackProvider>
             </PageProvider>
@@ -26,7 +24,7 @@ function App() {
     );
 }
 
-function Main() {
+function ActivePage() {
     const [[page]] = usePage();
     return (
         <>
@@ -40,8 +38,4 @@ function Main() {
     )
 }
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>,
-);
+

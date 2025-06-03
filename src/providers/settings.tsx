@@ -29,11 +29,9 @@ export default function SettingsProvider({ children }: Props) {
         readTextFile("userdata\\settings.json", {baseDir: BaseDirectory.AppLocalData})
         .then(contents => {
             const settings = JSON.parse(contents) satisfies Settings;
-            console.log("read", settings);
             setSettingsInner(settings);
         })
-        .catch(e => {console.log(e);}); // do nothing on error, leaving the default settings
-        
+        .catch(console.error); // do nothing on error, leaving the default settings
     }, []);
     
     function setSettings(setting: keyof Settings, value: Settings[keyof Settings]) {

@@ -13,6 +13,10 @@
 body {
     background-color: var(--background);
     overflow: hidden;
+    user-select: none;
+}
+input {
+    user-select: auto;
 }
 
 button {

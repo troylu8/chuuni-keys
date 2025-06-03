@@ -114,8 +114,8 @@ export default function GameManager({ children }: Props) {
         return unlisten;
     }, [gameStage, aud.playing]);
     
-    async function togglePauseGame() {
-        await aud.togglePlaying();
+    function togglePauseGame() {
+        aud.togglePlaying();
     }
     function restartGame() {
         i.current = 0;

@@ -10,8 +10,8 @@ type PosUpdateUnlisten = () => void
 type Playback = {
     playing: boolean,
     playNewAudio: (src: string, loop?: boolean) => void,
-    setPlaying: (next: boolean) => Promise<void>,
-    togglePlaying: () => Promise<void>,
+    setPlaying: (next: boolean) => void,
+    togglePlaying: () => void,
     getTruePosition: () => number,
     getOffsetPosition: () => number,
     duration: number,
@@ -41,6 +41,7 @@ export default function PlaybackProvider({ children }: Props) {
     
     function setHowl(next: Howl | null, play?: boolean) {
         setHowlInner(prev => {
+            console.log("starting sethowlinner");
             prev?.off();
             prev?.pause();
             if (intervalIdRef.current) clearInterval(intervalIdRef.current);
@@ -71,19 +72,33 @@ export default function PlaybackProvider({ children }: Props) {
     
     function playNewAudio(src: string, loop?: boolean) {
         clearAudio();
+        console.log("setting new howl");
         setHowl(new Howl({src: convertFileSrc(src), loop}), true);
     }
     
-    async function setPlaying(playing: boolean) {
-        if (!howl) return;
+    function setPlaying(next: boolean) {
+        if (!howl || playing == next) return;
         
-        setPlayingInner(playing);
+        console.log("setting to ", next);
+        setPlayingInner(next);
         
-        if (playing)    howl.play()
-        else            howl.pause()
+        if (next)   howl.play();
+        else        howl.pause();
     }
-    async function togglePlaying() {
-        setPlaying(!playing);
+    function togglePlaying() {
+        const next = !playing;
+        setPlayingInner(prev => {
+            if (!howl) return prev;
+            if (howl.playing() == next) return next;
+            
+            if (next) {
+                howl.play();
+                return true;
+            }
+            
+            howl.pause();
+            return false;
+        });
     }
     
     function getTruePosition() {
@@ -99,6 +114,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     function clearAudio() {
+        console.log("clearing audio");
         setHowl(null);
     }
     

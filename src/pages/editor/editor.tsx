@@ -17,7 +17,7 @@ export default function Editor() {
     const [[_, params], setPageParams] = usePage();
     const { audio, chart, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as ChartParams;
     
-    const [tab, setTab] = useState(Tab.TIMING);
+    const [tab, setTab] = useState(Tab.NOTES);
     
     const aud = usePlayback();
     
@@ -30,19 +30,18 @@ export default function Editor() {
         });
     }
     useEffect(() => {
-        if (!aud.playing) return;
-        
-        const update = () => setPositionInner(aud.getTruePosition());
-        const intervalId = setInterval(update, 0);
-        return () => { clearInterval(intervalId); }
-    }, [aud.playing]);
+        const unlisten = aud.addPosUpdateListener((_, pos) => {
+            setPositionInner(pos);
+        });
+        return unlisten;
+    }, []);
     
     const [bpm, setBPM] = useState<number | null>(savedBPM ?? null);
     const [measureSize, setMeasureSize] = useState<number | null>(savedMeasureSize ?? null);
     const [snaps, setSnaps] = useState<number>(savedSnaps);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent> | null>(null);
-    const offset = events && (events.begin.value?.[0] ?? null);
+    const first_event_ms = events && (events.begin.value?.[0] ?? null);
     useEffect(() => {
         readChartFile(chart).then(events => {
             console.log("events", events);
@@ -54,7 +53,6 @@ export default function Editor() {
             
             setEvents(tree);
         });
-        
     }, [chart]);
     
     
@@ -66,47 +64,45 @@ export default function Editor() {
                 
                 const MS_PER_BEAT = 60 / bpm * 1000;
                 if (e.deltaY < 0) {
-                    return snapLeft(ms, offset ?? 0, MS_PER_BEAT / (snaps + 1));
+                    return snapLeft(ms, first_event_ms ?? 0, MS_PER_BEAT / (snaps + 1));
                 }
                 else {
-                    return snapRight(ms, offset ?? 0, MS_PER_BEAT / (snaps + 1));
+                    return snapRight(ms, first_event_ms ?? 0, MS_PER_BEAT / (snaps + 1));
                 }
             });
         }
-        window.addEventListener("wheel", onScroll);
-        
-        function snapLeft(ms: number, offset: number, size: number) {
-            const beat = (ms - offset) / size;
+        function snapLeft(ms: number, startingFrom: number, size: number) {
+            const beat = (ms - startingFrom) / size;
             if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
-                return Math.round(beat - 1) * size + offset;
+                return Math.round(beat - 1) * size + startingFrom;
             
-            return Math.floor(beat) * size + offset;
+            return Math.floor(beat) * size + startingFrom;
         }
-        function snapRight(ms: number, offset: number, size: number) {
-            const beat = (ms - offset) / size;
+        function snapRight(ms: number, startingFrom: number, size: number) {
+            const beat = (ms - startingFrom) / size;
             if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
-                return Math.round(beat + 1) * size + offset;
+                return Math.round(beat + 1) * size + startingFrom;
             
-            return Math.ceil(beat) * size + offset;
+            return Math.ceil(beat) * size + startingFrom;
         }
         
         function onKeyDown(e: KeyboardEvent) {
-            if (e.key === " ")              
-                aud.togglePlaying()
+            if (e.key === " ")  
+                aud.togglePlaying();
             else if (e.key === "ArrowLeft") {
                 setPosition(ms => {
-                    if (offset == null || bpm == null) return ms;
-                    if (ms <= offset) return 0;
+                    if (first_event_ms == null || bpm == null) return ms;
+                    if (ms <= first_event_ms) return 0;
                     const MS_PER_BEAT = 60 / bpm * 1000;
-                    return snapLeft(ms, offset, MS_PER_BEAT);
+                    return snapLeft(ms, first_event_ms, MS_PER_BEAT);
                 });
             }
             else if (e.key === "ArrowRight") {
                 setPosition(ms => {
-                    if (offset == null || bpm == null) return ms;
-                    if (ms < offset) return offset;
+                    if (first_event_ms == null || bpm == null) return ms;
+                    if (ms < first_event_ms) return first_event_ms;
                     const MS_PER_BEAT = 60 / bpm * 1000;
-                    return snapRight(ms, offset, MS_PER_BEAT);
+                    return snapRight(ms, first_event_ms, MS_PER_BEAT);
                 });
             }
             else if (e.key === ",")
@@ -134,13 +130,14 @@ export default function Editor() {
                 });
             }
         }
+        window.addEventListener("wheel", onScroll);
         window.addEventListener("keydown", onKeyDown);
         
         return () => { 
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [bpm, offset, snaps]);
+    }, [aud, bpm, first_event_ms, snaps]);
     
     
     const [saved, setSaved] = useState(true);
@@ -187,10 +184,9 @@ export default function Editor() {
                     
                     <Inspector 
                         bpm={bpm} 
-                        offset={offset} 
                         measureSize={measureSize}
                         snaps={snaps}
-                        position={position} 
+                        offsetPosition={position} 
                         duration={aud.duration} 
                         events={events}
                     />
