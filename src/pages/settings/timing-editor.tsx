@@ -26,8 +26,8 @@ export default function TimingEditor({ onClose }: Props) {
             playNewAudio(applocaldatadir + "\\userdata\\metronome.mp3", true);
         });
         
-        const unlisten = addPosUpdateListener((_, pos) => {
-            setSinceLastBeat((pos < MS_FIRST_BEAT)? pos + MS_PER_LOOP - MS_LAST_BEAT : pos % MS_PER_BEAT);
+        const unlisten = addPosUpdateListener(offset_pos => {
+            setSinceLastBeat((offset_pos < MS_FIRST_BEAT)? offset_pos + MS_PER_LOOP - MS_LAST_BEAT : offset_pos % MS_PER_BEAT);
         });
         
         return unlisten;

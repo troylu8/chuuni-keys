@@ -30,8 +30,8 @@ export default function Editor() {
         });
     }
     useEffect(() => {
-        const unlisten = aud.addPosUpdateListener((_, pos) => {
-            setPositionInner(pos);
+        const unlisten = aud.addPosUpdateListener(offset_pos => {
+            setPositionInner(offset_pos);
         });
         return unlisten;
     }, []);

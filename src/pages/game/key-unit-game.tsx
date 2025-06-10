@@ -35,14 +35,14 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     }
     useEffect(() => {
         if (!playing) return;
-        const unlistenPos = addPosUpdateListener(pos => {
-            if (hitTimes.length != 0 && pos > hitTimes[0][0] + MISS_THRESHOLD) {
+        const unlistenPos = addPosUpdateListener(offset_pos => {
+            if (hitTimes.length != 0 && offset_pos > hitTimes[0][0] + MISS_THRESHOLD) {
                 popHitTime();
                 broadcastDelta("miss");
             }
             
             // recalculate progresses
-            setHitTimes(prev => prev.map(([hitTime]) => [hitTime, (hitTime - pos) / HITRING_DURATION]));
+            setHitTimes(prev => prev.map(([hitTime]) => [hitTime, (hitTime - offset_pos) / HITRING_DURATION]));
         });
         return unlistenPos;
     }, [hitTimes, playing]);

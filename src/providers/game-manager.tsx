@@ -91,11 +91,11 @@ export default function GameManager({ children }: Props) {
         
         if (i.current == 0) museEmitter.emit("start");
         
-        const unlisten = aud.addPosUpdateListener((_, pos) => {
+        const unlisten = aud.addPosUpdateListener(offset_pos => {
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];
-                if (pos >= nextEvent[0]) {
+                if (offset_pos >= nextEvent[0]) {
                     museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
                     i.current++;
                 }

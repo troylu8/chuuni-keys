@@ -4,7 +4,7 @@ import { Howl } from 'howler';
 import { EventEmitter } from "events";
 import { useSettings } from "./settings";
 
-type PosUpdateListener = (pos: number, offset_pos: number) => any
+type PosUpdateListener = (offset_pos: number, true_pos: number) => any
 type PosUpdateUnlisten = () => void
 
 type Playback = {
@@ -37,20 +37,20 @@ export default function PlaybackProvider({ children }: Props) {
     const [duration, setDuration] = useState(0);
     
     const posEmitter = useRef(new EventEmitter()).current;
-    const intervalIdRef = useRef<number | null>(null);
+    const intervalIdRef = useRef<number | undefined>(undefined);
+    const soundIdRef = useRef<number | undefined>(undefined);
     
     function setHowl(next: Howl | null, play?: boolean) {
+        setPlayingInner(play ?? false);
         setHowlInner(prev => {
-            console.log("starting sethowlinner");
             prev?.off();
-            prev?.pause();
-            if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+            prev?.stop();
+            clearInterval(intervalIdRef.current);
             
             if (next) {
-                next.on("end", () => {
-                    if (!next.loop())
-                        setPlayingInner(false);
-                });
+                if (!next.loop())
+                    next.on("end", () => setPlayingInner(false));
+                
                 next.once("load", () => {
                     setDuration(next.duration() * 1000)
                 });
@@ -58,21 +58,19 @@ export default function PlaybackProvider({ children }: Props) {
                 intervalIdRef.current = setInterval(() => {
                     if (next.playing()) {
                         const pos = next.seek() * 1000;
-                        posEmitter.emit("pos-update", pos, pos + offset);
+                        posEmitter.emit("pos-update", pos + offset, pos);
                     }
                 }, 0);
                 
-                if (play) next.play();
+                if (play) soundIdRef.current = next.play();
             }
-            
-            setPlayingInner(play ?? false);
             return next;
         });
     }
     
     function playNewAudio(src: string, loop?: boolean) {
         clearAudio();
-        console.log("setting new howl");
+        console.log("setting new howl to", src);
         setHowl(new Howl({src: convertFileSrc(src), loop}), true);
     }
     
@@ -87,9 +85,13 @@ export default function PlaybackProvider({ children }: Props) {
     }
     function togglePlaying() {
         const next = !playing;
+        console.log("toggling to ", next);
         setPlayingInner(prev => {
             if (!howl) return prev;
-            if (howl.playing() == next) return next;
+            if (howl.playing() == next) {
+                console.log("it was already", next);
+                return next;
+            };
             
             if (next) {
                 howl.play();
