@@ -1,10 +1,13 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { createContext, useContext, useEffect, useRef } from "react";
-import { appLocalDataDir } from "@tauri-apps/api/path";
+import { appLocalDataDir, BaseDirectory } from "@tauri-apps/api/path";
+import { readFile } from "@tauri-apps/plugin-fs";
 
+export enum SFX { HITSOUND }
 
-type PlaySfx = (sfx: string) => void;
+type PlaySfx = (sfx: SFX) => void;
 const SfxContext = createContext<PlaySfx | null>(null);
+
 
 export function useSfx() {
     return useContext(SfxContext)!;
@@ -15,20 +18,31 @@ type Props = Readonly<{
 }>
 export default function SfxProvider({ children }: Props) {
     
-    const audioMapRef = useRef<Record<string, Howl> | null>(null);
+    const audioContext = useRef(new AudioContext()).current;
+    const audioBuffersRef = useRef<Map<SFX, AudioBuffer> | null>();
     
     useEffect(() => {
-        appLocalDataDir().then(applocaldata => {
-            audioMapRef.current = {
-                "hitsound": new Howl({src: convertFileSrc(`${applocaldata}\\userdata\\sfx\\hitsound.ogg`), preload: true})
-            }
-        });
-    }, [])
+        async function getAudioBuffer(path: string) {
+            const bytes = await readFile(path, {baseDir: BaseDirectory.AppLocalData});
+            return await audioContext.decodeAudioData(bytes.buffer);
+        }
+        
+        (async () => {
+            audioBuffersRef.current = new Map([
+                [SFX.HITSOUND, await getAudioBuffer("userdata\\sfx\\hitsound.ogg")]
+            ]);
+        })();
+        
+    }, []);
     
     
-    function playSfx(sfx: string) {
-        if (!audioMapRef.current) return;
-        audioMapRef.current[sfx]?.play();
+    function playSfx(sfx: SFX) {
+        if (!audioBuffersRef.current) return;
+        
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffersRef.current.get(sfx)!;
+        source.connect(audioContext.destination);
+        source.start();
     }
     
     return (

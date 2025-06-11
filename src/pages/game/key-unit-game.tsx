@@ -1,5 +1,5 @@
 import { useEffect, useState, ReactNode } from "react"
-import { HITRING_DURATION, useGameControls, useMuseEvents } from "../../providers/game-manager";
+import { HITRING_DURATION, useMuseEvents } from "../../providers/game-manager";
 import { MISS_THRESHOLD, useDelta } from "../../providers/score";
 import { usePlayback } from "../../providers/playback";
 import { KeyUnit } from "../../components/key-unit";
@@ -13,12 +13,15 @@ type Props = Readonly<{
 }>
 export default function KeyUnitGame( { keyCode, museEvent, children, labelCentered }: Props ) {
     const { getOffsetPosition, addPosUpdateListener } = usePlayback();
-    const [ playing ] = useGameControls();
+    const [ broadcastDelta ] = useDelta();
     const addMuseListener = useMuseEvents();
     
-    /** `[hittime, progress]` */
-    const [ hitTimes, setHitTimes ] = useState<[number, number][]>([]);
-    const [ broadcastDelta ] = useDelta();
+    const [ hitTimes, setHitTimes ] = useState<number[]>([]);
+    const [ progresses, setHitProgresses ] = useState<number[]>([]);
+    
+    function updateHitProgresses(offset_pos: number) {
+        setHitProgresses(hitTimes.map(hitTime => (hitTime - offset_pos) / HITRING_DURATION));
+    }
     
     function popHitTime() {
         setHitTimes(prev => {
@@ -30,30 +33,31 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     
     function onHit() {
         if (hitTimes.length == 0) return console.log("none!");
-        broadcastDelta(getOffsetPosition() - hitTimes[0][0]);
+        broadcastDelta(getOffsetPosition() - hitTimes[0]);
         popHitTime();
     }
     useEffect(() => {
-        if (!playing) return;
+        console.log("added listener");
         const unlistenPos = addPosUpdateListener(offset_pos => {
-            if (hitTimes.length != 0 && offset_pos > hitTimes[0][0] + MISS_THRESHOLD) {
+            if (hitTimes.length != 0 && offset_pos > hitTimes[0] + MISS_THRESHOLD) {
                 popHitTime();
                 broadcastDelta("miss");
             }
-            
-            // recalculate progresses
-            setHitTimes(prev => prev.map(([hitTime]) => [hitTime, (hitTime - offset_pos) / HITRING_DURATION]));
+            updateHitProgresses(offset_pos);
         });
-        return unlistenPos;
-    }, [hitTimes, playing]);
+        return () => {
+            console.log("unlistening");
+            unlistenPos();
+        };
+    }, []);
+    useEffect(() => updateHitProgresses(getOffsetPosition()), [hitTimes]);
     
     useEffect(() => {
         const unlistenStart = addMuseListener("start", () => {
             setHitTimes([]);
-            console.log("clearing hitrings");
         });
         const unlistenHitring = addMuseListener(museEvent, (_, hitTime) => {
-            setHitTimes(prev => [...prev, [hitTime, 1]]);
+            setHitTimes(prev => [...prev, hitTime]);
         });
         return () => { 
             unlistenStart();
@@ -67,7 +71,7 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
             onHit={onHit}
             label={children} 
             labelCentered={labelCentered} 
-            hitProgresses={hitTimes.map(([_, progress]) => progress)}
+            hitProgresses={progresses}
         />
     );
 }

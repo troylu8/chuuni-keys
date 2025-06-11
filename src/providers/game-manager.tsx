@@ -62,9 +62,9 @@ export default function GameManager({ children }: Props) {
     
     // initialize
     useEffect(() => {
-        const { audio, chart } = pageParams[1] as ChartParams;
+        const { audio: audioSrc, chart } = pageParams[1] as ChartParams;
         
-        aud.playNewAudio(audio);
+        aud.loadAudio(audioSrc);
         readChartFile(chart).then(events => {
             resetEvents();
             
@@ -79,8 +79,7 @@ export default function GameManager({ children }: Props) {
                 }
             }
             eventsRef.current = joinEvents(otherEvents, noteEvents);
-            setGameStage(GameStage.STARTED);
-            aud.setPlaying(true);
+            aud.setPlaying(true).then(() => setGameStage(GameStage.STARTED));
         });
     }, []);
     

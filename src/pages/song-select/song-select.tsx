@@ -1,21 +1,10 @@
 import filenamify from 'filenamify';
-import { ChartParams, Page, usePage } from "../../providers/page";
+import { ChartMetadata, ChartParams, Page, usePage } from "../../providers/page";
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { appLocalDataDir } from '@tauri-apps/api/path';
 
-export type ChartMetadata = {
-    id: string,
-    title: string,
-    artists: string,
-    chart_author: string,
-    bpm?: number,
-    measure_size?: number,
-    snaps_per_beat: number,
-    audio: string,
-    chart: string,
-    img?: string
-}
+
 
 export default function SongSelect() {
     
@@ -30,7 +19,7 @@ export default function SongSelect() {
     if (charts == null) return <p> loading... </p>;
     
     
-    async function toChartParams(metadata: ChartMetadata): ChartParams {
+    async function toChartParams(metadata: ChartMetadata) {
         const applocaldata = await appLocalDataDir();
         
         const params = {...metadata} as ChartParams;

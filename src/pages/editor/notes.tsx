@@ -27,6 +27,6 @@ export default function Notes({ events, position }: Props) {
     );
     
     return (
-        <KeyboardLayout keyComponent={key => <KeyUnit key={key} label={key} hitProgresses={visibleProgresses[key] ?? []} />} />
+        <KeyboardLayout keyComponent={key => <KeyUnit key={key} keyCode={key} label={key} hitProgresses={visibleProgresses[key] ?? []} />} />
     );
 }

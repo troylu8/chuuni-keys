@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { useSfx } from "../providers/sfx";
+import { SFX, useSfx } from "../providers/sfx";
 
 
 const KEY_SIZE = 48;
@@ -21,7 +21,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key !== keyCode) return; 
             setPressed(true);
-            playSfx("hitsound");
+            playSfx(SFX.HITSOUND);
             if (onHit) onHit();
         }
         window.addEventListener("keydown", handleKeyDown);

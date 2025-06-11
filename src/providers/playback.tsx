@@ -1,6 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { useState, createContext, useContext, useRef } from "react";
-import { Howl } from 'howler';
+import { useState, createContext, useContext, useRef, useEffect } from "react";
 import { EventEmitter } from "events";
 import { useSettings } from "./settings";
 
@@ -9,14 +8,13 @@ type PosUpdateUnlisten = () => void
 
 type Playback = {
     playing: boolean,
-    playNewAudio: (src: string, loop?: boolean) => void,
-    setPlaying: (next: boolean) => void,
-    togglePlaying: () => void,
+    loadAudio: (src: string, play?: boolean) => Promise<void>,
+    setPlaying: (next: boolean) => Promise<void>,
+    togglePlaying: () => Promise<void>,
     getTruePosition: () => number,
     getOffsetPosition: () => number,
     duration: number,
     seek: (ms: number) => void,
-    clearAudio: () => void,
     addPosUpdateListener: (listener: PosUpdateListener) => PosUpdateUnlisten
 }
 const PlaybackContext = createContext<Playback | null>(null);
@@ -32,79 +30,57 @@ type Props = Readonly<{
 export default function PlaybackProvider({ children }: Props) {
     const [{ offset }] = useSettings();
     
-    const [howl, setHowlInner] = useState<Howl | null>(null);
+    const audio = useRef<HTMLAudioElement>(new Audio()).current;
     const [playing, setPlayingInner] = useState(false);
     const [duration, setDuration] = useState(0);
     
     const posEmitter = useRef(new EventEmitter()).current;
-    const intervalIdRef = useRef<number | undefined>(undefined);
-    const soundIdRef = useRef<number | undefined>(undefined);
+    useEffect(() => {posEmitter.setMaxListeners(50)}, []);
     
-    function setHowl(next: Howl | null, play?: boolean) {
-        setPlayingInner(play ?? false);
-        setHowlInner(prev => {
-            prev?.off();
-            prev?.stop();
-            clearInterval(intervalIdRef.current);
-            
-            if (next) {
-                if (!next.loop())
-                    next.on("end", () => setPlayingInner(false));
-                
-                next.once("load", () => {
-                    setDuration(next.duration() * 1000)
-                });
-                
-                intervalIdRef.current = setInterval(() => {
-                    if (next.playing()) {
-                        const pos = next.seek() * 1000;
-                        posEmitter.emit("pos-update", pos + offset, pos);
-                    }
-                }, 0);
-                
-                if (play) soundIdRef.current = next.play();
-            }
-            return next;
-        });
+    useEffect(() => {
+        
+        // update duration state when audio metadata loaded
+        const updateDuration = () => setDuration(audio.duration);
+        audio.addEventListener("loadedmetadata", updateDuration);
+        
+        // emit pos-update while audio is playing
+        const posUpdateInterval = setInterval(() => {
+            if (!audio.paused)
+                posEmitter.emit("pos-update", getOffsetPosition(), getTruePosition());
+        }, 0);
+        
+        return () => {
+            audio.removeEventListener("loadedmetadata", updateDuration);
+            clearInterval(posUpdateInterval);
+        }
+    }, [offset]);
+    
+    async function loadAudio(src: string, play: boolean = false) {
+        audio.src = convertFileSrc(src);
+        audio.load();
+        await setPlaying(play);
     }
     
-    function playNewAudio(src: string, loop?: boolean) {
-        clearAudio();
-        console.log("setting new howl to", src);
-        setHowl(new Howl({src: convertFileSrc(src), loop}), true);
-    }
-    
-    function setPlaying(next: boolean) {
-        if (!howl || playing == next) return;
+    async function setPlaying(next: boolean) {
+        if (playing == next) return;
         
         console.log("setting to ", next);
         setPlayingInner(next);
         
-        if (next)   howl.play();
-        else        howl.pause();
+        if (next) {
+            await audio.play().catch(e => {
+                if (e.name != "AbortError") throw e; // ignore AbortErrors
+            });
+        }
+        else audio.pause();
     }
-    function togglePlaying() {
-        const next = !playing;
-        console.log("toggling to ", next);
-        setPlayingInner(prev => {
-            if (!howl) return prev;
-            if (howl.playing() == next) {
-                console.log("it was already", next);
-                return next;
-            };
-            
-            if (next) {
-                howl.play();
-                return true;
-            }
-            
-            howl.pause();
-            return false;
-        });
+    
+    async function togglePlaying() {
+        await setPlaying(!playing);
     }
     
     function getTruePosition() {
-        return howl? howl.seek() * 1000 : 0;
+        return audio? audio.currentTime * 1000 : 0;
     }
     
     function getOffsetPosition() {
@@ -112,12 +88,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     function seek(ms: number) {
-        howl?.seek(ms / 1000);
-    }
-    
-    function clearAudio() {
-        console.log("clearing audio");
-        setHowl(null);
+        audio.currentTime = ms / 1000;
     }
     
     function addPosUpdateListener(listener: PosUpdateListener) {
@@ -126,7 +97,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     return (
-        <PlaybackContext.Provider value={{playing, playNewAudio, setPlaying, togglePlaying, getTruePosition, getOffsetPosition, seek, duration, clearAudio, addPosUpdateListener}}>
+        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, togglePlaying, getTruePosition, getOffsetPosition, seek, duration, addPosUpdateListener}}>
             { children }
         </PlaybackContext.Provider>
     );

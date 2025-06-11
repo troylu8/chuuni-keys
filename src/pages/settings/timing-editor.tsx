@@ -7,10 +7,11 @@ import { HITRING_DURATION } from "../../providers/game-manager";
 import MuseButton from "../../components/muse-button";
 import AccuracyBar from "../../components/accuracy-bar";
 import DeltaProvider, { useDelta } from "../../providers/score";
+import { SFX, useSfx } from "../../providers/sfx";
 
 const MS_PER_BEAT = 500;
-const MS_FIRST_BEAT = 450;
-const MS_LAST_BEAT = 1950;
+const MS_FIRST_BEAT = 475;
+const MS_LAST_BEAT = 1975;
 const MS_PER_LOOP = 2000;
 
 type Props = Readonly<{
@@ -18,23 +19,35 @@ type Props = Readonly<{
 }>
 export default function TimingEditor({ onClose }: Props) {
     const [settings, setSettings] = useSettings();
-    const { playNewAudio, clearAudio, addPosUpdateListener } = usePlayback();
+    const { loadAudio, setPlaying, addPosUpdateListener, seek } = usePlayback();
     const [sinceLastBeat, setSinceLastBeat] = useState(0);
+    const playSfx = useSfx();
+    
     
     useEffect(() => {
         appLocalDataDir().then(applocaldatadir => {
-            playNewAudio(applocaldatadir + "\\userdata\\metronome.mp3", true);
+            loadAudio(applocaldatadir + "\\userdata\\metronome.mp3", true);
         });
         
-        const unlisten = addPosUpdateListener(offset_pos => {
+        let prevI = 0;
+        
+        const unlisten = addPosUpdateListener((offset_pos, true_pos) => {
             setSinceLastBeat((offset_pos < MS_FIRST_BEAT)? offset_pos + MS_PER_LOOP - MS_LAST_BEAT : offset_pos % MS_PER_BEAT);
+            if (true_pos > MS_PER_LOOP) 
+                seek(true_pos - MS_PER_LOOP);
+            
+            const i = Math.floor((offset_pos - MS_FIRST_BEAT) / MS_PER_BEAT);
+            if (i != prevI && i != -1) {
+                playSfx(SFX.HITSOUND);
+                prevI = i;
+            }
         });
         
         return unlisten;
     }, []);
     
     function handleClose() {
-        clearAudio();
+        setPlaying(false);
         onClose();
     }
     
@@ -51,6 +64,8 @@ export default function TimingEditor({ onClose }: Props) {
             <DeltaProvider>
                 <Metronome msSinceLastBeat={sinceLastBeat} />
             </DeltaProvider>
+            
+            <div className="absolute left-0 bottom-0 h-3 bg-red-500" style={{width: (sinceLastBeat / MS_PER_BEAT * 100) + "%" }}></div>
         </div>
     );
 }
@@ -75,7 +90,7 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
         <div className="flex flex-col gap-20 items-center">
             
             <KeyUnit 
-                keyCode="z"
+                keyCode="r"
                 label="z"
                 onHit={() => broadcastDelta( msTilNextBeat < msSinceLastBeat ? -msTilNextBeat : msSinceLastBeat )}
                 hitProgresses={hitProgresses}

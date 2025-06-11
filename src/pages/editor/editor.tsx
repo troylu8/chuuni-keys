@@ -15,13 +15,13 @@ enum Tab { NOTES, TIMING, DETAILS };
 
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
-    const { audio, chart, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as ChartParams;
+    const { audio: audioSrc, chart, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as ChartParams;
     
     const [tab, setTab] = useState(Tab.NOTES);
     
     const aud = usePlayback();
     
-    useEffect(() => aud.playNewAudio(audio), [audio]);
+    useEffect(() => { aud.loadAudio(audioSrc); }, [audioSrc]);
     const [position, setPositionInner] = useState(0);
     function setPosition(setter: (prev: number) => number) {
         setPositionInner(prev => {

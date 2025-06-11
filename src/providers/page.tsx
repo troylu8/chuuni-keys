@@ -1,5 +1,17 @@
 import { useState, createContext, useContext } from "react";
-import { ChartMetadata } from "./user-data";
+
+export type ChartMetadata = {
+    id: string,
+    title: string,
+    artists: string,
+    chart_author: string,
+    bpm?: number,
+    measure_size?: number,
+    snaps_per_beat: number,
+    audio: string,
+    chart: string,
+    img?: string
+}
 
 export enum Page {
     MAIN_MENU,

@@ -1,6 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import {  usePage } from "../providers/page";
-import { ChartMetadata } from "../providers/user-data";
+import {  ChartMetadata, usePage } from "../providers/page";
 
 
 export default function Background() {
