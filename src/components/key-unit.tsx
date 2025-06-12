@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { SFX, useSfx } from "../providers/sfx";
+import playSfx, { SFX } from "../lib/sfx";
 
 
 const KEY_SIZE = 48;
@@ -14,7 +14,6 @@ type Props = Readonly<{
 }>
 export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, activated = hitProgresses.length != 0 }: Props ) {
     const [ pressed, setPressed ] = useState(false);
-    const playSfx = useSfx();
     
     useEffect(() => {
         

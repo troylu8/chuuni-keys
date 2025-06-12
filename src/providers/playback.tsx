@@ -35,7 +35,7 @@ export default function PlaybackProvider({ children }: Props) {
     const [duration, setDuration] = useState(0);
     
     const posEmitter = useRef(new EventEmitter()).current;
-    useEffect(() => {posEmitter.setMaxListeners(50)}, []);
+    useEffect(() => {posEmitter.setMaxListeners(100)}, []);
     
     useEffect(() => {
         
@@ -64,7 +64,6 @@ export default function PlaybackProvider({ children }: Props) {
     async function setPlaying(next: boolean) {
         if (playing == next) return;
         
-        console.log("setting to ", next);
         setPlayingInner(next);
         
         if (next) {

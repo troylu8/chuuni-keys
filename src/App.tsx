@@ -5,7 +5,6 @@ import MainMenu from "./pages/main-menu/main-menu";
 import SongSelect from "./pages/song-select/song-select";
 import PageProvider, { usePage, Page } from "./providers/page";
 import PlaybackProvider from "./providers/playback";
-import SfxProvider from "./providers/sfx";
 import "./styles.css"
 import Settings from "./pages/settings/settings";
 import SettingsProvider from "./providers/settings";
@@ -15,9 +14,7 @@ export default function App() {
         <SettingsProvider>
             <PageProvider>
                 <PlaybackProvider>
-                    <SfxProvider>
-                        <ActivePage />
-                    </SfxProvider>
+                    <ActivePage />
                 </PlaybackProvider>
             </PageProvider>
         </SettingsProvider>

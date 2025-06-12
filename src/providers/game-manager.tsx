@@ -62,6 +62,8 @@ export default function GameManager({ children }: Props) {
     
     // initialize
     useEffect(() => {
+        museEmitter.setMaxListeners(100);
+        
         const { audio: audioSrc, chart } = pageParams[1] as ChartParams;
         
         aud.loadAudio(audioSrc);
@@ -123,11 +125,11 @@ export default function GameManager({ children }: Props) {
     }
     function stopGame() {
         setPage([Page.SONG_SELECT]);
+        aud.setPlaying(false);
     }
     
     function addMuseListener(event: string, listener: (...params: any[]) => any) {
         museEmitter.addListener(event, listener);
-        museEmitter.setMaxListeners(200);
         return () => { museEmitter.removeListener(event, listener); }
     }
     

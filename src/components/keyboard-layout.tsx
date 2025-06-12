@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 
 const KEYBOARD_LAYOUT = [
-    // "z".split("")
+    // "q".split("")
     "qwertyuiop".split(""),
     "asdfghjkl".split(""),
     "zxcvbnm,".split("")

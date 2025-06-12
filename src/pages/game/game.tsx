@@ -18,7 +18,7 @@ export default function Game() {
 
 function GameInner() {
     const [gameStage] = useGameStage();
-    
+
     return (
         <div className="fixed cover">
             <Background />
@@ -27,12 +27,6 @@ function GameInner() {
             <DeltaProvider>
                 { gameStage == GameStage.STARTED &&
                     <>
-                        <PauseMenu />
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
-                            <AccuracyBar />
-                        </div>
-                        <Combo />
-                        
                         <KeyboardLayout keyComponent={key => 
                             <KeyUnitGame 
                                 key={key} 
@@ -42,6 +36,12 @@ function GameInner() {
                                 { key }
                             </KeyUnitGame>
                         } />
+                        
+                        <PauseMenu />
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
+                            <AccuracyBar />
+                        </div>
+                        <Combo />
                     </>
                 }
                 { gameStage == GameStage.ENDED && <Results /> }

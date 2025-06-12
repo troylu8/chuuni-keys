@@ -26,7 +26,7 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     function popHitTime() {
         setHitTimes(prev => {
             const next = [...prev];
-            next.shift()
+            next.shift();
             return next;
         });
     }
@@ -37,7 +37,6 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
         popHitTime();
     }
     useEffect(() => {
-        console.log("added listener");
         const unlistenPos = addPosUpdateListener(offset_pos => {
             if (hitTimes.length != 0 && offset_pos > hitTimes[0] + MISS_THRESHOLD) {
                 popHitTime();
@@ -45,19 +44,19 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
             }
             updateHitProgresses(offset_pos);
         });
-        return () => {
-            console.log("unlistening");
-            unlistenPos();
-        };
-    }, []);
-    useEffect(() => updateHitProgresses(getOffsetPosition()), [hitTimes]);
+        return unlistenPos;
+    }, [hitTimes]);
     
     useEffect(() => {
         const unlistenStart = addMuseListener("start", () => {
             setHitTimes([]);
         });
         const unlistenHitring = addMuseListener(museEvent, (_, hitTime) => {
-            setHitTimes(prev => [...prev, hitTime]);
+            setHitTimes(prev => {
+                const next = [...prev, hitTime];
+                console.log(prev, next);
+                return next;
+            });
         });
         return () => { 
             unlistenStart();
