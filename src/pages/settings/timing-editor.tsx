@@ -89,7 +89,7 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
         <div className="flex flex-col gap-20 items-center">
             
             <KeyUnit 
-                keyCode="r"
+                keyCode="z"
                 label="z"
                 onHit={() => broadcastDelta( msTilNextBeat < msSinceLastBeat ? -msTilNextBeat : msSinceLastBeat )}
                 hitProgresses={hitProgresses}

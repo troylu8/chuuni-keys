@@ -77,7 +77,7 @@ export default function Results() {
             </div>
             
             <button 
-                onClick={() => handleToSongSelect()}
+                onClick={handleToSongSelect}
                 className="self-center"
             > back to song select </button>
         </div>

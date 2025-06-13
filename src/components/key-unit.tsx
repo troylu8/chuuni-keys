@@ -20,7 +20,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key !== keyCode) return; 
             setPressed(true);
-            playSfx(SFX.HITSOUND);
+            playSfx(SFX.HITSOUND, 0.1);
             if (onHit) onHit();
         }
         window.addEventListener("keydown", handleKeyDown);
@@ -63,7 +63,7 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-foreground outline-3"
+                className="absolute outline-accent1 outline-4"
                 style={{
                     top: -gap,
                     bottom: -gap,

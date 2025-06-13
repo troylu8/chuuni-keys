@@ -88,8 +88,8 @@ export default function Editor() {
         
         function onKeyDown(e: KeyboardEvent) {
             if (e.key === " ")  
-                aud.togglePlaying();
-            else if (e.key === "ArrowLeft") {
+                aud.setPlaying(!aud.playing);
+            else if (e.key === "ArrowUp") {
                 setPosition(ms => {
                     if (first_event_ms == null || bpm == null) return ms;
                     if (ms <= first_event_ms) return 0;
@@ -97,7 +97,7 @@ export default function Editor() {
                     return snapLeft(ms, first_event_ms, MS_PER_BEAT);
                 });
             }
-            else if (e.key === "ArrowRight") {
+            else if (e.key === "ArrowDown") {
                 setPosition(ms => {
                     if (first_event_ms == null || bpm == null) return ms;
                     if (ms < first_event_ms) return first_event_ms;
@@ -105,9 +105,9 @@ export default function Editor() {
                     return snapRight(ms, first_event_ms, MS_PER_BEAT);
                 });
             }
-            else if (e.key === ",")
+            else if (e.key === "ArrowLeft")
                 setPosition(prev => prev - 1);
-            else if (e.key === ".")
+            else if (e.key === "ArrowRight")
                 setPosition(prev => prev + 1);
             else if ("qwertyuiopasdfghjklzxcvbnm,".includes(e.key)) {
                 const pos = aud.getTruePosition();
@@ -137,7 +137,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [aud, bpm, first_event_ms, snaps]);
+    }, [aud.playing, bpm, first_event_ms, snaps]);
     
     
     const [saved, setSaved] = useState(true);
@@ -210,7 +210,7 @@ export default function Editor() {
                 {/* bottom row */}
                 <nav className="flex gap-2 items-center">
                     <div className="min-w-20 max-w-20">
-                        <MuseButton onClick={() => aud.togglePlaying()}> 
+                        <MuseButton onClick={() => aud.setPlaying(!aud.playing)}> 
                             {aud.playing? "pause" : "play"} 
                         </MuseButton>
                     </div>

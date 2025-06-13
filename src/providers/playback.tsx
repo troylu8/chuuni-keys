@@ -10,7 +10,6 @@ type Playback = {
     playing: boolean,
     loadAudio: (src: string, play?: boolean) => Promise<void>,
     setPlaying: (next: boolean) => Promise<void>,
-    togglePlaying: () => Promise<void>,
     getTruePosition: () => number,
     getOffsetPosition: () => number,
     duration: number,
@@ -40,7 +39,7 @@ export default function PlaybackProvider({ children }: Props) {
     useEffect(() => {
         
         // update duration state when audio metadata loaded
-        const updateDuration = () => setDuration(audio.duration);
+        const updateDuration = () => setDuration(audio.duration * 1000);
         audio.addEventListener("loadedmetadata", updateDuration);
         
         // emit pos-update while audio is playing
@@ -62,7 +61,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     async function setPlaying(next: boolean) {
-        if (playing == next) return;
+        if (!audio.src || !audio.paused == next) return;
         
         setPlayingInner(next);
         
@@ -72,10 +71,6 @@ export default function PlaybackProvider({ children }: Props) {
             });
         }
         else audio.pause();
-    }
-    
-    async function togglePlaying() {
-        await setPlaying(!playing);
     }
     
     function getTruePosition() {
@@ -96,7 +91,7 @@ export default function PlaybackProvider({ children }: Props) {
     }
     
     return (
-        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, togglePlaying, getTruePosition, getOffsetPosition, seek, duration, addPosUpdateListener}}>
+        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, getTruePosition, getOffsetPosition, seek, duration, addPosUpdateListener}}>
             { children }
         </PlaybackContext.Provider>
     );

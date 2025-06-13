@@ -10,10 +10,9 @@ export const HITRING_DURATION = 400;
 export enum GameStage { LOADING, STARTED, ENDED };
 const GameStageContext = createContext<[GameStage, (next: GameStage) => any] | null>(null);
 
-type TogglePauseGame = () => void;
 type RestartGame = () => void;
 type StopGame = () => void;
-const ControlsContext = createContext<[boolean, TogglePauseGame, RestartGame, StopGame] | null>(null);
+const ControlsContext = createContext<[RestartGame, StopGame] | null>(null);
 
 type RemoveMuseListener = () => void;
 type AddMuseListener = (event: string, listener: (...params: any[]) => any) => RemoveMuseListener;
@@ -66,23 +65,29 @@ export default function GameManager({ children }: Props) {
         
         const { audio: audioSrc, chart } = pageParams[1] as ChartParams;
         
-        aud.loadAudio(audioSrc);
-        readChartFile(chart).then(events => {
-            resetEvents();
+        (async () => {
+            await aud.loadAudio(audioSrc);
+            const events = await readChartFile(chart);
             
+            resetEvents();
+                
             const otherEvents: MuseEvent[] = [];
             const noteEvents: MuseEvent[] = [];          // arr of [activation time, :key, hit time]
             for (const event of events) {
-                if (event[1].includes(":")) {
+                if (event[1].startsWith(":") || event[1].startsWith(".")) {
                     noteEvents.push([Math.max(event[0] - ACTIVATION_DURATION, 0), event[1], event[0]]);
                 }
                 else {
                     otherEvents.push(event);
                 }
             }
+            
             eventsRef.current = joinEvents(otherEvents, noteEvents);
-            aud.setPlaying(true).then(() => setGameStage(GameStage.STARTED));
-        });
+            
+            console.log("starting");
+            await aud.setPlaying(true);
+            setGameStage(GameStage.STARTED);
+        })();
     }, []);
     
     
@@ -91,6 +96,8 @@ export default function GameManager({ children }: Props) {
         if (gameStage != GameStage.STARTED || !aud.playing) return;
         
         if (i.current == 0) museEmitter.emit("start");
+        
+        const lastEventTime = eventsRef.current[eventsRef.current.length-1][0];
         
         const unlisten = aud.addPosUpdateListener(offset_pos => {
             // send all ready muse events
@@ -103,11 +110,9 @@ export default function GameManager({ children }: Props) {
                 else break;
             }
             
-            if (i.current == eventsRef.current.length) {
-                setTimeout(() => {
-                    resetEvents();
-                    setGameStage(GameStage.ENDED);
-                }, 5000);
+            if (offset_pos > lastEventTime + 5000) {
+                resetEvents();
+                setGameStage(GameStage.ENDED);
             }
             
         });
@@ -115,9 +120,6 @@ export default function GameManager({ children }: Props) {
         return unlisten;
     }, [gameStage, aud.playing]);
     
-    function togglePauseGame() {
-        aud.togglePlaying();
-    }
     function restartGame() {
         i.current = 0;
         aud.seek(0);
@@ -135,7 +137,7 @@ export default function GameManager({ children }: Props) {
     
     return (
         <GameStageContext.Provider value={[gameStage, setGameStage]}>
-            <ControlsContext.Provider value={[aud.playing, togglePauseGame, restartGame, stopGame]}>
+            <ControlsContext.Provider value={[restartGame, stopGame]}>
                 <MuseEventsContext.Provider value={addMuseListener}>
                     { children }
                 </MuseEventsContext.Provider>

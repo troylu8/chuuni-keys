@@ -18,11 +18,17 @@ async function getAudioBuffer(path: string) {
     ]);
 })();
 
-export default function playSfx(sfx: SFX) {
+export default function playSfx(sfx: SFX, volume: number = 1) {
     if (!audioBuffers) return;
     
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffers.get(sfx)!;
-    source.connect(audioContext.destination);
+
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = volume;
+
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
     source.start();
 }

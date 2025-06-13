@@ -52,11 +52,7 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
             setHitTimes([]);
         });
         const unlistenHitring = addMuseListener(museEvent, (_, hitTime) => {
-            setHitTimes(prev => {
-                const next = [...prev, hitTime];
-                console.log(prev, next);
-                return next;
-            });
+            setHitTimes(prev => [...prev, hitTime]);
         });
         return () => { 
             unlistenStart();

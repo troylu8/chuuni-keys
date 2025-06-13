@@ -35,6 +35,8 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
     }
     
     const contRef = useRef<HTMLDivElement | null>(null);
+    
+    // keep track of window width
     const [width, setWidth] = useState(0);
     useEffect(() => {
         const onResize = () => setWidth(contRef.current?.clientWidth ?? 0);
@@ -42,6 +44,8 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         window.addEventListener("resize", onResize);
         return () => { window.removeEventListener("resize", onResize); }
     }, []);
+    
+    
     
     // regarding horizontal bar
     const absCenterPx = offsetPosition * PX_PER_MS;
