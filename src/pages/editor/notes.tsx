@@ -5,13 +5,15 @@ import { ACTIVATION_DURATION, HITRING_DURATION, MuseEvent } from "../../provider
 import { useRef } from "react";
 import playSfx, { SFX } from "../../lib/sfx";
 import { usePlayback } from "../../providers/playback";
-import { MISS_THRESHOLD } from "../../providers/score";
+
+const PAST_VISIBILITY_DISTANCE = 500;
 
 type Props = Readonly<{
     events: Tree<number, MuseEvent>
     position: number
+    onHit: (key: string) => any
 }>
-export default function Notes({ events, position }: Props) {
+export default function Notes({ events, position, onHit }: Props) {
     
     const { playing } = usePlayback();
     const nextNoteTimeRef = useRef<number | undefined>(events.begin.value?.[0]);
@@ -25,6 +27,8 @@ export default function Notes({ events, position }: Props) {
     
     
     const visibleProgresses: Record<string, number[]> = {};
+    
+    // put all visible 
     events?.forEach(
         (hitTime, event) => {
             if (event[1].startsWith(":")) {
@@ -38,12 +42,18 @@ export default function Notes({ events, position }: Props) {
                 }
             }
         },
-        position - MISS_THRESHOLD, position + ACTIVATION_DURATION
+        position - PAST_VISIBILITY_DISTANCE, position + ACTIVATION_DURATION
     );
     
     return (
         <KeyboardLayout keyComponent={ key => 
-            <KeyUnit key={key} keyCode={key} label={key} hitProgresses={visibleProgresses[key] ?? []} />
+            <KeyUnit 
+                key={key} 
+                keyCode={key} 
+                label={key} 
+                hitProgresses={visibleProgresses[key] ?? []} 
+                onHit={() => onHit(key)}
+            />
         } />
     );
 }

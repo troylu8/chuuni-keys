@@ -90,9 +90,10 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         }
     }
     
+    // [px, all keys]
     const allCols: [number, string[]][] = [];
     let prevMs = -1;
-    events?.forEach(
+    events?.forEach( // calculate visible columns
         (_, event) => {
             // absMs => absPx => localPx
             const ms = event[0];
@@ -112,22 +113,7 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         absEndPx / PX_PER_MS
     );
     for (const [px, events] of allCols) {
-        inspectorElements.push(
-            <div 
-                key={px + "col"} 
-                style={{left: px}} 
-                className="absolute -translate-x-1/2 top-1 flex flex-col items-center font-mono [&>p]:h-3 [&>p]:leading-3"
-            >
-                { events.length <= 3 ? 
-                    events.map((e, i) => <p key={i}>{e}</p>) : //TODO fix
-                    <>
-                        <p> { events[0] } </p>
-                        <p> { events[1] } </p>
-                        <p> +{ events.length - 2 } </p>
-                    </>
-                }
-            </div>
-        )
+        inspectorElements.push(<MuseEventColumn key={px + "col"} px={px} events={events}/>);
     }
     
     return (
@@ -141,4 +127,36 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
             { inspectorElements }
         </div>
     );
+}
+
+type KeyColumnProps = Readonly<{
+    px: number
+    events: string[]
+}>
+function MuseEventColumn({ px, events }: KeyColumnProps) {
+    return (
+        <div 
+            style={{left: px}} 
+            className="absolute -translate-x-1/2 top-1 flex flex-col items-center font-mono [&>p]:h-3 [&>p]:leading-3"
+        >
+            { events.length <= 3 ? 
+                events.map((e, i) => <p key={i}>{e}</p>) :
+                
+                <>
+                    <p> { events[0] } </p>
+                    <p> { events[1] } </p>
+                    <p> +{ events.length - 2 } </p>
+                </>
+            }
+        </div>
+    )
+}
+
+type MuseEventTickerProps = Readonly<{
+    label: string,
+    onLeftClick: () => any 
+    onRightClick: () => any
+}>
+function MuseEventTicker({ label, onLeftClick, onRightClick }: MuseEventTickerProps) {
+    return <p> { label } </p>
 }

@@ -37,6 +37,7 @@ export default function Editor() {
     }, []);
     
     const [bpm, setBPM] = useState<number | null>(savedBPM ?? null);
+    const MS_PER_BEAT = bpm && 60 / bpm * 1000;
     const [measureSize, setMeasureSize] = useState<number | null>(savedMeasureSize ?? null);
     const [snaps, setSnaps] = useState<number>(savedSnaps);
     
@@ -44,7 +45,6 @@ export default function Editor() {
     const first_event_ms = events && (events.begin.value?.[0] ?? null);
     useEffect(() => {
         readChartFile(chart).then(events => {
-            console.log("events", events);
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             for (const event of events) {
@@ -58,11 +58,11 @@ export default function Editor() {
     
     useEffect(() => {
         function onScroll(e: WheelEvent) {
-            if (bpm == null) return;
+            if (MS_PER_BEAT == null) return;
             setPosition(ms => {
                 aud.setPlaying(false);
                 
-                const MS_PER_BEAT = 60 / bpm * 1000;
+                
                 if (e.deltaY < 0) {
                     return snapLeft(ms, first_event_ms ?? 0, MS_PER_BEAT / (snaps + 1));
                 }
@@ -89,19 +89,17 @@ export default function Editor() {
         function onKeyDown(e: KeyboardEvent) {
             if (e.key === " ")  
                 aud.setPlaying(!aud.playing);
-            else if (e.key === "ArrowUp") {
+            else if (e.code === "ShiftLeft") {
                 setPosition(ms => {
-                    if (first_event_ms == null || bpm == null) return ms;
+                    if (first_event_ms == null || MS_PER_BEAT == null) return ms;
                     if (ms <= first_event_ms) return 0;
-                    const MS_PER_BEAT = 60 / bpm * 1000;
                     return snapLeft(ms, first_event_ms, MS_PER_BEAT);
                 });
             }
-            else if (e.key === "ArrowDown") {
+            else if (e.code === "ShiftRight") {
                 setPosition(ms => {
-                    if (first_event_ms == null || bpm == null) return ms;
+                    if (first_event_ms == null || MS_PER_BEAT == null) return ms;
                     if (ms < first_event_ms) return first_event_ms;
-                    const MS_PER_BEAT = 60 / bpm * 1000;
                     return snapRight(ms, first_event_ms, MS_PER_BEAT);
                 });
             }
@@ -109,26 +107,8 @@ export default function Editor() {
                 setPosition(prev => prev - 1);
             else if (e.key === "ArrowRight")
                 setPosition(prev => prev + 1);
-            else if ("qwertyuiopasdfghjklzxcvbnm,".includes(e.key)) {
-                const pos = aud.getTruePosition();
-                setEvents(prev => {
-                    if (!prev) return null;
-                    
-                    setSaved(false);
-                    
-                    const iter = prev.ge(pos);
-                    while (iter.valid && iter.key == pos) {
-                        // if this key exists at this time, remove it
-                        if (iter.value![1] == ":" + e.key) {
-                            return iter.remove();
-                        }
-                        iter.next();
-                    }
-                    
-                    // key didnt exist at this time, so add it
-                    return prev.insert(pos, [pos, ":" + e.key]);
-                });
-            }
+            else if (e.ctrlKey && e.key === "s")
+                handleSave()
         }
         window.addEventListener("wheel", onScroll);
         window.addEventListener("keydown", onKeyDown);
@@ -137,7 +117,29 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [aud.playing, bpm, first_event_ms, snaps]);
+    }, [aud.playing, MS_PER_BEAT, first_event_ms, snaps]);
+    
+    function onHit(key: string) {
+        const pos = aud.getTruePosition();
+        
+        setSaved(false);
+        
+        setEvents(prev => {
+            if (!prev) return null;
+            
+            const iter = prev.ge(pos);
+            while (iter.valid && iter.key == pos) {
+                // if this key exists at this time, remove it
+                if (iter.value![1] == ":" + key) {
+                    return iter.remove();
+                }
+                iter.next();
+            }
+            
+            // key didnt exist at this time, so add it
+            return prev.insert(pos, [pos, ":" + key]);
+        });
+    }
     
     
     const [saved, setSaved] = useState(true);
@@ -193,7 +195,7 @@ export default function Editor() {
                 </nav>
                 
                 <div className="relative grow">
-                    { tab == Tab.NOTES && events && <Notes events={events} position={position} />}
+                    { tab == Tab.NOTES && events && <Notes events={events} position={position} onHit={onHit} />}
                     { tab == Tab.TIMING && 
                         <Timing 
                             bpm={bpm} 

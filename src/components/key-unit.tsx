@@ -4,6 +4,15 @@ import playSfx, { SFX } from "../lib/sfx";
 
 const KEY_SIZE = 48;
 
+function noModifiersPressed(e: KeyboardEvent) {
+    return (
+        !e.shiftKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.metaKey
+    );
+}
+
 type Props = Readonly<{
     onHit?: () => any
     keyCode: string
@@ -18,10 +27,11 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     useEffect(() => {
         
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key !== keyCode) return; 
-            setPressed(true);
-            playSfx(SFX.HITSOUND, 0.1);
-            if (onHit) onHit();
+            if (e.key === keyCode && noModifiersPressed(e) ) {
+                setPressed(true);
+                playSfx(SFX.HITSOUND, 0.1);
+                if (onHit) onHit();
+            }
         }
         window.addEventListener("keydown", handleKeyDown);
         
@@ -36,9 +46,18 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
         }
     }, [onHit]);
     
+    const allHitsPassed = hitProgresses.length != 0 && hitProgresses.every(v => v < 0);
+    const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);
     return (
-        <div 
-            style={{width: KEY_SIZE, height: KEY_SIZE}}
+        <div
+            onClick={() => { if (onHit) onHit() } }
+            style={{
+                width: KEY_SIZE, 
+                height: KEY_SIZE,
+                
+                // if all hits have passed, set opacity based on how long ago the last hit was, with a min of 25%
+                opacity: allHitsPassed? Math.max(0.25, 1 + latestHitProgress) : undefined 
+            }}
             className={`
                 flex flex-col-reverse rounded-xl relative
                 ${pressed? "bg-foreground text-background" : "bg-background opacity-25" }
@@ -51,6 +70,8 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
         </div>
     );
 }
+
+
 
 const HITRING_MAX_GAP = 45;
 
