@@ -2,7 +2,7 @@ import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
-import { ChartParams, Page, usePage } from "./page";
+import { GameAndEditorParams, Page, usePage } from "./page";
 
 export const ACTIVATION_DURATION = 800;
 export const HITRING_DURATION = 400;
@@ -45,7 +45,7 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function GameManager({ children }: Props) {
-    const [pageParams, setPage] = usePage();
+    const [[_, params], setPage] = usePage();
     
     const aud = usePlayback();
     const [gameStage, setGameStage] = useState(GameStage.LOADING);
@@ -63,11 +63,11 @@ export default function GameManager({ children }: Props) {
     useEffect(() => {
         museEmitter.setMaxListeners(100);
         
-        const { audio: audioSrc, chart } = pageParams[1] as ChartParams;
+        const { song_folder, audio: audioSrc } = params as GameAndEditorParams;
         
         (async () => {
             await aud.loadAudio(audioSrc);
-            const events = await readChartFile(chart);
+            const events = await readChartFile(song_folder + "chart.txt");
             
             resetEvents();
                 

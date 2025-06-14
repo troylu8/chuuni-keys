@@ -1,18 +1,18 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import {  ChartMetadata, usePage } from "../providers/page";
+import {  GameAndEditorParams, usePage } from "../providers/page";
 
 
 export default function Background() {
-    const [pageParams] = usePage();
+    const [[_, params]] = usePage();
     
-    const { img } = pageParams[1] as ChartMetadata;
+    const { song_folder, img } = params as GameAndEditorParams;
     
     return (
         <>
             { img &&
                 <div className="fixed cover">
                     <img 
-                        src={convertFileSrc(img)}
+                        src={convertFileSrc(song_folder + img)}
                         className="w-full h-full object-cover brightness-50"
                     ></img>
                 </div>

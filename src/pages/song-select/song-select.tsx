@@ -1,5 +1,5 @@
 import filenamify from 'filenamify';
-import { ChartMetadata, ChartParams, Page, usePage } from "../../providers/page";
+import { ChartMetadata, Page, SongSelectParams, usePage } from "../../providers/page";
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { appLocalDataDir } from '@tauri-apps/api/path';
@@ -9,7 +9,8 @@ import { appLocalDataDir } from '@tauri-apps/api/path';
 export default function SongSelect() {
     
     const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
-    const [[_, editing], setPageParams] = usePage();
+    const [[_, params], setPageParams] = usePage();
+    const { isEditing } = params as SongSelectParams;
     
     useEffect(() => {
         invoke<ChartMetadata[]>("get_all_charts").then(setCharts);
@@ -18,19 +19,6 @@ export default function SongSelect() {
     
     if (charts == null) return <p> loading... </p>;
     
-    
-    async function toChartParams(metadata: ChartMetadata) {
-        const applocaldata = await appLocalDataDir();
-        
-        const params = {...metadata} as ChartParams;
-        const songFolder = `${applocaldata}\\userdata\\charts\\${params.id} ${filenamify(params.title, {replacement: '_'})}\\`;
-        params.chart = songFolder + params.chart;
-        params.audio = songFolder + params.audio;
-        params.img = params.img && songFolder + params.img;
-        params.leaderboard = songFolder + "leaderboard.csv";
-        return params;
-    }
-
     return (
         
         <div className="fixed cover">
@@ -49,11 +37,16 @@ export default function SongSelect() {
                         key={metadata.id}
                         metadata={metadata}
                         onClick={async () => {
+                            const applocaldata = await appLocalDataDir();
+                            
                             setPageParams([
-                                editing === true? Page.EDITOR : Page.GAME, 
-                                await toChartParams(metadata)
+                                isEditing? Page.EDITOR : Page.GAME, 
+                                {
+                                    ...metadata, 
+                                    song_folder: `${applocaldata}\\userdata\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`
+                                }
                             ])
-                        }} 
+                        }}
                     />
                 )}
             </div>

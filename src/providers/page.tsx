@@ -9,7 +9,6 @@ export type ChartMetadata = {
     measure_size?: number,
     snaps_per_beat: number,
     audio: string,
-    chart: string,
     img?: string
 }
 
@@ -22,9 +21,10 @@ export enum Page {
     EDITOR,
 }
 
-export type IsEditing = boolean
-export type ChartParams = ChartMetadata & {leaderboard: string}
-export type PageParams = [Page] | [Page, ChartParams | IsEditing];
+export type GameAndEditorParams = ChartMetadata & { song_folder: string }
+export type SongSelectParams = { isEditing: boolean }
+
+export type PageParams = [Page] | [ Page, GameAndEditorParams | SongSelectParams];
 
 const PageContext = createContext<[PageParams, (next: PageParams) => void] | null>(null);
 

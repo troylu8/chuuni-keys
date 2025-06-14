@@ -25,4 +25,5 @@ serde_json = "1"
 tauri-plugin-fs = "2"
 rand = "0.9.1"
 tauri-plugin-process = "2"
+tauri-plugin-prevent-default = { version = "2.1.1", features = ["unstable-windows"] }
 

@@ -15,7 +15,6 @@ pub struct MuseMetadata {
     snaps_per_beat: usize,
     
     audio: String,
-    chart: String,
     img: Option<String>,
 }
 

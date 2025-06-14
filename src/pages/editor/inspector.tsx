@@ -18,8 +18,10 @@ type Props = Readonly<{
     offsetPosition: number
     duration: number
     events: Tree<number, MuseEvent> | null
+    onTickerLeftClick: (e: MuseEvent) => any
+    onTickerRightClick: (e: MuseEvent) => any
 }>
-export default function Inspector({ bpm, measureSize, snaps, offsetPosition, duration, events }: Props) {
+export default function Inspector({ bpm, measureSize, snaps, offsetPosition, duration, events, onTickerLeftClick, onTickerRightClick }: Props) {
     
     const first_event_ms = events && (events.begin.value?.[0] ?? null);
     
@@ -90,21 +92,23 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         }
     }
     
-    // [px, all keys]
-    const allCols: [number, string[]][] = [];
+    // [px, event]
+    const allCols: [number, MuseEvent[]][] = [];
     let prevMs = -1;
     events?.forEach( // calculate visible columns
         (_, event) => {
-            // absMs => absPx => localPx
             const ms = event[0];
             const absPx = ms * PX_PER_MS;
             const px = absPx - absStartPx + startPx;
             
+            // if time changed, start a new column
             if (ms != prevMs) {
-                allCols.push([px, [toInspectorDisplay(event[1])]]);
+                allCols.push([px, [event]]);
             }
+            
+            // time is still the same, add to previous column
             else {
-                allCols[allCols.length-1][1].push(toInspectorDisplay(event[1]))
+                allCols[allCols.length-1][1].push(event)
             }
             
             prevMs = ms;
@@ -113,7 +117,15 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         absEndPx / PX_PER_MS
     );
     for (const [px, events] of allCols) {
-        inspectorElements.push(<MuseEventColumn key={px + "col"} px={px} events={events}/>);
+        inspectorElements.push(
+            <MuseEventColumn 
+                key={px + "col"} 
+                px={px} 
+                events={events}
+                onTickerLeftClick={onTickerLeftClick}
+                onTickerRightClick={onTickerRightClick}
+            />
+        );
     }
     
     return (
@@ -129,34 +141,59 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
     );
 }
 
+const MAX_EVENTS_PER_COLUMN = 3;
+
 type KeyColumnProps = Readonly<{
     px: number
-    events: string[]
+    events: MuseEvent[]
+    onTickerLeftClick: (e: MuseEvent) => any
+    onTickerRightClick: (e: MuseEvent) => any
 }>
-function MuseEventColumn({ px, events }: KeyColumnProps) {
+function MuseEventColumn({ px, events, onTickerLeftClick, onTickerRightClick }: KeyColumnProps) {
+    
+    // only show the first (MAX_EVENTS_PER_COLUMN) events.
+    // if too many events, show 1 less than (MAX_EVENTS_PER_COLUMN) events (to make room for the "+x" ticker)
+    const visibleEvents = events.length <= MAX_EVENTS_PER_COLUMN ? events : events.slice(0, MAX_EVENTS_PER_COLUMN-1);
+    
     return (
         <div 
             style={{left: px}} 
             className="absolute -translate-x-1/2 top-1 flex flex-col items-center font-mono [&>p]:h-3 [&>p]:leading-3"
         >
-            { events.length <= 3 ? 
-                events.map((e, i) => <p key={i}>{e}</p>) :
-                
-                <>
-                    <p> { events[0] } </p>
-                    <p> { events[1] } </p>
-                    <p> +{ events.length - 2 } </p>
-                </>
+            { 
+                visibleEvents.map((e, i) => (
+                    <MuseEventTicker 
+                        key={i} 
+                        label={toInspectorDisplay(e[1])} 
+                        onLeftClick={() => onTickerLeftClick(e)}
+                        onRightClick={() => onTickerRightClick(e)}
+                    />
+                ))
+            }
+            
+            {/* the extra "+x" ticker when events exceed MAX_EVENTS_PER_COLUMN */}
+            { events.length > MAX_EVENTS_PER_COLUMN && 
+                <MuseEventTicker label={"+" + (events.length - MAX_EVENTS_PER_COLUMN + 1)} />
             }
         </div>
     )
 }
 
 type MuseEventTickerProps = Readonly<{
-    label: string,
-    onLeftClick: () => any 
-    onRightClick: () => any
+    label: string
+    onLeftClick?: () => any 
+    onRightClick?: () => any
 }>
 function MuseEventTicker({ label, onLeftClick, onRightClick }: MuseEventTickerProps) {
-    return <p> { label } </p>
+    
+    return (
+        <button 
+            className="
+                font-mono text-sm rounded-sm bg-background px-1
+                hover:bg-accent1 hover:text-background
+            "
+            onClick={() => {if (onLeftClick) onLeftClick()}}
+            onContextMenu={() => { if (onRightClick) onRightClick(); }}
+        > { label } </button>
+    )
 }

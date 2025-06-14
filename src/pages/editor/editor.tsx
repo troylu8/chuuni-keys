@@ -1,4 +1,4 @@
-import { ChartParams, Page, usePage } from "../../providers/page";
+import { GameAndEditorParams, Page, usePage } from "../../providers/page";
 import { usePlayback } from "../../providers/playback";
 import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
@@ -15,13 +15,13 @@ enum Tab { NOTES, TIMING, DETAILS };
 
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
-    const { audio: audioSrc, chart, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as ChartParams;
+    const { song_folder, audio: audioSrc, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as GameAndEditorParams;
     
     const [tab, setTab] = useState(Tab.NOTES);
     
     const aud = usePlayback();
     
-    useEffect(() => { aud.loadAudio(audioSrc); }, [audioSrc]);
+    useEffect(() => { aud.loadAudio(song_folder + audioSrc); }, [song_folder, audioSrc]);
     const [position, setPositionInner] = useState(0);
     function setPosition(setter: (prev: number) => number) {
         setPositionInner(prev => {
@@ -44,7 +44,7 @@ export default function Editor() {
     const [events, setEvents] = useState<Tree<number, MuseEvent> | null>(null);
     const first_event_ms = events && (events.begin.value?.[0] ?? null);
     useEffect(() => {
-        readChartFile(chart).then(events => {
+        readChartFile(song_folder + "chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             for (const event of events) {
@@ -53,15 +53,14 @@ export default function Editor() {
             
             setEvents(tree);
         });
-    }, [chart]);
+    }, [song_folder]);
     
-    
+    // keybinds and scroll
     useEffect(() => {
         function onScroll(e: WheelEvent) {
             if (MS_PER_BEAT == null) return;
             setPosition(ms => {
                 aud.setPlaying(false);
-                
                 
                 if (e.deltaY < 0) {
                     return snapLeft(ms, first_event_ms ?? 0, MS_PER_BEAT / (snaps + 1));
@@ -119,28 +118,36 @@ export default function Editor() {
         }
     }, [aud.playing, MS_PER_BEAT, first_event_ms, snaps]);
     
-    function onHit(key: string) {
+    function toggleEventHere(key: string) {
         const pos = aud.getTruePosition();
         
         setSaved(false);
-        
-        setEvents(prev => {
-            if (!prev) return null;
+        setEvents(tree => {
+            if (!tree) return null;
             
-            const iter = prev.ge(pos);
-            while (iter.valid && iter.key == pos) {
-                // if this key exists at this time, remove it
-                if (iter.value![1] == ":" + key) {
-                    return iter.remove();
-                }
-                iter.next();
+            const treeWithoutEvent = deleteEventFrom(tree, [pos, ":" + key]);
+            if (treeWithoutEvent) {
+                console.log("removed", [pos, ":" + key]);
+                return treeWithoutEvent;
             }
+            console.log("added", [pos, ":" + key]);
             
             // key didnt exist at this time, so add it
-            return prev.insert(pos, [pos, ":" + key]);
+            return tree.insert(pos, [pos, ":" + key]);
         });
     }
+    useEffect(() => console.log(JSON.stringify(events?.values)), [events])
     
+    function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEvent) {
+        const iter = tree.ge(pos); // must use `.ge()` instead of `.find()` bc `.ge()` gets the LEFTMOST node, not the first encountered node
+        while (iter.valid && iter.key == pos) {
+            // if this key exists at this time, remove it
+            if (iter.value![1] == eventStr) {
+                return iter.remove();
+            }
+            iter.next();
+        }
+    }
     
     const [saved, setSaved] = useState(true);
     const [savePopupVisible, setSavePopupVisible] = useState(false);
@@ -153,12 +160,25 @@ export default function Editor() {
             res.push(event.join(" "));
         }
         
-        await writeTextFile(chart, res.join("\n"));
+        await writeTextFile(song_folder + "chart.txt", res.join("\n"));
         setSaved(true);
     }
     async function handleQuit() {
         if (saved) return setPageParams([Page.MAIN_MENU]);
         setSavePopupVisible(true);
+    }
+    
+    function handleEventTickerLeftClick([pos]: MuseEvent) {
+        setPosition(() => pos);
+    }
+    function handleEventTickerRightClick(event: MuseEvent) {
+        setSaved(false);
+        // delete that event
+        setEvents(prev => {
+            if (!prev) return null;
+            const treeWithEventRemoved = deleteEventFrom(prev, event);
+            return treeWithEventRemoved? treeWithEventRemoved : prev;
+        })
     }
     
     return (
@@ -191,11 +211,13 @@ export default function Editor() {
                         offsetPosition={position} 
                         duration={aud.duration} 
                         events={events}
+                        onTickerLeftClick={handleEventTickerLeftClick}
+                        onTickerRightClick={handleEventTickerRightClick}
                     />
                 </nav>
                 
                 <div className="relative grow">
-                    { tab == Tab.NOTES && events && <Notes events={events} position={position} onHit={onHit} />}
+                    { tab == Tab.NOTES && events && <Notes events={events} position={position} onHit={toggleEventHere} />}
                     { tab == Tab.TIMING && 
                         <Timing 
                             bpm={bpm} 

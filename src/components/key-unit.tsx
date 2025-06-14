@@ -24,13 +24,17 @@ type Props = Readonly<{
 export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, activated = hitProgresses.length != 0 }: Props ) {
     const [ pressed, setPressed ] = useState(false);
     
+    function hit() {
+        playSfx(SFX.HITSOUND, 0.1);
+        if (onHit) onHit();
+    }
+    
     useEffect(() => {
         
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key === keyCode && noModifiersPressed(e) ) {
                 setPressed(true);
-                playSfx(SFX.HITSOUND, 0.1);
-                if (onHit) onHit();
+                hit();
             }
         }
         window.addEventListener("keydown", handleKeyDown);
@@ -50,7 +54,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);
     return (
         <div
-            onClick={() => { if (onHit) onHit() } }
+            onClick={hit}
             style={{
                 width: KEY_SIZE, 
                 height: KEY_SIZE,
@@ -84,7 +88,7 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-accent1 outline-4"
+                className="absolute outline-accent1 outline-4 pointer-events-none"
                 style={{
                     top: -gap,
                     bottom: -gap,
