@@ -9,13 +9,14 @@ import { appLocalDataDir } from '@tauri-apps/api/path';
 export default function SongSelect() {
     
     const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
-    const [[_, params], setPageParams] = usePage();
+    const [[,params], setPageParams] = usePage();
     const { isEditing } = params as SongSelectParams;
     
     useEffect(() => {
         invoke<ChartMetadata[]>("get_all_charts").then(setCharts);
     }, []);
     
+    // useEffect(() => console.log(charts), [charts])
     
     if (charts == null) return <p> loading... </p>;
     
@@ -40,10 +41,10 @@ export default function SongSelect() {
                             
                             setPageParams([
                                 isEditing? Page.EDITOR : Page.GAME, 
-                                {
-                                    ...metadata, 
-                                    song_folder: `${applocaldata}\\userdata\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`
-                                }
+                                [
+                                    metadata, 
+                                    `${applocaldata}\\userdata\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`
+                                ]
                             ])
                         }}
                     />
@@ -64,7 +65,7 @@ function ChartEntry({ metadata, onClick }: Props) {
             className="cursor-pointer"
         >
             <p>{metadata.title}</p>
-            <p>{`${metadata.artists} ++ ${metadata.chart_author}`}</p>
+            <p>{`${metadata.credit_audio} ++ ${metadata.credit_chart}`}</p>
         </div>
     )
 }

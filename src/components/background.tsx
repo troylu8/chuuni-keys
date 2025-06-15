@@ -3,9 +3,9 @@ import {  GameAndEditorParams, usePage } from "../providers/page";
 
 
 export default function Background() {
-    const [[_, params]] = usePage();
+    const [[, params]] = usePage();
     
-    const { song_folder, img } = params as GameAndEditorParams;
+    const [{img}, song_folder] = params as GameAndEditorParams;
     
     return (
         <>

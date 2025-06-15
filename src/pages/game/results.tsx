@@ -21,7 +21,7 @@ function calculateLetter(accuracy: number, fullCombo: boolean) {
 }
 
 export default function Results() {
-    const [[_, params], setPage] = usePage();
+    const [[,params], setPage] = usePage();
     const { perfect, good, miss, maxCombo } = useStats();
     
     const [] = useState("");
@@ -52,7 +52,7 @@ export default function Results() {
         setPage([Page.SONG_SELECT, {isEditing: false}]); 
         
         if (!params) return;
-        const { song_folder } = params as GameAndEditorParams;
+        const [, song_folder] = params as GameAndEditorParams;
         writeTextFile(
             song_folder + "leaderboard.csv", 
             `${Date.now()},${accuracyPercent},${maxCombo},${letter}${fullCombo? ",FC" : ""}\n`,

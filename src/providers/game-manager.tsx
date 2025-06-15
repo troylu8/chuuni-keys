@@ -46,7 +46,7 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function GameManager({ children }: Props) {
-    const [[_, params], setPage] = usePage();
+    const [[,params], setPage] = usePage();
     
     const aud = usePlayback();
     const [gameStage, setGameStage] = useState(GameStage.LOADING);
@@ -65,7 +65,7 @@ export default function GameManager({ children }: Props) {
         globals.keyUnitsEnabled = true;
         museEmitter.setMaxListeners(100);
         
-        const { song_folder, audio: audioSrc } = params as GameAndEditorParams;
+        const [{audio: audioSrc}, song_folder] = params as GameAndEditorParams;
         
         (async () => {
             await aud.loadAudio(song_folder + audioSrc);

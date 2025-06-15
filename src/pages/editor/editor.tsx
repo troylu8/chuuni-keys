@@ -1,4 +1,4 @@
-import { GameAndEditorParams, Page, usePage } from "../../providers/page";
+import { ChartMetadata, GameAndEditorParams, Page, usePage } from "../../providers/page";
 import { usePlayback } from "../../providers/playback";
 import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
@@ -41,12 +41,18 @@ function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEve
 }
 
 export default function Editor() {
-    const [[_, params], setPageParams] = usePage();
-    const { song_folder, audio: audioSrc, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as GameAndEditorParams;
+    const [[,params], setPageParams] = usePage();
+    const [savedMetadata, song_folder] = params as GameAndEditorParams;
+    
+    const [metadata, setMetadataInner] = useState<ChartMetadata>(savedMetadata);
+    function setMetadata(metadata: ChartMetadata) {
+        setSaved(false);
+        setMetadataInner(metadata);
+    }
     
     const aud = usePlayback();
     // load audio file on init
-    useEffect(() => { aud.loadAudio(song_folder + audioSrc); }, [song_folder, audioSrc]);
+    useEffect(() => { aud.loadAudio(song_folder + savedMetadata.audio); }, [savedMetadata]);
     
     const [activeModal, setActiveModalInner] = useState(() => {
         globals.keyUnitsEnabled = true;
@@ -73,10 +79,7 @@ export default function Editor() {
         return unlisten;
     }, []);
     
-    const [bpm, setBPM] = useState<number | null>(savedBPM ?? null);
-    const [measureSize, setMeasureSize] = useState<number | null>(savedMeasureSize ?? null);
-    const [snaps, setSnaps] = useState<number>(savedSnaps);
-    const MS_PER_SNAP = bpm && 60 / bpm * 1000 / (snaps + 1);
+    const ms_per_snap = metadata.bpm && 60 / metadata.bpm * 1000 / (metadata.snaps + 1);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     const first_event_ms = events.begin.value?.[0] ?? null;
@@ -173,6 +176,7 @@ export default function Editor() {
         }
         
         await writeTextFile(song_folder + "chart.txt", res.join("\n"));
+        await writeTextFile(song_folder + "metadata.json", JSON.stringify(metadata, null, 4));
         setSaved(true);
     }
     function handleQuit() {
@@ -183,14 +187,14 @@ export default function Editor() {
     // keybinds and scroll
     useEffect(() => {
         function onScroll(e: WheelEvent) {
-            if (MS_PER_SNAP == null) return;
+            if (ms_per_snap == null) return;
             setPosition(ms => {
                 aud.setPlaying(false);
                 if (e.deltaY < 0) {
-                    return snapLeft(ms, first_event_ms ?? 0, MS_PER_SNAP);
+                    return snapLeft(ms, first_event_ms ?? 0, ms_per_snap);
                 }
                 else {
-                    return snapRight(ms, first_event_ms ?? 0, MS_PER_SNAP);
+                    return snapRight(ms, first_event_ms ?? 0, ms_per_snap);
                 }
             });
         }
@@ -199,16 +203,16 @@ export default function Editor() {
                 aud.setPlaying(!aud.playing);
             else if (e.code === "ShiftLeft") {
                 setPosition(ms => {
-                    if (first_event_ms == null || MS_PER_SNAP == null) return ms;
+                    if (first_event_ms == null || ms_per_snap == null) return ms;
                     if (ms <= first_event_ms) return 0;
-                    return snapLeft(ms, first_event_ms, MS_PER_SNAP);
+                    return snapLeft(ms, first_event_ms, ms_per_snap);
                 });
             }
             else if (e.code === "ShiftRight") {
                 setPosition(ms => {
-                    if (first_event_ms == null || MS_PER_SNAP == null) return ms;
+                    if (first_event_ms == null || ms_per_snap == null) return ms;
                     if (ms < first_event_ms) return first_event_ms;
-                    return snapRight(ms, first_event_ms, MS_PER_SNAP);
+                    return snapRight(ms, first_event_ms, ms_per_snap);
                 });
             }
             else if (e.key === "ArrowLeft")
@@ -232,7 +236,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [aud.playing, MS_PER_SNAP, first_event_ms, snaps, activeModal]);
+    }, [aud.playing, first_event_ms, metadata, activeModal]);
     
     return (
         <>
@@ -251,9 +255,9 @@ export default function Editor() {
                     </div>
                     
                     <Inspector 
-                        bpm={bpm} 
-                        measureSize={measureSize}
-                        snaps={snaps}
+                        bpm={metadata.bpm} 
+                        measureSize={metadata.measure_size}
+                        snaps={metadata.snaps}
                         offsetPosition={position} 
                         duration={aud.duration} 
                         events={events}
@@ -277,16 +281,18 @@ export default function Editor() {
                     }
                     { activeModal == ActiveModal.TIMING && 
                         <TimingModal 
-                            bpm={bpm} 
-                            measureSize={measureSize}
-                            snaps={snaps}
-                            setBPM={setBPM} 
-                            setMeasureSize={setMeasureSize}
-                            setSnaps={setSnaps}
+                            metadata={metadata}
+                            setMetadata={setMetadata}
                             onClose={() => setActiveModal(ActiveModal.NONE)}
                         />
                     }
-                    { activeModal == ActiveModal.DETAILS && <DetailsModal />}
+                    { activeModal == ActiveModal.DETAILS && 
+                        <DetailsModal
+                            metadata={metadata}
+                            setMetadata={setMetadata}
+                            onClose={() => setActiveModal(ActiveModal.NONE)}
+                        />
+                    }
                 </div>
                 
                 {/* bottom row */}
@@ -316,7 +322,7 @@ type SaveChangesProps = Readonly<{
     saveChanges: () => Promise<void>
 }>
 function ConfirmQuitModal({ onClose, saveChanges }: SaveChangesProps) {
-    const [_, setPageParams] = usePage();
+    const [,setPageParams] = usePage();
     return (
         <Modal title="you have unsaved changes!" onClose={onClose}>
             <div className="flex gap-3">

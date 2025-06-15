@@ -20,8 +20,7 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     const [ offsetPos, setOffsetPos ] = useState<number>(0);
     
     function popHitTime() {
-        if (hitTimes.length == 0) 
-            return broadcastDelta("miss");
+        if (hitTimes.length == 0) return;
         
         broadcastDelta(getOffsetPosition() - hitTimes[0]);
         setHitTimes(hitTimes.slice(1));

@@ -5,7 +5,7 @@ type Props = Readonly<{
     showRawDeltas?: boolean
 }>
 export default function AccuracyBar({showRawDeltas}: Props) {
-    const [_, addDeltaListener] = useDelta();
+    const [, addDeltaListener] = useDelta();
     
     const [praise, setPraise] = useState("");
     const [deltas, setDeltas] = useState<[number, number][]>([]);

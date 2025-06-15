@@ -5,7 +5,7 @@ import TimingEditor from "./timing-editor";
 import MuseButton from "../../components/muse-button";
 
 export default function Settings() {
-    const [_, setPageParams] = usePage();
+    const [,setPageParams] = usePage();
     const [settings, setSettings] = useSettings(); 
     const [timingEditorVisible, setTimingEditorVisible] = useState(false);
     

@@ -3,7 +3,7 @@ import { Page, usePage } from "../../providers/page";
 
 
 export default function MainMenu() {
-    const [_, setPageParams] = usePage();    
+    const [,setPageParams] = usePage();    
     
     return (
         <div className="absolute cover flex flex-col justify-center items-center gap-3">

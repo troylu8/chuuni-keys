@@ -1,27 +1,24 @@
 import Modal from "../../components/modal"
+import { ChartMetadata } from "../../providers/page";
 
 
 type Props = Readonly<{
-    bpm: number | null
-    measureSize: number | null
-    snaps: number
-    setBPM: (bpm: number) => void
-    setMeasureSize: (measureSize: number) => void
-    setSnaps: (snaps: number) => void
+    metadata: ChartMetadata
+    setMetadata: (metadata: ChartMetadata) => void
     onClose: () => void
 }>
-export default function TimingModal({ bpm, measureSize, snaps, setBPM, setMeasureSize, setSnaps, onClose }: Props) {
+export default function TimingModal({ metadata, setMetadata, onClose }: Props) {
     return (
         <Modal title="timing" onClose={onClose}>
-            <NumberInput label="BPM" value={bpm} onChange={setBPM} />
-            <NumberInput label="measure size" value={measureSize} onChange={setMeasureSize} />
-            <NumberInput label="snaps" value={snaps} onChange={setSnaps} />
+            <NumberInput label="BPM" value={metadata.bpm} onChange={bpm => setMetadata({...metadata, bpm})} />
+            <NumberInput label="measure size" value={metadata.measure_size} onChange={measure_size => setMetadata({...metadata, measure_size})} />
+            <NumberInput label="snaps" value={metadata.snaps} onChange={snaps => setMetadata({...metadata, snaps})} />
         </Modal>
     );
 }
 
 type NumberInputProps = Readonly<{
-    value: number | null
+    value?: number
     label: string,
     onChange: (num: number) => void
 }>

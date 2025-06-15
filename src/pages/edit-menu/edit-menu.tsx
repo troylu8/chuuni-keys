@@ -1,7 +1,7 @@
 import { Page, usePage } from "../../providers/page";
 
 export default function EditMenu() {
-    const [_, setPageParams] = usePage();
+    const [,setPageParams] = usePage();
     
     return (
         <div className="absolute cover flex flex-col justify-center items-center gap-5">

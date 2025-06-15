@@ -3,7 +3,7 @@ import { useDelta } from "../../providers/score";
 
 export default function Combo() {
     const [combo, setCombo] = useState(0);
-    const [_, addDeltaListener] = useDelta();
+    const [,addDeltaListener] = useDelta();
     
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {

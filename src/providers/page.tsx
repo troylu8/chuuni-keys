@@ -3,13 +3,17 @@ import { useState, createContext, useContext } from "react";
 export type ChartMetadata = {
     id: string,
     title: string,
-    artists: string,
-    chart_author: string,
+    
     bpm?: number,
     measure_size?: number,
-    snaps_per_beat: number,
+    snaps: number,
+    
     audio: string,
-    img?: string
+    img?: string,
+    
+    credit_audio?: string,
+    credit_img?: string,
+    credit_chart?: string,
 }
 
 export enum Page {
@@ -21,7 +25,8 @@ export enum Page {
     EDITOR,
 }
 
-export type GameAndEditorParams = ChartMetadata & { song_folder: string }
+/** [metadata, song folder] */
+export type GameAndEditorParams = [ChartMetadata, string]
 export type SongSelectParams = { isEditing: boolean }
 
 export type PageParams = [Page] | [ Page, GameAndEditorParams | SongSelectParams];

@@ -12,8 +12,8 @@ export function getBeatDuration(bpm: number) {
 }
 
 type Props = Readonly<{
-    bpm: number | null
-    measureSize: number | null
+    bpm?: number
+    measureSize?: number
     snaps: number
     offsetPosition: number
     duration: number
