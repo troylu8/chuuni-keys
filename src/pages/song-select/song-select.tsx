@@ -23,7 +23,6 @@ export default function SongSelect() {
         
         <div className="fixed cover">
             <div className="flex flex-row-reverse gap-3">
-                <button> settings </button>
                 <button onClick={() => setPageParams([Page.MAIN_MENU])}> main menu </button>
             </div>
             

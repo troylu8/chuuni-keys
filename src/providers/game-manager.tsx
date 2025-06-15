@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
 import { GameAndEditorParams, Page, usePage } from "./page";
+import globals from '../lib/globals';
 
 export const ACTIVATION_DURATION = 800;
 export const HITRING_DURATION = 400;
@@ -61,12 +62,13 @@ export default function GameManager({ children }: Props) {
     
     // initialize
     useEffect(() => {
+        globals.keyUnitsEnabled = true;
         museEmitter.setMaxListeners(100);
         
         const { song_folder, audio: audioSrc } = params as GameAndEditorParams;
         
         (async () => {
-            await aud.loadAudio(audioSrc);
+            await aud.loadAudio(song_folder + audioSrc);
             const events = await readChartFile(song_folder + "chart.txt");
             
             resetEvents();
@@ -90,6 +92,8 @@ export default function GameManager({ children }: Props) {
         })();
     }, []);
     
+    // disable key presses when paused
+    useEffect(() => { globals.keyUnitsEnabled = aud.playing }, [aud.playing]);
     
     // game loop
     useEffect(() => {
@@ -99,18 +103,18 @@ export default function GameManager({ children }: Props) {
         
         const lastEventTime = eventsRef.current[eventsRef.current.length-1][0];
         
-        const unlisten = aud.addPosUpdateListener(offset_pos => {
+        const unlisten = aud.addPosUpdateListener(offsetPos => {
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];
-                if (offset_pos >= nextEvent[0]) {
+                if (offsetPos >= nextEvent[0]) {
                     museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
                     i.current++;
                 }
                 else break;
             }
             
-            if (offset_pos > lastEventTime + 5000) {
+            if (offsetPos > lastEventTime + 5000) {
                 resetEvents();
                 setGameStage(GameStage.ENDED);
             }
@@ -126,7 +130,7 @@ export default function GameManager({ children }: Props) {
         aud.setPlaying(true);
     }
     function stopGame() {
-        setPage([Page.SONG_SELECT]);
+        setPage([Page.SONG_SELECT, { isEditing: false }]);
         aud.setPlaying(false);
     }
     

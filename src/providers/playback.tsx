@@ -3,7 +3,7 @@ import { useState, createContext, useContext, useRef, useEffect } from "react";
 import { EventEmitter } from "events";
 import { useSettings } from "./settings";
 
-type PosUpdateListener = (offset_pos: number, true_pos: number) => any
+type PosUpdateListener = (offsetPos: number, truePos: number) => any
 type PosUpdateUnlisten = () => void
 
 type Playback = {

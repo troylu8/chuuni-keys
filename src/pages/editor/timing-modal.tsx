@@ -1,3 +1,4 @@
+import Modal from "../../components/modal"
 
 
 type Props = Readonly<{
@@ -7,15 +8,15 @@ type Props = Readonly<{
     setBPM: (bpm: number) => void
     setMeasureSize: (measureSize: number) => void
     setSnaps: (snaps: number) => void
+    onClose: () => void
 }>
-export default function Timing({ bpm, measureSize, snaps, setBPM, setMeasureSize, setSnaps }: Props) {
-
+export default function TimingModal({ bpm, measureSize, snaps, setBPM, setMeasureSize, setSnaps, onClose }: Props) {
     return (
-        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-1 ">
+        <Modal title="timing" onClose={onClose}>
             <NumberInput label="BPM" value={bpm} onChange={setBPM} />
             <NumberInput label="measure size" value={measureSize} onChange={setMeasureSize} />
             <NumberInput label="snaps" value={snaps} onChange={setSnaps} />
-        </div>
+        </Modal>
     );
 }
 

@@ -30,12 +30,12 @@ export default function TimingEditor({ onClose }: Props) {
         
         let prevI = 0;
         
-        const unlisten = addPosUpdateListener((offset_pos, true_pos) => {
-            setSinceLastBeat((offset_pos < MS_FIRST_BEAT)? offset_pos + MS_PER_LOOP - MS_LAST_BEAT : offset_pos % MS_PER_BEAT);
-            if (true_pos > MS_PER_LOOP) 
-                seek(true_pos - MS_PER_LOOP);
+        const unlisten = addPosUpdateListener((offsetPos, truePos) => {
+            setSinceLastBeat((offsetPos < MS_FIRST_BEAT)? offsetPos + MS_PER_LOOP - MS_LAST_BEAT : offsetPos % MS_PER_BEAT);
+            if (truePos > MS_PER_LOOP) 
+                seek(truePos - MS_PER_LOOP);
             
-            const i = Math.floor((offset_pos - MS_FIRST_BEAT) / MS_PER_BEAT);
+            const i = Math.floor((offsetPos - MS_FIRST_BEAT) / MS_PER_BEAT);
             if (i != prevI && i != -1) {
                 playSfx(SFX.HITSOUND);
                 prevI = i;

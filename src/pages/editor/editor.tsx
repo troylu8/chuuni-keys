@@ -3,15 +3,17 @@ import { usePlayback } from "../../providers/playback";
 import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
-import Timing from "./timing";
-import Details from "./details";
+import Modal from "../../components/modal";
+import TimingModal from "./timing-modal";
+import DetailsModal from "./details-modal";
 import { MuseEvent, readChartFile } from "../../providers/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
-import Notes from "./notes";
+import EditorKeyboard from "./editor-keyboard";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
+import globals from "../../lib/globals";
 
-enum Tab { NOTES, TIMING, DETAILS };
+enum ActiveModal { NONE, TIMING, DETAILS, CONFIRM_QUIT };
 
 function snapLeft(ms: number, startingFrom: number, size: number) {
     const beat = (ms - startingFrom) / size;
@@ -42,12 +44,19 @@ export default function Editor() {
     const [[_, params], setPageParams] = usePage();
     const { song_folder, audio: audioSrc, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as GameAndEditorParams;
     
-    const [tab, setTab] = useState(Tab.NOTES);
-    
     const aud = usePlayback();
-    
     // load audio file on init
     useEffect(() => { aud.loadAudio(song_folder + audioSrc); }, [song_folder, audioSrc]);
+    
+    const [activeModal, setActiveModalInner] = useState(() => {
+        globals.keyUnitsEnabled = true;
+        return ActiveModal.NONE;
+    });
+    function setActiveModal(modal: ActiveModal) {
+        aud.setPlaying(false);
+        globals.keyUnitsEnabled = modal == ActiveModal.NONE;
+        setActiveModalInner(modal);
+    }
     
     
     const [position, setPositionInner] = useState(0);
@@ -58,8 +67,8 @@ export default function Editor() {
         });
     }
     useEffect(() => {
-        const unlisten = aud.addPosUpdateListener(offset_pos => {
-            setPositionInner(offset_pos);
+        const unlisten = aud.addPosUpdateListener(offsetPos => {
+            setPositionInner(offsetPos);
         });
         return unlisten;
     }, []);
@@ -69,8 +78,8 @@ export default function Editor() {
     const [snaps, setSnaps] = useState<number>(savedSnaps);
     const MS_PER_SNAP = bpm && 60 / bpm * 1000 / (snaps + 1);
     
-    const [events, setEvents] = useState<Tree<number, MuseEvent> | null>(null);
-    const first_event_ms = events && (events.begin.value?.[0] ?? null);
+    const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
+    const first_event_ms = events.begin.value?.[0] ?? null;
     useEffect(() => {
         readChartFile(song_folder + "chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
@@ -126,7 +135,6 @@ export default function Editor() {
     function deleteEvent(event: MuseEvent) {
         setSaved(false);
         setEvents(prev => {
-            if (!prev) return null;
             const treeWithoutEvent = deleteEventFrom(prev, event);
             if (treeWithoutEvent) {
                 return treeWithoutEvent;
@@ -136,11 +144,11 @@ export default function Editor() {
     }
     
     function toggleEventHere(key: string) {
+        console.log(activeModal);
         const pos = aud.getTruePosition();
         setSaved(false);
         
         setEvents(events => {
-            if (!events) return null;
             const event: MuseEvent = [pos, ":" + key];
             
             const treeWithoutEvent = deleteEventFrom(events, event);
@@ -156,7 +164,6 @@ export default function Editor() {
     }
     
     const [saved, setSaved] = useState(true);
-    const [savePopupVisible, setSavePopupVisible] = useState(false);
     async function handleSave() {
         if (!events) return;
         
@@ -168,9 +175,9 @@ export default function Editor() {
         await writeTextFile(song_folder + "chart.txt", res.join("\n"));
         setSaved(true);
     }
-    async function handleQuit() {
-        if (saved) return setPageParams([Page.MAIN_MENU]);
-        setSavePopupVisible(true);
+    function handleQuit() {
+        if (saved) setPageParams([Page.MAIN_MENU]);
+        else setActiveModal(ActiveModal.CONFIRM_QUIT);
     }
     
     // keybinds and scroll
@@ -215,24 +222,21 @@ export default function Editor() {
             else if (e.ctrlKey && e.key === "y")
                 handleRedo()
         }
-        window.addEventListener("wheel", onScroll);
-        window.addEventListener("keydown", onKeyDown);
+        
+        if (activeModal == ActiveModal.NONE) {
+            window.addEventListener("wheel", onScroll);
+            window.addEventListener("keydown", onKeyDown);
+        };
         
         return () => { 
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [aud.playing, MS_PER_SNAP, first_event_ms, snaps]);
+    }, [aud.playing, MS_PER_SNAP, first_event_ms, snaps, activeModal]);
     
     return (
         <>
             <Background />
-            { savePopupVisible && 
-                <SaveChangesPopup 
-                    onClose={() => setSavePopupVisible(false)}
-                    saveChanges={handleSave}
-                />
-            }
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
@@ -241,9 +245,8 @@ export default function Editor() {
                         <MuseButton onClick={handleQuit}> quit </MuseButton>
                         <MuseButton onClick={handleSave}> save {!saved && "*"} </MuseButton>
                         <div className="grow flex flex-row-reverse gap-1">
-                            <MuseButton onClick={() => setTab(Tab.DETAILS)}> details </MuseButton>
-                            <MuseButton onClick={() => setTab(Tab.TIMING)}> timing </MuseButton>
-                            <MuseButton onClick={() => setTab(Tab.NOTES)}> notes </MuseButton>
+                            <MuseButton onClick={() => setActiveModal(ActiveModal.DETAILS)}> details </MuseButton>
+                            <MuseButton onClick={() => setActiveModal(ActiveModal.TIMING)}> timing </MuseButton>
                         </div>
                     </div>
                     
@@ -262,19 +265,28 @@ export default function Editor() {
                     />
                 </nav>
                 
+                {/* center */}
                 <div className="relative grow">
-                    { tab == Tab.NOTES && events && <Notes events={events} position={position} onHit={toggleEventHere} />}
-                    { tab == Tab.TIMING && 
-                        <Timing 
+                    <EditorKeyboard events={events} position={position} onHit={toggleEventHere} />
+                    
+                    { activeModal == ActiveModal.CONFIRM_QUIT && 
+                        <ConfirmQuitModal 
+                            onClose={() => setActiveModal(ActiveModal.NONE)}
+                            saveChanges={handleSave}
+                        />
+                    }
+                    { activeModal == ActiveModal.TIMING && 
+                        <TimingModal 
                             bpm={bpm} 
                             measureSize={measureSize}
                             snaps={snaps}
                             setBPM={setBPM} 
                             setMeasureSize={setMeasureSize}
                             setSnaps={setSnaps}
+                            onClose={() => setActiveModal(ActiveModal.NONE)}
                         />
                     }
-                    { tab == Tab.DETAILS && <Details />}
+                    { activeModal == ActiveModal.DETAILS && <DetailsModal />}
                 </div>
                 
                 {/* bottom row */}
@@ -303,24 +315,17 @@ type SaveChangesProps = Readonly<{
     onClose: () => any
     saveChanges: () => Promise<void>
 }>
-function SaveChangesPopup({ onClose, saveChanges }: SaveChangesProps) {
+function ConfirmQuitModal({ onClose, saveChanges }: SaveChangesProps) {
     const [_, setPageParams] = usePage();
     return (
-        <div className="
-            fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 flex flex-col
-            border-2 border-foreground bg-background rounded-md z-50 p-2 gap-2
-        ">
-            <div className="flex justify-between">
-                <h1 className="text-center grow"> you have unsaved changes! </h1>
-                <MuseButton onClick={onClose}> x </MuseButton>
-            </div>
+        <Modal title="you have unsaved changes!" onClose={onClose}>
             <div className="flex gap-3">
                 <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> discard changes </MuseButton>
                 <MuseButton onClick={() => 
                     saveChanges().then(() => setPageParams([Page.MAIN_MENU]))
                 }> save and quit </MuseButton>
             </div>
-        </div>
+        </Modal>
     )
 }
 

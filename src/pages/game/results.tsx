@@ -49,7 +49,7 @@ export default function Results() {
     
     
     function handleToSongSelect() {
-        setPage([Page.SONG_SELECT]); 
+        setPage([Page.SONG_SELECT, {isEditing: false}]); 
         
         if (!params) return;
         const { song_folder } = params as GameAndEditorParams;

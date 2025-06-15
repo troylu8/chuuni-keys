@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { useGameControls } from "../../providers/game-manager";
 import { usePlayback } from "../../providers/playback";
+import Modal from "../../components/modal";
+import MuseButton from "../../components/muse-button";
 
-export default function PauseMenu() {
+export default function PauseModal() {
     const { playing, setPlaying } = usePlayback();
     const [ restartGame, stopGame ] = useGameControls();
     
@@ -21,11 +23,11 @@ export default function PauseMenu() {
     return (
         <>
             { !playing && 
-                <div className="absolute cover flex flex-col justify-center items-center gap-3 z-20">
-                    <button onClick={() => setPlaying(true)}> resume </button>
-                    <button onClick={restartGame}> restart </button>
-                    <button onClick={stopGame}> quit </button>
-                </div>
+                <Modal title="paused">
+                    <MuseButton onClick={() => setPlaying(true)}> resume </MuseButton>
+                    <MuseButton onClick={restartGame}> restart </MuseButton>
+                    <MuseButton onClick={stopGame}> quit </MuseButton>
+                </Modal>
             }
         </>
     )

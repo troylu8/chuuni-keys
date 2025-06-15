@@ -13,7 +13,7 @@ type Props = Readonly<{
     position: number
     onHit: (key: string) => any
 }>
-export default function Notes({ events, position, onHit }: Props) {
+export default function EditorKeyboard({ events, position, onHit }: Props) {
     
     const { playing } = usePlayback();
     const nextNoteTimeRef = useRef<number | undefined>(events.begin.value?.[0]);
@@ -53,6 +53,7 @@ export default function Notes({ events, position, onHit }: Props) {
                 label={key} 
                 hitProgresses={visibleProgresses[key] ?? []} 
                 onHit={() => onHit(key)}
+                fadeOut
             />
         } />
     );

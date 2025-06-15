@@ -17,32 +17,22 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     const addMuseListener = useMuseEvents();
     
     const [ hitTimes, setHitTimes ] = useState<number[]>([]);
-    const [ progresses, setHitProgresses ] = useState<number[]>([]);
-    
-    function updateHitProgresses(offset_pos: number) {
-        setHitProgresses(hitTimes.map(hitTime => (hitTime - offset_pos) / HITRING_DURATION));
-    }
+    const [ offsetPos, setOffsetPos ] = useState<number>(0);
     
     function popHitTime() {
-        setHitTimes(prev => {
-            const next = [...prev];
-            next.shift();
-            return next;
-        });
-    }
-    
-    function onHit() {
-        if (hitTimes.length == 0) return console.log("none!");
+        if (hitTimes.length == 0) 
+            return broadcastDelta("miss");
+        
         broadcastDelta(getOffsetPosition() - hitTimes[0]);
-        popHitTime();
+        setHitTimes(hitTimes.slice(1));
     }
+
     useEffect(() => {
-        const unlistenPos = addPosUpdateListener(offset_pos => {
-            if (hitTimes.length != 0 && offset_pos > hitTimes[0] + MISS_THRESHOLD) {
+        const unlistenPos = addPosUpdateListener(offsetPos => {
+            if (hitTimes.length != 0 && offsetPos > hitTimes[0] + MISS_THRESHOLD) {
                 popHitTime();
-                broadcastDelta("miss");
             }
-            updateHitProgresses(offset_pos);
+            setOffsetPos(offsetPos);
         });
         return unlistenPos;
     }, [hitTimes]);
@@ -63,10 +53,10 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     return (
         <KeyUnit 
             keyCode={keyCode}
-            onHit={onHit}
+            onHit={popHitTime}
             label={children} 
             labelCentered={labelCentered} 
-            hitProgresses={progresses}
+            hitProgresses={hitTimes.map(hitTime => (hitTime - offsetPos) / HITRING_DURATION)}
         />
     );
 }

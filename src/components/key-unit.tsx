@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import playSfx, { SFX } from "../lib/sfx";
+import globals from "../lib/globals";
 
 
 const KEY_SIZE = 48;
@@ -20,8 +21,9 @@ type Props = Readonly<{
     label?: ReactNode
     labelCentered?: boolean
     hitProgresses: number[]
+    fadeOut?: boolean
 }>
-export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, activated = hitProgresses.length != 0 }: Props ) {
+export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, activated = hitProgresses.length != 0, fadeOut }: Props ) {
     const [ pressed, setPressed ] = useState(false);
     
     function hit() {
@@ -32,7 +34,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     useEffect(() => {
         
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === keyCode && noModifiersPressed(e) ) {
+            if (globals.keyUnitsEnabled && e.key === keyCode && noModifiersPressed(e) ) {
                 setPressed(true);
                 hit();
             }
@@ -48,7 +50,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
         }
-    }, []);
+    }, [onHit]);
     
     const allHitsPassed = hitProgresses.length != 0 && hitProgresses.every(v => v < 0);
     const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);
@@ -60,7 +62,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
                 height: KEY_SIZE,
                 
                 // if all hits have passed, set opacity based on how long ago the last hit was, with a min of 25%
-                opacity: allHitsPassed? Math.max(0.25, 1 + latestHitProgress) : undefined 
+                opacity: fadeOut && allHitsPassed ? Math.max(0.25, 1 + latestHitProgress) : undefined 
             }}
             className={`
                 flex flex-col-reverse rounded-xl relative
