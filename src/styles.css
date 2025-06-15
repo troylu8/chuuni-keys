@@ -4,12 +4,14 @@
     --foreground: #282a3a;
     --background: #f3f4f8;
     --accent1: #ceb2dc;
+    --error: #833642;
 }
 
 @theme inline {
     --color-foreground: var(--foreground);
     --color-background: var(--background);
     --color-accent1: var(--accent1);
+    --color-error: var(--error);
 }
 
 body {

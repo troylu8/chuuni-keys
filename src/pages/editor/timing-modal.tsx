@@ -25,8 +25,9 @@ type NumberInputProps = Readonly<{
 function NumberInput({ value, label, onChange }: NumberInputProps) {
     return (
         <div className="flex gap-3 justify-between text-nowrap">
-            <p> {label} </p>
+            <label htmlFor={label}> {label} </label>
             <input 
+                id={label}
                 type="number" 
                 value={value ?? "-1"} 
                 onChange={e => onChange(Number(e.currentTarget.value))}

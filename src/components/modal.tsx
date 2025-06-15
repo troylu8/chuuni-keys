@@ -22,18 +22,14 @@ export default function Modal({ onClose, title, children }: Props) {
         >
             <div className="max-h-[80%] bg-background rounded-md flex flex-col outline-3 outline-foreground p-3 gap-3">
                 <div className="flex justify-between">
-                    <h1 
-                        className={`font-bold text-primary md:text-lg text-nowrap ${onClose == undefined && "w-full text-center"}`}
-                    >
+                    <h1 className={`text-nowrap ${onClose == undefined && "w-full text-center"}`}>
                         {title}
                     </h1>
                     
                     { onClose && <MuseButton onClick={handleClose}> x </MuseButton> }
                 </div>
                 
-                <div className="flex flex-col gap-3">
-                    { children }
-                </div>
+                { children }
             </div>
         </div>
     );

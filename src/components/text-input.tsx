@@ -1,23 +1,26 @@
 import { KeyboardEvent } from "react";
 
 type Props = {
-    bind: [string, (nextText: string) => any];
-    className?: string;
-    placeholder?: string;
-    maxChars?: number;
-    onSubmit?: () => any 
+    bind: [string, (nextText: string) => any]
+    valid?: boolean,
+    className?: string
+    placeholder?: string
+    maxChars?: number
+    onSubmit?: () => any
+    label?: string
 };
 export default function TextInput({
     bind,
+    valid = true,
     className,
     placeholder,
     maxChars,
-    onSubmit
+    onSubmit,
 }: Props) {
-    const [text, setText] = bind;
+    let [text, setText] = bind;
     
-    const showCharLimit = (maxChars != undefined) && (text.length > maxChars - 10);
-    const limitExceeded = (maxChars != undefined) && (text.length > maxChars);
+    const showCharLimit = maxChars != undefined && text.length > maxChars - 10;
+    const limitExceeded = maxChars != undefined && text.length > maxChars;
     
     function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
         if (onSubmit && e.key === "Enter" && !limitExceeded) onSubmit()
@@ -28,7 +31,7 @@ export default function TextInput({
             <input
                 placeholder={placeholder}
                 onInput={(e) => setText(e.currentTarget.value) }
-                className={`${className} w-full ${showCharLimit && "pr-15"}`}
+                className={`${className} w-full rounded-sm ${showCharLimit && "pr-15"} outline-2 ${!valid && "outline-error text-error" }`}
                 value={text}
                 onKeyDown={handleKeyDown}
             />
