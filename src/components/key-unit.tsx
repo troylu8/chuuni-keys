@@ -37,18 +37,18 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
                 hit();
             }
         }
-        window.addEventListener("keydown", handleKeyDown);
-        
         function handleKeyUp(e: KeyboardEvent) {
             if (e.key === keyCode) setPressed(false);
         }
+        
+        window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
         
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
         }
-    }, [onHit]);
+    }, []);
     
     const allHitsPassed = hitProgresses.length != 0 && hitProgresses.every(v => v < 0);
     const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);

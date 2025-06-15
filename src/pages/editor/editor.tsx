@@ -13,6 +13,31 @@ import MuseButton from "../../components/muse-button";
 
 enum Tab { NOTES, TIMING, DETAILS };
 
+function snapLeft(ms: number, startingFrom: number, size: number) {
+    const beat = (ms - startingFrom) / size;
+    if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
+        return Math.round(beat - 1) * size + startingFrom;
+    
+    return Math.floor(beat) * size + startingFrom;
+}
+function snapRight(ms: number, startingFrom: number, size: number) {
+    const beat = (ms - startingFrom) / size;
+    if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
+        return Math.round(beat + 1) * size + startingFrom;
+    
+    return Math.ceil(beat) * size + startingFrom;
+}
+function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEvent) {
+    const iter = tree.ge(pos); // must use `.ge()` instead of `.find()` bc `.ge()` gets the LEFTMOST node, not the first encountered node
+    while (iter.valid && iter.key == pos) {
+        // if this key exists at this time, remove it
+        if (iter.value![1] == eventStr) {
+            return iter.remove();
+        }
+        iter.next();
+    }
+}
+
 export default function Editor() {
     const [[_, params], setPageParams] = usePage();
     const { song_folder, audio: audioSrc, bpm: savedBPM, measure_size: savedMeasureSize, snaps_per_beat: savedSnaps } = params as GameAndEditorParams;
@@ -21,7 +46,10 @@ export default function Editor() {
     
     const aud = usePlayback();
     
+    // load audio file on init
     useEffect(() => { aud.loadAudio(song_folder + audioSrc); }, [song_folder, audioSrc]);
+    
+    
     const [position, setPositionInner] = useState(0);
     function setPosition(setter: (prev: number) => number) {
         setPositionInner(prev => {
@@ -37,9 +65,9 @@ export default function Editor() {
     }, []);
     
     const [bpm, setBPM] = useState<number | null>(savedBPM ?? null);
-    const MS_PER_BEAT = bpm && 60 / bpm * 1000;
     const [measureSize, setMeasureSize] = useState<number | null>(savedMeasureSize ?? null);
     const [snaps, setSnaps] = useState<number>(savedSnaps);
+    const MS_PER_SNAP = bpm && 60 / bpm * 1000 / (snaps + 1);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent> | null>(null);
     const first_event_ms = events && (events.begin.value?.[0] ?? null);
@@ -55,103 +83,80 @@ export default function Editor() {
         });
     }, [song_folder]);
     
-    // keybinds and scroll
-    useEffect(() => {
-        function onScroll(e: WheelEvent) {
-            if (MS_PER_BEAT == null) return;
-            setPosition(ms => {
-                aud.setPlaying(false);
-                
-                if (e.deltaY < 0) {
-                    return snapLeft(ms, first_event_ms ?? 0, MS_PER_BEAT / (snaps + 1));
-                }
-                else {
-                    return snapRight(ms, first_event_ms ?? 0, MS_PER_BEAT / (snaps + 1));
-                }
-            });
-        }
-        function snapLeft(ms: number, startingFrom: number, size: number) {
-            const beat = (ms - startingFrom) / size;
-            if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
-                return Math.round(beat - 1) * size + startingFrom;
-            
-            return Math.floor(beat) * size + startingFrom;
-        }
-        function snapRight(ms: number, startingFrom: number, size: number) {
-            const beat = (ms - startingFrom) / size;
-            if (beat % 1 < 0.01 || 1 - (beat % 1) < 0.01) 
-                return Math.round(beat + 1) * size + startingFrom;
-            
-            return Math.ceil(beat) * size + startingFrom;
+    /** [`true/false` = added/removed event, event] */
+    const historyRef = useRef<[boolean, MuseEvent][]>([]);
+    const historyPosRef = useRef(0);
+    function appendHistory(entry: [boolean, MuseEvent]) {
+        
+        // if this entry is the same as the last, ignore it
+        const prev = historyRef.current[historyPosRef.current - 1];
+        if (prev != undefined && prev[0] == entry[0] && prev[1][0] == entry[1][0] && prev[1][1] == entry[1][1]) {
+            return;
         }
         
-        function onKeyDown(e: KeyboardEvent) {
-            if (e.key === " ")  
-                aud.setPlaying(!aud.playing);
-            else if (e.code === "ShiftLeft") {
-                setPosition(ms => {
-                    if (first_event_ms == null || MS_PER_BEAT == null) return ms;
-                    if (ms <= first_event_ms) return 0;
-                    return snapLeft(ms, first_event_ms, MS_PER_BEAT);
-                });
-            }
-            else if (e.code === "ShiftRight") {
-                setPosition(ms => {
-                    if (first_event_ms == null || MS_PER_BEAT == null) return ms;
-                    if (ms < first_event_ms) return first_event_ms;
-                    return snapRight(ms, first_event_ms, MS_PER_BEAT);
-                });
-            }
-            else if (e.key === "ArrowLeft")
-                setPosition(prev => prev - 1);
-            else if (e.key === "ArrowRight")
-                setPosition(prev => prev + 1);
-            else if (e.ctrlKey && e.key === "s")
-                handleSave()
+        // if not at the top of history, overwrite history past this point
+        if (historyPosRef.current < historyRef.current.length) {
+            historyRef.current = historyRef.current.slice(0, historyPosRef.current);
         }
-        window.addEventListener("wheel", onScroll);
-        window.addEventListener("keydown", onKeyDown);
         
-        return () => { 
-            window.removeEventListener("wheel", onScroll); 
-            window.removeEventListener("keydown", onKeyDown); 
-        }
-    }, [aud.playing, MS_PER_BEAT, first_event_ms, snaps]);
+        historyRef.current.push(entry);
+        historyPosRef.current = historyRef.current.length;
+    }
+    function handleUndo() {
+        if (historyPosRef.current == 0) return; 
+        
+        historyPosRef.current--;
+        const [eventWasAdded, event] = historyRef.current[historyPosRef.current];
+        
+        eventWasAdded? deleteEvent(event) : addEvent(event);
+    }
+    function handleRedo() {
+        if (historyPosRef.current == historyRef.current.length) return; 
+     
+        const [eventWasAdded, event] = historyRef.current[historyPosRef.current];
+        historyPosRef.current++;
+        
+        eventWasAdded? addEvent(event) : deleteEvent(event);
+    }
+    
+    function addEvent(event: MuseEvent) {
+        setSaved(false);
+        setEvents(tree => tree?.insert(event[0], event) ?? null);
+    }
+    function deleteEvent(event: MuseEvent) {
+        setSaved(false);
+        setEvents(prev => {
+            if (!prev) return null;
+            const treeWithoutEvent = deleteEventFrom(prev, event);
+            if (treeWithoutEvent) {
+                return treeWithoutEvent;
+            }
+            return prev;
+        });
+    }
     
     function toggleEventHere(key: string) {
         const pos = aud.getTruePosition();
-        
         setSaved(false);
-        setEvents(tree => {
-            if (!tree) return null;
+        
+        setEvents(events => {
+            if (!events) return null;
+            const event: MuseEvent = [pos, ":" + key];
             
-            const treeWithoutEvent = deleteEventFrom(tree, [pos, ":" + key]);
+            const treeWithoutEvent = deleteEventFrom(events, event);
             if (treeWithoutEvent) {
-                console.log("removed", [pos, ":" + key]);
+                appendHistory([false, event]);
                 return treeWithoutEvent;
             }
-            console.log("added", [pos, ":" + key]);
             
             // key didnt exist at this time, so add it
-            return tree.insert(pos, [pos, ":" + key]);
+            appendHistory([true, event]);
+            return events.insert(pos, event);
         });
-    }
-    useEffect(() => console.log(JSON.stringify(events?.values)), [events])
-    
-    function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEvent) {
-        const iter = tree.ge(pos); // must use `.ge()` instead of `.find()` bc `.ge()` gets the LEFTMOST node, not the first encountered node
-        while (iter.valid && iter.key == pos) {
-            // if this key exists at this time, remove it
-            if (iter.value![1] == eventStr) {
-                return iter.remove();
-            }
-            iter.next();
-        }
     }
     
     const [saved, setSaved] = useState(true);
     const [savePopupVisible, setSavePopupVisible] = useState(false);
-    
     async function handleSave() {
         if (!events) return;
         
@@ -168,18 +173,56 @@ export default function Editor() {
         setSavePopupVisible(true);
     }
     
-    function handleEventTickerLeftClick([pos]: MuseEvent) {
-        setPosition(() => pos);
-    }
-    function handleEventTickerRightClick(event: MuseEvent) {
-        setSaved(false);
-        // delete that event
-        setEvents(prev => {
-            if (!prev) return null;
-            const treeWithEventRemoved = deleteEventFrom(prev, event);
-            return treeWithEventRemoved? treeWithEventRemoved : prev;
-        })
-    }
+    // keybinds and scroll
+    useEffect(() => {
+        function onScroll(e: WheelEvent) {
+            if (MS_PER_SNAP == null) return;
+            setPosition(ms => {
+                aud.setPlaying(false);
+                if (e.deltaY < 0) {
+                    return snapLeft(ms, first_event_ms ?? 0, MS_PER_SNAP);
+                }
+                else {
+                    return snapRight(ms, first_event_ms ?? 0, MS_PER_SNAP);
+                }
+            });
+        }
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === " ")  
+                aud.setPlaying(!aud.playing);
+            else if (e.code === "ShiftLeft") {
+                setPosition(ms => {
+                    if (first_event_ms == null || MS_PER_SNAP == null) return ms;
+                    if (ms <= first_event_ms) return 0;
+                    return snapLeft(ms, first_event_ms, MS_PER_SNAP);
+                });
+            }
+            else if (e.code === "ShiftRight") {
+                setPosition(ms => {
+                    if (first_event_ms == null || MS_PER_SNAP == null) return ms;
+                    if (ms < first_event_ms) return first_event_ms;
+                    return snapRight(ms, first_event_ms, MS_PER_SNAP);
+                });
+            }
+            else if (e.key === "ArrowLeft")
+                setPosition(prev => prev - 1);
+            else if (e.key === "ArrowRight")
+                setPosition(prev => prev + 1);
+            else if (e.ctrlKey && e.key === "s")
+                handleSave()
+            else if (e.ctrlKey && e.key === "z")
+                handleUndo()
+            else if (e.ctrlKey && e.key === "y")
+                handleRedo()
+        }
+        window.addEventListener("wheel", onScroll);
+        window.addEventListener("keydown", onKeyDown);
+        
+        return () => { 
+            window.removeEventListener("wheel", onScroll); 
+            window.removeEventListener("keydown", onKeyDown); 
+        }
+    }, [aud.playing, MS_PER_SNAP, first_event_ms, snaps]);
     
     return (
         <>
@@ -193,7 +236,7 @@ export default function Editor() {
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
-                <nav className="flex flex-col gap-5 mb-8">
+                <nav className="flex flex-col gap-5 mb-8 z-20">
                     <div className="relative flex gap-1">
                         <MuseButton onClick={handleQuit}> quit </MuseButton>
                         <MuseButton onClick={handleSave}> save {!saved && "*"} </MuseButton>
@@ -211,8 +254,11 @@ export default function Editor() {
                         offsetPosition={position} 
                         duration={aud.duration} 
                         events={events}
-                        onTickerLeftClick={handleEventTickerLeftClick}
-                        onTickerRightClick={handleEventTickerRightClick}
+                        setPosition={pos => setPosition(() => pos)}
+                        deleteEvent={event => {
+                            appendHistory([false, event]); 
+                            deleteEvent(event);
+                        }}
                     />
                 </nav>
                 

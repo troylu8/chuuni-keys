@@ -18,10 +18,10 @@ type Props = Readonly<{
     offsetPosition: number
     duration: number
     events: Tree<number, MuseEvent> | null
-    onTickerLeftClick: (e: MuseEvent) => any
-    onTickerRightClick: (e: MuseEvent) => any
+    setPosition: (pos: number) => void
+    deleteEvent: (e: MuseEvent) => void
 }>
-export default function Inspector({ bpm, measureSize, snaps, offsetPosition, duration, events, onTickerLeftClick, onTickerRightClick }: Props) {
+export default function Inspector({ bpm, measureSize, snaps, offsetPosition, duration, events, setPosition, deleteEvent }: Props) {
     
     const first_event_ms = events && (events.begin.value?.[0] ?? null);
     
@@ -122,8 +122,8 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
                 key={px + "col"} 
                 px={px} 
                 events={events}
-                onTickerLeftClick={onTickerLeftClick}
-                onTickerRightClick={onTickerRightClick}
+                setPosition={setPosition}
+                deleteEvent={deleteEvent}
             />
         );
     }
@@ -146,45 +146,48 @@ const MAX_EVENTS_PER_COLUMN = 3;
 type KeyColumnProps = Readonly<{
     px: number
     events: MuseEvent[]
-    onTickerLeftClick: (e: MuseEvent) => any
-    onTickerRightClick: (e: MuseEvent) => any
+    setPosition: (pos: number) => void
+    deleteEvent: (e: MuseEvent) => void
 }>
-function MuseEventColumn({ px, events, onTickerLeftClick, onTickerRightClick }: KeyColumnProps) {
+function MuseEventColumn({ px, events, setPosition, deleteEvent }: KeyColumnProps) {
     
     // only show the first (MAX_EVENTS_PER_COLUMN) events.
-    // if too many events, show 1 less than (MAX_EVENTS_PER_COLUMN) events (to make room for the "+x" ticker)
+    // 
+    // if too many events, show 1 less than (MAX_EVENTS_PER_COLUMN) events 
+    // to make room for the ticker with a number label for the # of hidden events
     const visibleEvents = events.length <= MAX_EVENTS_PER_COLUMN ? events : events.slice(0, MAX_EVENTS_PER_COLUMN-1);
     
     return (
         <div 
             style={{left: px}} 
-            className="absolute -translate-x-1/2 top-1 flex flex-col items-center font-mono [&>p]:h-3 [&>p]:leading-3"
+            className="absolute -translate-x-1/2 top-1 flex flex-col items-center font-mono"
         >
             { 
                 visibleEvents.map((e, i) => (
                     <MuseEventTicker 
                         key={i} 
-                        label={toInspectorDisplay(e[1])} 
-                        onLeftClick={() => onTickerLeftClick(e)}
-                        onRightClick={() => onTickerRightClick(e)}
-                    />
+                        onLeftClick={() => setPosition(e[0])}
+                        onRightClick={() => deleteEvent(e)}
+                    > { toInspectorDisplay(e[1]) } </MuseEventTicker>
                 ))
             }
             
-            {/* the extra "+x" ticker when events exceed MAX_EVENTS_PER_COLUMN */}
+            {/* the extra ticker showing # of events exceeding MAX_EVENTS_PER_COLUMN */}
             { events.length > MAX_EVENTS_PER_COLUMN && 
-                <MuseEventTicker label={"+" + (events.length - MAX_EVENTS_PER_COLUMN + 1)} />
+                <MuseEventTicker
+                    onLeftClick={() => setPosition(events[0][0])}
+                > {events.length - MAX_EVENTS_PER_COLUMN + 1} </MuseEventTicker>
             }
         </div>
     )
 }
 
 type MuseEventTickerProps = Readonly<{
-    label: string
+    children: React.ReactNode
     onLeftClick?: () => any 
     onRightClick?: () => any
 }>
-function MuseEventTicker({ label, onLeftClick, onRightClick }: MuseEventTickerProps) {
+function MuseEventTicker({ children, onLeftClick, onRightClick }: MuseEventTickerProps) {
     
     return (
         <button 
@@ -194,6 +197,6 @@ function MuseEventTicker({ label, onLeftClick, onRightClick }: MuseEventTickerPr
             "
             onClick={() => {if (onLeftClick) onLeftClick()}}
             onContextMenu={() => { if (onRightClick) onRightClick(); }}
-        > { label } </button>
+        > { children } </button>
     )
 }
