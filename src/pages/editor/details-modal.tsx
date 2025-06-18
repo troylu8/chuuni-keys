@@ -3,12 +3,15 @@ import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
 import { ChartMetadata } from "../../providers/page";
 import { openPath } from '@tauri-apps/plugin-opener';
+import { copyFile, remove } from '@tauri-apps/plugin-fs';
+import { basename } from '@tauri-apps/api/path';
+
 
 
 type Props = Readonly<{
     songFolder: string,
     metadata: ChartMetadata
-    setMetadata: (metadata: ChartMetadata) => void
+    setMetadata: (metadata: ChartMetadata, save?: boolean) => void
     onClose: () => void
 }>
 export default function DetailsModal({ songFolder, metadata, setMetadata, onClose }: Props) {
@@ -34,10 +37,22 @@ export default function DetailsModal({ songFolder, metadata, setMetadata, onClos
             directory: false,
             title: "Select background image",
         });
-    }
-    
-    async function handleOpenSongFolder() {
-        await openPath(songFolder)
+        
+        if (filepath == null) return;
+        
+        // copy to song folder
+        const newImg = await basename(filepath)
+        await copyFile(filepath, songFolder + newImg);
+        console.log(filepath, "to", songFolder + newImg);
+        
+        // delete old img
+        const oldImg = metadata.img;
+        console.log(oldImg, "/", newImg);
+        if (oldImg != newImg) {     // if new and old img are the same, copy will have overridden so no need to delete
+            await remove(songFolder + oldImg);
+        }
+        
+        setMetadata({ ...metadata, img: newImg }, true);
     }
 
     return (
@@ -66,7 +81,7 @@ export default function DetailsModal({ songFolder, metadata, setMetadata, onClos
                 
                 <button
                     style={{gridColumn: "1 / -1"}} 
-                    onClick={handleOpenSongFolder}
+                    onClick={() => openPath(songFolder)}
                 > open song folder </button>
             </div>
         </Modal>

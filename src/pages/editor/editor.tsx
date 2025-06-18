@@ -47,9 +47,10 @@ export default function Editor() {
     const [savedMetadata, song_folder] = params as GameAndEditorParams;
     
     const [metadata, setMetadataInner] = useState<ChartMetadata>(savedMetadata);
-    function setMetadata(metadata: ChartMetadata) {
-        setSaved(false);
+    async function setMetadata(metadata: ChartMetadata, save: boolean = false) {
         setMetadataInner(metadata);
+        if (save) await handleSave(metadata);
+        else            setSaved(false);
     }
     
     const aud = usePlayback();
@@ -170,7 +171,7 @@ export default function Editor() {
     }
     
     const [saved, setSaved] = useState(true);
-    async function handleSave() {
+    async function handleSave(newMetadata: ChartMetadata = metadata) {
         if (!events) return;
         
         const res = [];
@@ -179,7 +180,7 @@ export default function Editor() {
         }
         
         await writeTextFile(song_folder + "chart.txt", res.join("\n"));
-        await writeTextFile(song_folder + "metadata.json", JSON.stringify(metadata, null, 4));
+        await writeTextFile(song_folder + "metadata.json", JSON.stringify(newMetadata, null, 4));
         setSaved(true);
     }
     function handleQuit() {
@@ -258,7 +259,7 @@ export default function Editor() {
     
     return (
         <>
-            <Background />
+            <Background imgPath={song_folder + metadata.img} />
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}

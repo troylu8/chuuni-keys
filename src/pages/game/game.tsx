@@ -7,6 +7,7 @@ import Background from "../../components/background";
 import Combo from "./combo";
 import Results from "./results";
 import KeyUnitGame from "./key-unit-game";
+import { GameAndEditorParams, usePage } from "../../providers/page";
 
 export default function Game() {
     return (
@@ -18,10 +19,12 @@ export default function Game() {
 
 function GameInner() {
     const [gameStage] = useGameStage();
+    const [[, params]] = usePage();
+    const [ { img }, song_folder ] = params as GameAndEditorParams;
 
     return (
         <div className="fixed cover">
-            <Background />
+            <Background imgPath={song_folder + img} />
             { gameStage == GameStage.LOADING && <p> loading... </p> }
             
             <DeltaProvider>
