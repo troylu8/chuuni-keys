@@ -1,8 +1,10 @@
 import { useState, createContext, useContext, useRef } from "react";
 
-/** e.g. hit the note within `+25` or `-25` ms for a `perfect`   */
-export const ACCURACY_THRESHOLDS = [25, 100];
-export const MISS_THRESHOLD = ACCURACY_THRESHOLDS[ACCURACY_THRESHOLDS.length-1];
+export const PERFECT_THRESHOLD = 30;
+export const GOOD_THRESHOLD = 60;
+
+/** hits outside this threshold are ignored, they don't even count as a miss */
+export const HIT_THRESHOLD = 80;
 
 export type Stats = {
     perfect: number,
@@ -19,9 +21,10 @@ type Delta = number | "miss";
 export function getPraise(delta: Delta) {
     if (delta == "miss") return "miss";
     delta = Math.abs(delta);
-    if (delta > MISS_THRESHOLD) return "miss";
-    if (delta > ACCURACY_THRESHOLDS[0]) return "good";
-    return "perfect";
+    if (delta < PERFECT_THRESHOLD) return "perfect";
+    if (delta < GOOD_THRESHOLD) return "good";
+    if (delta < HIT_THRESHOLD) return "miss";
+    return "";
 }
 
 type BroadcastDelta = (delta: Delta) => void;
@@ -55,12 +58,14 @@ export default function DeltaProvider({ children }: Props) {
     const listeners = useRef<Set<DeltaListener>>(new Set()).current;
     
     function broadcastDelta(delta: Delta) {
+        // if delta is so big its not even considered a hit, ignore it
+        if (delta != "miss" && delta > HIT_THRESHOLD) return;
         
-        if (delta == "miss" || delta > MISS_THRESHOLD) {
+        if (delta == "miss" || delta > GOOD_THRESHOLD) {
             setStats(prev => ({...prev, miss: prev.miss + 1, combo: 0}));
         }
         else {
-            if (Math.abs(delta) <= ACCURACY_THRESHOLDS[0]) {
+            if (Math.abs(delta) < PERFECT_THRESHOLD) {
                 setStats(prev => ({
                     ...prev, 
                     perfect: prev.perfect + 1,

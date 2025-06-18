@@ -12,8 +12,10 @@ import EditorKeyboard from "./editor-keyboard";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
 import globals from "../../lib/globals";
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
-enum ActiveModal { NONE, TIMING, DETAILS, CONFIRM_QUIT };
+
+enum ActiveModal { NONE, TIMING, DETAILS, CONFIRM_QUIT_TO_MENU, CONFIRM_QUIT_APP };
 
 function snapLeft(ms: number, startingFrom: number, size: number) {
     const beat = (ms - startingFrom) / size;
@@ -79,7 +81,8 @@ export default function Editor() {
         return unlisten;
     }, []);
     
-    const ms_per_snap = metadata.bpm && 60 / metadata.bpm * 1000 / (metadata.snaps + 1);
+    const ms_per_beat = metadata.bpm && 60 / metadata.bpm * 1000;
+    const ms_per_snap = ms_per_beat && ms_per_beat / (metadata.snaps + 1);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     const first_event_ms = events.begin.value?.[0] ?? null;
@@ -181,24 +184,38 @@ export default function Editor() {
     }
     function handleQuit() {
         if (saved) setPageParams([Page.MAIN_MENU]);
-        else setActiveModal(ActiveModal.CONFIRM_QUIT);
+        else setActiveModal(ActiveModal.CONFIRM_QUIT_TO_MENU);
     }
+    
+    // confirm if want to quit app with unsaved changes
+    useEffect(() => {
+        const unlisten = getCurrentWindow().onCloseRequested(e => {
+            if (!saved) {
+                e.preventDefault();
+                setActiveModal(ActiveModal.CONFIRM_QUIT_APP);
+            }
+        });
+        return () => { unlisten.then(unlisten => unlisten()); }
+    }, [saved]);
     
     // keybinds and scroll
     useEffect(() => {
+        
         function onScroll(e: WheelEvent) {
-            if (ms_per_snap == null) return;
+            if (ms_per_beat == null || ms_per_snap == null) return;
             setPosition(ms => {
                 aud.setPlaying(false);
+                const snapSize = e.ctrlKey ? ms_per_beat : ms_per_snap;
                 if (e.deltaY < 0) {
-                    return snapLeft(ms, first_event_ms ?? 0, ms_per_snap);
+                    return snapLeft(ms, first_event_ms ?? 0, snapSize);
                 }
                 else {
-                    return snapRight(ms, first_event_ms ?? 0, ms_per_snap);
+                    return snapRight(ms, first_event_ms ?? 0, snapSize);
                 }
             });
         }
         function onKeyDown(e: KeyboardEvent) {
+            
             if (e.key === " ")  
                 aud.setPlaying(!aud.playing);
             else if (e.code === "ShiftLeft") {
@@ -226,6 +243,7 @@ export default function Editor() {
             else if (e.ctrlKey && e.key === "y")
                 handleRedo()
         }
+        
         
         if (activeModal == ActiveModal.NONE) {
             window.addEventListener("wheel", onScroll);
@@ -273,10 +291,15 @@ export default function Editor() {
                 <div className="relative grow">
                     <EditorKeyboard events={events} position={position} onHit={toggleEventHere} />
                     
-                    { activeModal == ActiveModal.CONFIRM_QUIT && 
+                    { (activeModal == ActiveModal.CONFIRM_QUIT_TO_MENU || activeModal == ActiveModal.CONFIRM_QUIT_APP) && 
                         <ConfirmQuitModal 
                             onClose={() => setActiveModal(ActiveModal.NONE)}
                             saveChanges={handleSave}
+                            quit={() => {
+                                activeModal == ActiveModal.CONFIRM_QUIT_TO_MENU ? 
+                                    setPageParams([Page.MAIN_MENU]) :
+                                    getCurrentWindow().destroy()
+                            }}
                         />
                     }
                     { activeModal == ActiveModal.TIMING && 
@@ -288,6 +311,7 @@ export default function Editor() {
                     }
                     { activeModal == ActiveModal.DETAILS && 
                         <DetailsModal
+                            songFolder={song_folder}
                             metadata={metadata}
                             setMetadata={setMetadata}
                             onClose={() => setActiveModal(ActiveModal.NONE)}
@@ -317,19 +341,17 @@ export default function Editor() {
     );
 }
 
-type SaveChangesProps = Readonly<{
+type ConfirmQuitModalProps = Readonly<{
     onClose: () => any
     saveChanges: () => Promise<void>
+    quit: () => any
 }>
-function ConfirmQuitModal({ onClose, saveChanges }: SaveChangesProps) {
-    const [,setPageParams] = usePage();
+function ConfirmQuitModal({ onClose, saveChanges, quit }: ConfirmQuitModalProps) {
     return (
         <Modal title="you have unsaved changes!" onClose={onClose}>
             <div className="flex gap-3">
-                <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> discard changes </MuseButton>
-                <MuseButton onClick={() => 
-                    saveChanges().then(() => setPageParams([Page.MAIN_MENU]))
-                }> save and quit </MuseButton>
+                <MuseButton onClick={quit}> discard changes </MuseButton>
+                <MuseButton onClick={() => saveChanges().then(quit)}> save and quit </MuseButton>
             </div>
         </Modal>
     )

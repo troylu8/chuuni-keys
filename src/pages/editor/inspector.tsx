@@ -67,7 +67,7 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
             inspectorElements.push(
                 <div 
                     key={px} 
-                    style={{left: px, height: beat % measureSize! == 0? 12 : 8}} 
+                    style={{left: px, height: beat % measureSize! == 0? 18 : 12}} 
                     className="inspector-tick bg-foreground">
                 </div>
             );

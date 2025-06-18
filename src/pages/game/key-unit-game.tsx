@@ -1,6 +1,6 @@
 import { useEffect, useState, ReactNode } from "react"
 import { HITRING_DURATION, useMuseEvents } from "../../providers/game-manager";
-import { MISS_THRESHOLD, useDelta } from "../../providers/score";
+import { GOOD_THRESHOLD, HIT_THRESHOLD, useDelta } from "../../providers/score";
 import { usePlayback } from "../../providers/playback";
 import { KeyUnit } from "../../components/key-unit";
 
@@ -22,13 +22,17 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
     function popHitTime() {
         if (hitTimes.length == 0) return;
         
+        const delta = Math.abs(getOffsetPosition() - hitTimes[0]);
+        console.log(delta);
+        if (delta > HIT_THRESHOLD) return; // if not even considered a hit, ignore
+        
         broadcastDelta(getOffsetPosition() - hitTimes[0]);
         setHitTimes(hitTimes.slice(1));
     }
 
     useEffect(() => {
         const unlistenPos = addPosUpdateListener(offsetPos => {
-            if (hitTimes.length != 0 && offsetPos > hitTimes[0] + MISS_THRESHOLD) {
+            if (hitTimes.length != 0 && offsetPos > hitTimes[0] + GOOD_THRESHOLD) {
                 popHitTime();
             }
             setOffsetPos(offsetPos);

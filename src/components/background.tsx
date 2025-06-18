@@ -7,6 +7,8 @@ export default function Background() {
     
     const [{img}, song_folder] = params as GameAndEditorParams;
     
+    
+    
     return (
         <>
             { img &&

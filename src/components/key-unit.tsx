@@ -1,9 +1,10 @@
 import { ReactNode, useEffect, useState } from "react";
 import playSfx, { SFX } from "../lib/sfx";
 import globals from "../lib/globals";
+import { KEY_SIZE } from "./keyboard-layout";
 
 
-const KEY_SIZE = 48;
+
 
 function noModifiersPressed(e: KeyboardEvent) {
     return (
@@ -56,7 +57,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);
     return (
         <div
-            onClick={hit}
+            onClick={() => {if (globals.keyUnitsEnabled) hit()}}
             style={{
                 width: KEY_SIZE, 
                 height: KEY_SIZE,
@@ -79,7 +80,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
 
 
 
-const HITRING_MAX_GAP = 45;
+const HITRING_MAX_GAP = 70;
 
 type HitringProps = Readonly<{
     progress: number
@@ -90,14 +91,14 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-accent1 outline-4 pointer-events-none"
+                className="absolute outline-accent1 outline-5 pointer-events-none"
                 style={{
                     top: -gap,
                     bottom: -gap,
                     left: -gap,
                     right: -gap,
                     borderRadius: (2 * gap + KEY_SIZE) * 0.25,  // total size * 0.25
-                    opacity: (1 - progress) / 0.8
+                    opacity: (1 - progress) / 0.9
                 }}
             ></div>
         </>
