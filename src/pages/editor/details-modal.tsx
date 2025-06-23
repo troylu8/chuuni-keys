@@ -11,7 +11,7 @@ import { basename } from '@tauri-apps/api/path';
 type Props = Readonly<{
     songFolder: string,
     metadata: ChartMetadata
-    setMetadata: (metadata: ChartMetadata, save?: boolean) => void
+    setMetadata: (metadata: ChartMetadata, save?: boolean, imgCacheBust?: string) => void
     onClose: () => void
 }>
 export default function DetailsModal({ songFolder, metadata, setMetadata, onClose }: Props) {
@@ -43,16 +43,20 @@ export default function DetailsModal({ songFolder, metadata, setMetadata, onClos
         // copy to song folder
         const newImg = await basename(filepath)
         await copyFile(filepath, songFolder + newImg);
-        console.log(filepath, "to", songFolder + newImg);
+        
+        //TODO when old and new img are same, bg doesnt get rerendered
         
         // delete old img
         const oldImg = metadata.img;
-        console.log(oldImg, "/", newImg);
         if (oldImg != newImg) {     // if new and old img are the same, copy will have overridden so no need to delete
             await remove(songFolder + oldImg);
         }
         
-        setMetadata({ ...metadata, img: newImg }, true);
+        setMetadata(
+            { ...metadata, img: newImg }, 
+            true,                           // save
+            "" + Date.now()                 // image cache bust
+        );
     }
 
     return (

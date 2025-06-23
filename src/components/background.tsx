@@ -1,18 +1,19 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 type Props = Readonly<{
-    imgPath?: string 
+    imgPath?: string
+    imgCacheBust?: string
 }>
-export default function Background({ imgPath }: Props) {
+export default function Background({ imgPath, imgCacheBust }: Props) {
     
-    console.log("rerender bg with img", imgPath);
+    const src = imgPath && convertFileSrc(imgPath);
     
     return (
         <>
             { imgPath &&
                 <div className="fixed cover">
                     <img 
-                        src={convertFileSrc(imgPath)}
+                        src={imgCacheBust? `${src}?v=${imgCacheBust}` : src}
                         className="w-full h-full object-cover brightness-50"
                     ></img>
                 </div>

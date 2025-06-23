@@ -46,9 +46,9 @@ export default function Editor() {
     const [[,params], setPageParams] = usePage();
     const [savedMetadata, song_folder] = params as GameAndEditorParams;
     
-    const [metadata, setMetadataInner] = useState<ChartMetadata>(savedMetadata);
-    async function setMetadata(metadata: ChartMetadata, save: boolean = false) {
-        setMetadataInner(metadata);
+    const [metadata, setMetadataInner] = useState<ChartMetadata & {imgCacheBust?: string}>(savedMetadata);
+    async function setMetadata(metadata: ChartMetadata, save: boolean = false, imgCacheBust?: string) {
+        setMetadataInner({...metadata, imgCacheBust });
         if (save) await handleSave(metadata);
         else            setSaved(false);
     }
@@ -259,7 +259,7 @@ export default function Editor() {
     
     return (
         <>
-            <Background imgPath={song_folder + metadata.img} />
+            <Background imgPath={song_folder + metadata.img} imgCacheBust={metadata.imgCacheBust} />
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
