@@ -91,7 +91,7 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-accent1 outline-5 pointer-events-none"
+                className="absolute outline-color2 outline-5 pointer-events-none"
                 style={{
                     top: -gap,
                     bottom: -gap,

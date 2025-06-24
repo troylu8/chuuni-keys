@@ -193,7 +193,7 @@ function MuseEventTicker({ children, onLeftClick, onRightClick }: MuseEventTicke
         <button 
             className="
                 font-mono text-sm rounded-sm bg-background px-1
-                hover:bg-accent1 hover:text-background
+                hover:bg-color2 hover:text-background
             "
             onClick={() => {if (onLeftClick) onLeftClick()}}
             onContextMenu={() => { if (onRightClick) onRightClick(); }}

@@ -1,13 +1,20 @@
 import filenamify from 'filenamify';
 import { ChartMetadata, Page, SongSelectParams, usePage } from "../../providers/page";
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { appLocalDataDir } from '@tauri-apps/api/path';
 import MuseButton from '../../components/muse-button';
 
 
-/** gap between chart view and entries */
-const ENTRIES_LEFT_GAP = 200;
+/** https://www.desmos.com/calculator/3zoigxxcl0 */
+function distToCircle(x: number, radius: number) {
+    if (x < 0 || x > radius * 2) return 0; // out of bounds
+    return radius - Math.sqrt(radius * radius - (x - radius) * (x - radius));
+}
+
+async function getSongFolder(id: string, title: string) {
+    return `${await appLocalDataDir()}\\userdata\\charts\\${id} ${filenamify(title, {replacement: '_'})}\\`;
+}
 
 export default function SongSelect() {
     
@@ -24,18 +31,16 @@ export default function SongSelect() {
     }, []);
     
     
-    const songViewRef = useRef<HTMLDivElement | null>(null);
     const songListRef = useRef<HTMLDivElement | null>(null);
     
     function updateEntryPositions() {
-        const songView = songViewRef.current;
         const songList = songListRef.current;
-        if (!songView || !songList) return;
+        if (!songList) return;
         
         const listRect = songList.getBoundingClientRect();
         const listCenterY = (listRect.top + listRect.bottom) / 2;
 
-        for (const entry of songList.querySelectorAll("div")) {
+        for (const entry of songList.querySelectorAll("section")) {
             const entryRect = entry.getBoundingClientRect();
 
             // ignore entries that are out of sight
@@ -57,7 +62,7 @@ export default function SongSelect() {
             else deltaX = 0;
             
             console.log(deltaX);
-            entry.style.left = songView.getBoundingClientRect().right + ENTRIES_LEFT_GAP - deltaX + "px";
+            entry.style.left = listRect.width * 0.5 - deltaX + "px";
         }
     }
     
@@ -110,47 +115,71 @@ export default function SongSelect() {
             </div>
             
             {/* song view */}
-            <div ref={songViewRef} className="relative top-[25vh] left-[20vh] w-[50vh] h-[50vh] bg-red-600">
+            <div className="absolute left-1/4 -translate-x-1/2 top-1/4 w-[50vh] h-[50vh] bg-color1 rounded-[15%]">
                 
             </div>
             
             {/* song list */}
-            <div
+            <nav
                 ref={songListRef}
                 onScroll={updateEntryPositions}
-                className="absolute cover overflow-y-auto flex flex-col gap-6"
+                className="absolute cover overflow-y-auto flex flex-col gap-[20vh]"
             >
                 {/* buffer top */}
                 <div className="w-[40vh] h-[40vh] shrink-0"></div>
                 
                 { charts && charts.map(metadata => 
-                    <div
-                        className="relative w-[40vh] h-[40vh] rounded-[25%] bg-blue-300 shrink-0"
+                    <ChartEntry 
                         key={metadata.id}
+                        metadata={metadata}
                         onClick={async () => {
-                            const applocaldata = await appLocalDataDir();
                             setPageParams([
                                 isEditing? Page.EDITOR : Page.GAME, 
-                                [
-                                    metadata, 
-                                    `${applocaldata}\\userdata\\charts\\${metadata.id} ${filenamify(metadata.title, {replacement: '_'})}\\`
-                                ]
+                                [metadata, await getSongFolder(metadata.id, metadata.title)]
                             ])
                         }}
-                    >
-                        { metadata.title }
-                    </div>
+                    />
                 )}
                 
                 {/* buffer bottom */}
                 <div className="w-[40vh] h-[40vh] shrink-0"></div>
-            </div>
+            </nav>
         </div>
     )
 }
 
-/** https://www.desmos.com/calculator/3zoigxxcl0 */
-function distToCircle(x: number, radius: number) {
-    if (x < 0 || x > radius * 2) return 0; // out of bounds
-    return radius - Math.sqrt(radius * radius - (x - radius) * (x - radius));
+type ChartEntryProps = Readonly<{
+    metadata: ChartMetadata
+    onClick: () => any
+}>
+function ChartEntry({ metadata, onClick }: ChartEntryProps) {
+    
+    const [songFolder, setSongFolder] = useState<string | null>(null);
+    useEffect(() => {
+        getSongFolder(metadata.id, metadata.title).then(setSongFolder);
+    }, []);
+    
+    return (
+        <section 
+            className="relative shrink-0 w-fit"
+            onClick={onClick}
+        >            
+            {/* thumbnail */}
+            <div className="relative w-[35vh] h-[35vh] overflow-hidden rotate-45 rounded-[25%]">
+                <img 
+                    src={songFolder ? convertFileSrc(songFolder + metadata.img) : ""} 
+                    className='absolute cover w-full h-full scale-125 object-cover -rotate-45'
+                />
+            </div>
+            
+            {/* difficulty label */}
+            <div className='
+                absolute top-1/2 -translate-y-1/2 left-full -translate-x-1/2 ml-[10vh]
+                w-[15vh] h-[15vh] bg-red-400 rotate-45 rounded-[25%]
+                flex justify-center items-center
+            '>
+                <div className='-rotate-45 text-2xl'>4.1</div>
+            </div>
+        </section>
+    )
 }
