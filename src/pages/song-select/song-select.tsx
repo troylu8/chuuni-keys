@@ -22,16 +22,49 @@ export default function SongSelect() {
     const [[,params], setPageParams] = usePage();
     const { isEditing } = params as SongSelectParams;
     
-    // load charts on mount
-    useEffect(() => {
-        invoke<ChartMetadata[]>("get_all_charts").then(setCharts);
-        
-        window.addEventListener("resize", updateEntryPositions);
-        return () => { window.removeEventListener("resize", updateEntryPositions); }
-    }, []);
-    
-    
+    // smooth scrolling
+    const scrollingRef = useRef(false);
+    const scrollTargetRef = useRef(0);
     const songListRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const songList = songListRef.current;
+        if (!songList) return;
+        
+        function scrollAnimation() {
+            const songList = songListRef.current;
+            if (!songList) return;
+            
+            const delta = scrollTargetRef.current - songList.scrollTop;
+
+            // snap to target if close enough
+            if (Math.abs(delta) < 1) {
+                scrollingRef.current = false;
+                songList.scrollTop = scrollTargetRef.current;
+            } else {
+                scrollingRef.current = true;
+                songList.scrollTop += delta * 0.2;
+                requestAnimationFrame(scrollAnimation);
+            }
+        }
+        
+        // can't use react's onWheel property bc it is passive
+        function handleWheel(e: WheelEvent) {
+            e.preventDefault();
+            
+            const songList = songListRef.current;
+            if (!songList) return;
+            
+            // clamp new scroll pos to valid values
+            scrollTargetRef.current = Math.max(0, Math.min(scrollTargetRef.current + e.deltaY, songList.scrollHeight - songList.clientHeight));
+            if (!scrollingRef.current) scrollAnimation(); // if already scrolling, don't start a new scrolling frame
+        }
+        
+        songList.addEventListener("wheel", handleWheel, { passive: false });
+        return () => { songList.removeEventListener("wheel", handleWheel); }
+    }, [songListRef.current]);
+    
+    
+    const [activeChart, setActiveChart] = useState<ChartMetadata | null>(null);
     
     function updateEntryPositions() {
         const songList = songListRef.current;
@@ -61,52 +94,23 @@ export default function SongSelect() {
             // if box straddles center
             else deltaX = 0;
             
-            console.log(deltaX);
-            entry.style.left = listRect.width * 0.5 - deltaX + "px";
+            // entries 45% from the left of the screen at the closest
+            entry.style.left = listRect.width * 0.45 - deltaX + "px"; 
         }
     }
-    
-    const scrollingRef = useRef(false);
-    const scrollTargetRef = useRef(0);
-
-    function scrollAnimation() {
-        const songList = songListRef.current;
-        if (!songList) return;
         
-        const delta = scrollTargetRef.current - songList.scrollTop;
-
-        // snap to target if close enough
-        if (Math.abs(delta) < 1) {
-            scrollingRef.current = false;
-            songList.scrollTop = scrollTargetRef.current;
-        } else {
-            scrollingRef.current = true;
-            songList.scrollTop += delta * 0.2;
-            requestAnimationFrame(scrollAnimation);
-        }
-    }
-    
     useEffect(() => {
-        const songList = songListRef.current;
-        if (!songList) return;
+        invoke<ChartMetadata[]>("get_all_charts").then(charts => {
+            setCharts(charts);
+            setActiveChart(charts?.[0] ?? null);
+        });
         
-        updateEntryPositions();
-        
-        // can't use react's onWheel property bc it is passive
-        function handleWheel(e: WheelEvent) {
-            e.preventDefault();
-            
-            const songList = songListRef.current;
-            if (!songList) return;
-            
-            // clamp new scroll pos to valid values
-            scrollTargetRef.current = Math.max(0, Math.min(scrollTargetRef.current + e.deltaY, songList.scrollHeight - songList.clientHeight));
-            if (!scrollingRef.current) scrollAnimation(); // if already scrolling, don't start a new scrolling frame
-        }
-        
-        songList.addEventListener("wheel", handleWheel, { passive: false });
-        return () => { songList.removeEventListener("wheel", handleWheel); }
-    }, [songListRef.current]);
+        window.addEventListener("resize", updateEntryPositions);
+        return () => { window.removeEventListener("resize", updateEntryPositions); }
+    }, []);
+    useEffect(updateEntryPositions, [charts]);
+    
+    
     
     return (
         <div className="fixed cover">
@@ -115,18 +119,44 @@ export default function SongSelect() {
             </div>
             
             {/* song view */}
-            <div className="absolute left-1/4 -translate-x-1/2 top-1/4 w-[50vh] h-[50vh] bg-color1 rounded-[15%]">
-                
+            <div className="absolute left-1/5 -translate-x-1/2 top-1/4 w-[50vh] h-[50vh] bg-color1 rounded-[15%]">
+                { activeChart && 
+                    <>
+                        <p className="text-[6vh]"> {activeChart.title} </p>
+                        
+                        {/* credits grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                            { activeChart.credit_audio &&
+                                <>
+                                    <p className="text-end"> music </p>
+                                    <p> { activeChart.credit_audio } </p>
+                                </>
+                            }
+                            { activeChart.credit_img &&
+                                <>
+                                    <p className="text-end"> img </p>
+                                    <p> { activeChart.credit_img } </p>
+                                </>
+                            }
+                            { activeChart.credit_chart &&
+                                <>
+                                    <p className="text-end"> chart </p>
+                                    <p> { activeChart.credit_chart } </p>
+                                </>
+                            }
+                        </div>
+                    </>
+                }
             </div>
             
             {/* song list */}
             <nav
                 ref={songListRef}
                 onScroll={updateEntryPositions}
-                className="absolute cover overflow-y-auto flex flex-col gap-[20vh]"
+                className="absolute cover overflow-hidden flex flex-col gap-[10vh]"
             >
                 {/* buffer top */}
-                <div className="w-[40vh] h-[40vh] shrink-0"></div>
+                <div className="h-[20vh] shrink-0"></div>
                 
                 { charts && charts.map(metadata => 
                     <ChartEntry 
@@ -142,7 +172,7 @@ export default function SongSelect() {
                 )}
                 
                 {/* buffer bottom */}
-                <div className="w-[40vh] h-[40vh] shrink-0"></div>
+                <div className="h-[20vh] shrink-0"></div>
             </nav>
         </div>
     )
@@ -165,7 +195,7 @@ function ChartEntry({ metadata, onClick }: ChartEntryProps) {
             onClick={onClick}
         >            
             {/* thumbnail */}
-            <div className="relative w-[35vh] h-[35vh] overflow-hidden rotate-45 rounded-[25%]">
+            <div className="relative w-[25vh] h-[25vh] overflow-hidden rotate-45 rounded-[25%] z-10">
                 <img 
                     src={songFolder ? convertFileSrc(songFolder + metadata.img) : ""} 
                     className='absolute cover w-full h-full scale-125 object-cover -rotate-45'
@@ -174,12 +204,27 @@ function ChartEntry({ metadata, onClick }: ChartEntryProps) {
             
             {/* difficulty label */}
             <div className='
-                absolute top-1/2 -translate-y-1/2 left-full -translate-x-1/2 ml-[10vh]
-                w-[15vh] h-[15vh] bg-red-400 rotate-45 rounded-[25%]
-                flex justify-center items-center
+                absolute top-1/2 -translate-y-1/2 left-full -translate-x-1/2 ml-[7vh]
+                w-[10vh] h-[10vh] bg-red-400 rotate-45 rounded-[25%]
+                flex justify-center items-center z-20
             '>
-                <div className='-rotate-45 text-2xl'>4.1</div>
+                <div className='-rotate-45 text-[5vh]'>4.1</div>
             </div>
+            
+            {/* song title / producer label */}
+            <header 
+                style={{
+                    border: "solid 5px",
+                    borderImage: "linear-gradient(to right, var(--color1), rgba(0, 0, 0, 0) 80%) 100% 1"
+                }}
+                className='
+                    absolute left-1/2 top-1/10 bottom-1/10 text-foreground text-nowrap 
+                    flex flex-col justify-center pl-[27vh] w-[50vw]
+                '
+            >
+                <p className='text-[6vh]'> {metadata.title} </p>
+                <p className='text-[3vh]'> {metadata.credit_audio} </p>
+            </header>
         </section>
     )
 }
