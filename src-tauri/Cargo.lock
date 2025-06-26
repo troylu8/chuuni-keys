@@ -507,6 +507,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "chuuni-keys"
+version = "0.1.0"
+dependencies = [
+ "rand 0.9.1",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-opener",
+ "tauri-plugin-prevent-default",
+ "tauri-plugin-process",
+]
+
+[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2063,22 +2079,6 @@ dependencies = [
  "serde",
  "thiserror 2.0.12",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "muse"
-version = "0.1.0"
-dependencies = [
- "rand 0.9.1",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-opener",
- "tauri-plugin-prevent-default",
- "tauri-plugin-process",
 ]
 
 [[package]]
