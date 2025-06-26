@@ -20,11 +20,11 @@ export default function Game() {
 function GameInner() {
     const [gameStage] = useGameStage();
     const [[, params]] = usePage();
-    const [ { img }, song_folder ] = params as GameAndEditorParams;
+    const [ { img_ext }, songFolder ] = params as GameAndEditorParams;
 
     return (
         <div className="fixed cover">
-            <Background imgPath={song_folder + img} />
+            <Background imgPath={img_ext && `${songFolder}\\img.${img_ext}`} />
             { gameStage == GameStage.LOADING && <p> loading... </p> }
             
             <DeltaProvider>

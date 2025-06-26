@@ -4,12 +4,12 @@ export type ChartMetadata = {
     id: string,
     title: string,
     
-    bpm?: number,
-    measure_size?: number,
+    bpm: number,
+    measure_size: number,
     snaps: number,
     
-    audio: string,
-    img?: string,
+    audio_ext: string,
+    img_ext?: string,
     
     credit_audio?: string,
     credit_img?: string,

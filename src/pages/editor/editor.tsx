@@ -44,7 +44,7 @@ function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEve
 
 export default function Editor() {
     const [[,params], setPageParams] = usePage();
-    const [savedMetadata, song_folder] = params as GameAndEditorParams;
+    const [savedMetadata, songFolder] = params as GameAndEditorParams;
     
     const [metadata, setMetadataInner] = useState<ChartMetadata & {imgCacheBust?: string}>(savedMetadata);
     async function setMetadata(metadata: ChartMetadata, save: boolean = false, imgCacheBust?: string) {
@@ -55,7 +55,7 @@ export default function Editor() {
     
     const aud = usePlayback();
     // load audio file on init
-    useEffect(() => { aud.loadAudio(song_folder + savedMetadata.audio); }, [savedMetadata]);
+    useEffect(() => { aud.loadAudio(`${songFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
     
     const [activeModal, setActiveModalInner] = useState(() => {
         globals.keyUnitsEnabled = true;
@@ -82,13 +82,13 @@ export default function Editor() {
         return unlisten;
     }, []);
     
-    const ms_per_beat = metadata.bpm && 60 / metadata.bpm * 1000;
-    const ms_per_snap = ms_per_beat && ms_per_beat / (metadata.snaps + 1);
+    const ms_per_beat = 60 / metadata.bpm * 1000;
+    const ms_per_snap = ms_per_beat / (metadata.snaps + 1);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     const first_event_ms = events.begin.value?.[0] ?? null;
     useEffect(() => {
-        readChartFile(song_folder + "chart.txt").then(events => {
+        readChartFile(songFolder + "chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             for (const event of events) {
@@ -97,7 +97,7 @@ export default function Editor() {
             
             setEvents(tree);
         });
-    }, [song_folder]);
+    }, [songFolder]);
     
     /** [`true/false` = added/removed event, event] */
     const historyRef = useRef<[boolean, MuseEvent][]>([]);
@@ -179,8 +179,8 @@ export default function Editor() {
             res.push(event.join(" "));
         }
         
-        await writeTextFile(song_folder + "chart.txt", res.join("\n"));
-        await writeTextFile(song_folder + "metadata.json", JSON.stringify(newMetadata, null, 4));
+        await writeTextFile(songFolder + "chart.txt", res.join("\n"));
+        await writeTextFile(songFolder + "metadata.json", JSON.stringify(newMetadata, null, 4));
         setSaved(true);
     }
     function handleQuit() {
@@ -203,7 +203,6 @@ export default function Editor() {
     useEffect(() => {
         
         function onScroll(e: WheelEvent) {
-            if (ms_per_beat == null || ms_per_snap == null) return;
             setPosition(ms => {
                 aud.setPlaying(false);
                 const snapSize = e.ctrlKey ? ms_per_beat : ms_per_snap;
@@ -221,14 +220,14 @@ export default function Editor() {
                 aud.setPlaying(!aud.playing);
             else if (e.code === "ShiftLeft") {
                 setPosition(ms => {
-                    if (first_event_ms == null || ms_per_snap == null) return ms;
+                    if (first_event_ms == null) return ms;
                     if (ms <= first_event_ms) return 0;
                     return snapLeft(ms, first_event_ms, ms_per_snap);
                 });
             }
             else if (e.code === "ShiftRight") {
                 setPosition(ms => {
-                    if (first_event_ms == null || ms_per_snap == null) return ms;
+                    if (first_event_ms == null) return ms;
                     if (ms < first_event_ms) return first_event_ms;
                     return snapRight(ms, first_event_ms, ms_per_snap);
                 });
@@ -259,7 +258,7 @@ export default function Editor() {
     
     return (
         <>
-            <Background imgPath={song_folder + metadata.img} imgCacheBust={metadata.imgCacheBust} />
+            <Background imgPath={metadata.img_ext && `${songFolder}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
@@ -312,7 +311,7 @@ export default function Editor() {
                     }
                     { activeModal == ActiveModal.DETAILS && 
                         <DetailsModal
-                            songFolder={song_folder}
+                            songFolder={songFolder}
                             metadata={metadata}
                             setMetadata={setMetadata}
                             onClose={() => setActiveModal(ActiveModal.NONE)}

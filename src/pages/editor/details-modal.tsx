@@ -4,7 +4,7 @@ import TextInput from "../../components/text-input";
 import { ChartMetadata } from "../../providers/page";
 import { openPath } from '@tauri-apps/plugin-opener';
 import { copyFile, remove } from '@tauri-apps/plugin-fs';
-import { basename } from '@tauri-apps/api/path';
+import { extname } from '@tauri-apps/api/path';
 
 
 
@@ -37,23 +37,21 @@ export default function DetailsModal({ songFolder, metadata, setMetadata, onClos
             directory: false,
             title: "Select background image",
         });
-        
         if (filepath == null) return;
         
-        // copy to song folder
-        const newImg = await basename(filepath)
-        await copyFile(filepath, songFolder + newImg);
         
-        //TODO when old and new img are same, bg doesnt get rerendered
+        const newImgExt = await extname(filepath)
+        const oldImgExt = metadata.img_ext;
         
-        // delete old img
-        const oldImg = metadata.img;
-        if (oldImg != newImg) {     // if new and old img are the same, copy will have overridden so no need to delete
-            await remove(songFolder + oldImg);
+        await copyFile(filepath, `${songFolder}\\img.${newImgExt}`);
+        
+        // delete old img if necessary (if same exts, then file will be overwritten so no need to delete)
+        if (oldImgExt != newImgExt) {
+            await remove(`${songFolder}\\img.${oldImgExt}`);
         }
         
         setMetadata(
-            { ...metadata, img: newImg }, 
+            { ...metadata, img_ext: newImgExt }, 
             true,                           // save
             "" + Date.now()                 // image cache bust
         );

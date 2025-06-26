@@ -8,12 +8,12 @@ pub struct ChartMetadata {
     id: String,
     title: String,
 
-    bpm: Option<f32>,
-    measure_size: Option<usize>,
+    bpm: f32,
+    measure_size: usize,
     snaps: usize,
 
-    audio: String,
-    img: Option<String>,
+    audio_ext: String,
+    img_ext: Option<String>,
 
     credit_audio: Option<String>,
     credit_img: Option<String>,

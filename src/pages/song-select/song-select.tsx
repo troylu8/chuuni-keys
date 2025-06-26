@@ -1,6 +1,6 @@
 import filenamify from 'filenamify';
 import { ChartMetadata, Page, SongSelectParams, usePage } from "../../providers/page";
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { appLocalDataDir } from '@tauri-apps/api/path';
 import MuseButton from '../../components/muse-button';
@@ -13,7 +13,7 @@ function distToCircle(x: number, radius: number) {
 }
 
 async function getSongFolder(id: string, title: string) {
-    return `${await appLocalDataDir()}\\userdata\\charts\\${id} ${filenamify(title, {replacement: '_'})}\\`;
+    return `${await appLocalDataDir()}\\userdata\\charts\\${id} ${filenamify(title, {replacement: '_'})}`;
 }
 
 export default function SongSelect() {
@@ -119,31 +119,51 @@ export default function SongSelect() {
             </div>
             
             {/* song view */}
-            <div className="absolute left-1/5 -translate-x-1/2 top-1/4 w-[50vh] h-[50vh] bg-color1 rounded-[15%]">
+            <div className="
+                absolute left-1/5 -translate-x-1/2 top-1/4 w-[50vh] h-[50vh] max-w-full
+                flex flex-col justify-between p-3
+                bg-color1 rounded-[15%]
+            ">
                 { activeChart && 
                     <>
-                        <p className="text-[6vh]"> {activeChart.title} </p>
+                        <p className="text-[6vh] wrap-anywhere overflow-y-hidden"> {activeChart.title} </p>
                         
-                        {/* credits grid */}
-                        <div className="grid grid-cols-2 gap-3">
-                            { activeChart.credit_audio &&
-                                <>
-                                    <p className="text-end"> music </p>
-                                    <p> { activeChart.credit_audio } </p>
-                                </>
-                            }
-                            { activeChart.credit_img &&
-                                <>
-                                    <p className="text-end"> img </p>
-                                    <p> { activeChart.credit_img } </p>
-                                </>
-                            }
-                            { activeChart.credit_chart &&
-                                <>
-                                    <p className="text-end"> chart </p>
-                                    <p> { activeChart.credit_chart } </p>
-                                </>
-                            }
+                        <div className='flex justify-between gap-3'>
+                            
+                            {/* credits grid */}
+                            <div 
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "fit-content(100%) 1fr",
+                                    columnGap: "12px"
+                                }}
+                                className='[&>p]:text-ellipsis [&>p]:text-nowrap [&>p]:overflow-hidden'
+                            >
+                                { activeChart.credit_audio &&
+                                    <>
+                                        <p className="text-end"> music </p>
+                                        <p> { activeChart.credit_audio } </p>
+                                    </>
+                                }
+                                { activeChart.credit_img &&
+                                    <>
+                                        <p className="text-end"> img </p>
+                                        <p> { activeChart.credit_img } </p>
+                                    </>
+                                }
+                                { activeChart.credit_chart &&
+                                    <>
+                                        <p className="text-end"> chart </p>
+                                        <p> { activeChart.credit_chart } </p>
+                                    </>
+                                }
+                            </div>
+                            
+                            {/* bpm and difficulty */}
+                            <div className='flex flex-col-reverse'>
+                                <p>bpm</p>
+                                <p>diff</p>
+                            </div>
                         </div>
                     </>
                 }
@@ -197,7 +217,7 @@ function ChartEntry({ metadata, onClick }: ChartEntryProps) {
             {/* thumbnail */}
             <div className="relative w-[25vh] h-[25vh] overflow-hidden rotate-45 rounded-[25%] z-10">
                 <img 
-                    src={songFolder ? convertFileSrc(songFolder + metadata.img) : ""} 
+                    src={metadata.img_ext ? convertFileSrc(`${songFolder}\\img.${metadata.img_ext}`) : ""} 
                     className='absolute cover w-full h-full scale-125 object-cover -rotate-45'
                 />
             </div>

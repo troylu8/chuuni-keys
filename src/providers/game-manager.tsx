@@ -65,11 +65,11 @@ export default function GameManager({ children }: Props) {
         globals.keyUnitsEnabled = true;
         museEmitter.setMaxListeners(100);
         
-        const [{audio: audioSrc}, song_folder] = params as GameAndEditorParams;
+        const [{ audio_ext }, songFolder] = params as GameAndEditorParams;
         
         (async () => {
-            await aud.loadAudio(song_folder + audioSrc);
-            const events = await readChartFile(song_folder + "chart.txt");
+            await aud.loadAudio(`${songFolder}\\audio.${audio_ext}`);
+            const events = await readChartFile(songFolder + "chart.txt");
             
             resetEvents();
                 

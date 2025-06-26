@@ -6,7 +6,7 @@ import MuseButton from "../../components/muse-button";
 
 export default function Settings() {
     const [,setPageParams] = usePage();
-    const [settings, setSettings] = useSettings(); 
+    const [settings, setSettings] = useSettings();  // TODO
     const [timingEditorVisible, setTimingEditorVisible] = useState(false);
     
     if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;

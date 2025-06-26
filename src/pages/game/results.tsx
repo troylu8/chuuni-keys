@@ -52,9 +52,9 @@ export default function Results() {
         setPage([Page.SONG_SELECT, {isEditing: false}]); 
         
         if (!params) return;
-        const [, song_folder] = params as GameAndEditorParams;
+        const [, songFolder] = params as GameAndEditorParams;
         writeTextFile(
-            song_folder + "leaderboard.csv", 
+            songFolder + "leaderboard.csv", 
             `${Date.now()},${accuracyPercent},${maxCombo},${letter}${fullCombo? ",FC" : ""}\n`,
             {append: true}
         );

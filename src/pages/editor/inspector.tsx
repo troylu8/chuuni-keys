@@ -12,20 +12,20 @@ export function getBeatDuration(bpm: number) {
 }
 
 type Props = Readonly<{
-    bpm?: number
-    measureSize?: number
+    bpm: number
+    measureSize: number
     snaps: number
     offsetPosition: number
     duration: number
-    events: Tree<number, MuseEvent> | null
+    events: Tree<number, MuseEvent>
     setPosition: (pos: number) => void
     deleteEvent: (e: MuseEvent) => void
 }>
 export default function Inspector({ bpm, measureSize, snaps, offsetPosition, duration, events, setPosition, deleteEvent }: Props) {
     
-    const first_event_ms = events && (events.begin.value?.[0] ?? null);
+    const first_event_ms = events.begin.value?.[0] ?? null;
     
-    const MS_PER_BEAT = bpm && getBeatDuration(bpm);
+    const MS_PER_BEAT = getBeatDuration(bpm);
     const PX_PER_BEAT = MS_PER_BEAT && MS_PER_BEAT * PX_PER_MS;
     const PX_PER_SNAP = PX_PER_BEAT && PX_PER_BEAT / (snaps + 1);
     
@@ -57,39 +57,32 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
     const endPx = width/2 + Math.min(duration * PX_PER_MS - absCenterPx, width/2);
     
     const inspectorElements = [];
-    if (PX_PER_BEAT) {
-        const firstBeatPx = startPx + diffToNext(absStartPx, PX_PER_BEAT);
-        let beat = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_BEAT) - ABS_FIRST_PX!) / PX_PER_BEAT);
-        for (let px = firstBeatPx; px <= endPx; px += PX_PER_BEAT) {
-            // const absPx = (px - startPx + absStartPx)
-            
-            // const ms = absPx / PX_PER_MS;
+    const firstBeatPx = startPx + diffToNext(absStartPx, PX_PER_BEAT);
+    let beat = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_BEAT) - ABS_FIRST_PX!) / PX_PER_BEAT);
+    for (let px = firstBeatPx; px <= endPx; px += PX_PER_BEAT) {
+        inspectorElements.push(
+            <div 
+                key={px} 
+                style={{left: px, height: beat % measureSize! == 0? 18 : 12}} 
+                className="inspector-tick bg-foreground">
+            </div>
+        );
+        
+        beat++;
+    }
+    const firstSnapPx = startPx + diffToNext(absStartPx, PX_PER_SNAP);
+    let snap = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_SNAP) - ABS_FIRST_PX!) / PX_PER_SNAP);
+    for (let px = firstSnapPx; px <= endPx; px += PX_PER_SNAP) {
+        if (snap % (snaps + 1) != 0) {
             inspectorElements.push(
                 <div 
                     key={px} 
-                    style={{left: px, height: beat % measureSize! == 0? 18 : 12}} 
-                    className="inspector-tick bg-foreground">
+                    style={{left: px}} 
+                    className="inspector-tick h-1.5 bg-red-500">
                 </div>
             );
-            
-            beat++;
         }
-    }
-    if (PX_PER_SNAP) {
-        const firstSnapPx = startPx + diffToNext(absStartPx, PX_PER_SNAP);
-        let snap = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_SNAP) - ABS_FIRST_PX!) / PX_PER_SNAP);
-        for (let px = firstSnapPx; px <= endPx; px += PX_PER_SNAP) {
-            if (snap % (snaps + 1) != 0) {
-                inspectorElements.push(
-                    <div 
-                        key={px} 
-                        style={{left: px}} 
-                        className="inspector-tick h-1.5 bg-red-500">
-                    </div>
-                );
-            }
-            snap++;
-        }
+        snap++;
     }
     
     // [px, event]
