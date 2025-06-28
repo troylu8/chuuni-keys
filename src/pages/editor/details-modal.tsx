@@ -33,18 +33,22 @@ export default function DetailsModal({ metadata, setMetadata, onClose }: Props) 
     
     
     async function handleUploadImg() {
-        const filepath = await open({
+        const imgFilepath = await open({
             multiple: false,
             directory: false,
             title: "Select background image",
+            filters: [{
+                name: "Image",
+                extensions: ["png", "jpg", "bmp", "webp", "avif"]
+            }]
         });
-        if (filepath == null) return;
+        if (imgFilepath == null) return;
         
         
-        const newImgExt = await extname(filepath)
+        const newImgExt = await extname(imgFilepath)
         const oldImgExt = metadata.img_ext;
         
-        await copyFile(filepath, `${chartFolder}\\img.${newImgExt}`);
+        await copyFile(imgFilepath, `${chartFolder}\\img.${newImgExt}`);
         
         // delete old img if necessary (if same exts, then file will be overwritten so no need to delete)
         if (oldImgExt != newImgExt) {

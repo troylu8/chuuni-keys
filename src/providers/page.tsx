@@ -25,9 +25,10 @@ export enum Page {
     EDITOR,
 }
 
+export type EditorParams = { metadata: ChartMetadata, isNew?: boolean }
 export type ChartSelectParams = { isEditing: boolean }
 
-export type PageParams = [Page] | [ Page, ChartMetadata | ChartSelectParams];
+export type PageParams = [Page] | [ Page, ChartMetadata | ChartSelectParams | EditorParams];
 
 const PageContext = createContext<[PageParams, (next: PageParams) => void] | null>(null);
 

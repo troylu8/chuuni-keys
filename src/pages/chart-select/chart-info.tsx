@@ -12,9 +12,10 @@ export default function ChartInfo({ metadata, onClick }: Props) {
         <div 
             onClick={onClick}
             className="
-                absolute left-1/5 -translate-x-1/2 top-1/4 w-[50vh] h-[50vh] max-w-full
+                absolute left-1/5 -translate-x-1/2 top-1/2 -translate-y-1/2
+                w-[60vh] h-[60vh] max-w-full
                 flex flex-col justify-between p-3
-                bg-color1 rounded-[15%]
+                bg-color1 rounded-[15%] overflow-hidden text-background
             "
         >
             { metadata && 

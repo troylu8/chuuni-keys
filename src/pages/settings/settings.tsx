@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Page, usePage } from "../../providers/page";
 import { useSettings } from "../../providers/settings";
 import TimingEditor from "./timing-editor";
 import MuseButton from "../../components/muse-button";
+import MainMenuButton from "../../components/main-menu-btn";
 
 export default function Settings() {
-    const [,setPageParams] = usePage();
     const [settings, setSettings] = useSettings();  // TODO
     const [timingEditorVisible, setTimingEditorVisible] = useState(false);
     
@@ -13,7 +12,8 @@ export default function Settings() {
     
     return (
         <div className="absolute cover flex flex-col gap-3 p-3">
-            <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> back to main menu </MuseButton>
+            <MainMenuButton />
+            
             <h1> settings </h1>
             <MuseButton onClick={() => setTimingEditorVisible(true)} > edit note timing </MuseButton>
             <p> (other settings here) </p>

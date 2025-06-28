@@ -1,4 +1,4 @@
-import { ChartMetadata, Page, usePage } from "../../providers/page";
+import { ChartMetadata, EditorParams, Page, usePage } from "../../providers/page";
 import { usePlayback } from "../../providers/playback";
 import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
@@ -44,7 +44,7 @@ function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEve
 
 export default function Editor() {
     const [[,params], setPageParams] = usePage();
-    const savedMetadata = params as ChartMetadata;
+    const { metadata: savedMetadata, isNew } = params as EditorParams;
     const chartFolder = getChartFolder(savedMetadata);
     
     const [metadata, setMetadataInner] = useState<ChartMetadata & {imgCacheBust?: string}>(savedMetadata);

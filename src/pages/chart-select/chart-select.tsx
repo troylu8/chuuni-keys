@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import MuseButton from '../../components/muse-button';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
+import MainMenuButton from "../../components/main-menu-btn";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -108,8 +109,9 @@ export default function ChartSelect() {
     useEffect(updateEntryPositions, [charts]);
     
     async function startGame() {
-        if (!activeChart) return;
-        setPageParams([ isEditing? Page.EDITOR : Page.GAME, activeChart]);
+        if (!activeChart)   return;
+        if (isEditing)      setPageParams([Page.EDITOR, { metadata: activeChart }]);
+        else                setPageParams([Page.GAME, activeChart]);
     }
     
     function handleEntryClick(metadata: ChartMetadata) {
@@ -123,9 +125,7 @@ export default function ChartSelect() {
     
     return (
         <div className="fixed cover">
-            <div className="absolute top-1 left-1 z-10">
-                <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}> main menu </MuseButton>
-            </div>
+            <MainMenuButton />
             
             <ChartInfo
                 metadata={activeChart} 
