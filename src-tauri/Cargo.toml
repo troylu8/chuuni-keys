@@ -27,4 +27,5 @@ rand = "0.9.1"
 tauri-plugin-process = "2"
 tauri-plugin-prevent-default = { version = "2.1.1", features = ["unstable-windows"] }
 tauri-plugin-dialog = "2"
+zip = "4.2.0"
 

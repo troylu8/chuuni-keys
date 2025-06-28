@@ -12,7 +12,7 @@ import EditorKeyboard from "./editor-keyboard";
 import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { getChartFolder, GLOBALS } from "../../lib/globals";
+import { getChartFolder, GLOBALS, stringifyIgnoreNull } from "../../lib/globals";
 
 
 enum ActiveModal { NONE, TIMING, DETAILS, CONFIRM_QUIT_TO_MENU, CONFIRM_QUIT_APP };
@@ -187,7 +187,7 @@ export default function Editor() {
         
         await Promise.all([
             writeTextFile(newChartFolder + "\\chart.txt", events.values.map(e => e.join(" ")).join("\n")),
-            writeTextFile(newChartFolder + "\\metadata.json", JSON.stringify(newMetadata, null, 4)),
+            writeTextFile(newChartFolder + "\\metadata.json", stringifyIgnoreNull(newMetadata)),
         ]);
         setSaved(true);
     }
@@ -321,6 +321,7 @@ export default function Editor() {
                         <DetailsModal
                             metadata={metadata}
                             setMetadata={setMetadata}
+                            handleSave={handleSave}
                             onClose={() => setActiveModal(ActiveModal.NONE)}
                         />
                     }

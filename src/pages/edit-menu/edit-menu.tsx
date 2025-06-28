@@ -3,7 +3,7 @@ import MainMenuButton from "../../components/main-menu-btn";
 import MuseButton from "../../components/muse-button";
 import { ChartMetadata, Page, usePage } from "../../providers/page";
 import { copyFile, create, mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
-import { getChartFolder } from '../../lib/globals';
+import { getChartFolder, stringifyIgnoreNull } from '../../lib/globals';
 import { extname } from '@tauri-apps/api/path';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useState } from 'react';
@@ -24,7 +24,7 @@ export default function EditMenu() {
         await mkdir(chartFolder);
         
         await Promise.all([
-            writeTextFile(chartFolder + "\\metadata.json", JSON.stringify(metadata, null, 4)),
+            writeTextFile(chartFolder + "\\metadata.json", stringifyIgnoreNull(metadata)),
             create(chartFolder + "\\chart.txt"),
             copyFile(audioFilepath, `${chartFolder}\\audio.${metadata.audio_ext}`),
         ]);

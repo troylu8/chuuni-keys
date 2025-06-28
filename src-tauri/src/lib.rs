@@ -1,6 +1,6 @@
 use tauri_plugin_prevent_default::PlatformOptions;
 mod charts;
-use charts::get_all_charts;
+mod publish;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -17,7 +17,7 @@ pub fn run() {
                 })
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![get_all_charts,])
+        .invoke_handler(tauri::generate_handler![charts::get_all_charts, publish::publish])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

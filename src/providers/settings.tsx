@@ -1,5 +1,6 @@
 import { useState, createContext, useContext, useEffect } from "react";
 import { BaseDirectory, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { stringifyIgnoreNull } from "../lib/globals";
 
 type Settings = {
     offset: number
@@ -39,7 +40,7 @@ export default function SettingsProvider({ children }: Props) {
             const next = ({...prev, [setting]: value});
             writeTextFile(
                 "userdata\\settings.json", 
-                JSON.stringify(next, null, 4),
+                stringifyIgnoreNull(next),
                 { baseDir: BaseDirectory.AppLocalData }
             );
             return next;

@@ -7,15 +7,18 @@ import { copyFile, remove } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';
 import { getChartFolder } from '../../lib/globals';
 import MuseButton from '../../components/muse-button';
+import { useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 
 
 
 type Props = Readonly<{
     metadata: ChartMetadata
     setMetadata: (metadata: ChartMetadata, save?: boolean, imgCacheBust?: string) => void
+    handleSave: () => Promise<void>
     onClose: () => void
 }>
-export default function DetailsModal({ metadata, setMetadata, onClose }: Props) {
+export default function DetailsModal({ metadata, handleSave, setMetadata, onClose }: Props) {
     const chartFolder = getChartFolder(metadata);
     
     function bindMetadataText(field: keyof ChartMetadata): [string, (txt: string) => any] {
@@ -62,10 +65,7 @@ export default function DetailsModal({ metadata, setMetadata, onClose }: Props) 
         );
     }
     
-    function handlePublish() {
-        //TODO
-    }
-    
+    const [publishModalVisible, setPublishModalVisible] = useState(false);
 
     return (
         <Modal title="details" onClose={handleClose}>
@@ -101,10 +101,53 @@ export default function DetailsModal({ metadata, setMetadata, onClose }: Props) 
                 
                 <MuseButton 
                     className='self-center col-start-1 -col-end-1 mx-auto'
-                    onClick={handlePublish}> publish to internet! 
+                    onClick={() => setPublishModalVisible(true)}> publish to internet! 
                 </MuseButton>
-                
             </div>
+            
+            { publishModalVisible && 
+                <PublishModal 
+                    metadata={metadata} 
+                    save={handleSave}
+                    onClose={() => setPublishModalVisible(false)} 
+                /> 
+            }
         </Modal>
     );
+}
+
+type PublishPopupProps = Readonly<{
+    metadata: ChartMetadata
+    save: () => Promise<void>
+    onClose: () => any
+}>
+function PublishModal({ metadata, save, onClose }: PublishPopupProps) {
+    const chartFolder = getChartFolder(metadata);
+    
+    async function publish() {
+        const pair = await invoke<[string, string]>("publish", { 
+            chartFolder, 
+            audioExt: metadata.audio_ext,
+            imgExt: undefined
+        });
+        
+        console.log(pair);
+    }
+    
+    return (
+        <Modal title='publish your chart?' onClose={onClose}>
+            <div className='flex flex-col gap-2 p-2 max-w-[300px]'>
+                <p> 
+                    it will be available for anyone to play at&nbsp;
+                    <a className='text-color2' href='https://chuuni-keys.troylu.com/charts' target='_blank'>
+                        chuuni-keys.troylu.com/charts
+                    </a>
+                </p>
+                <div className="flex gap-2">
+                    <MuseButton onClick={onClose}> cancel </MuseButton>
+                    <MuseButton onClick={() => save().then(publish).then(onClose)}> publish! </MuseButton>
+                </div>
+            </div>
+        </Modal>
+    )
 }
