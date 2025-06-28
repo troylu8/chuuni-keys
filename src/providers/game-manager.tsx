@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
 import { ChartMetadata, Page, usePage } from "./page";
-import { getChartFolder as getChartFolder, GLOBALS } from '../lib/globals';
+import { getChartFolder as getChartFolder, FLAGS } from '../lib/globals';
 
 export const ACTIVATION_DURATION = 800;
 export const HITRING_DURATION = 400;
@@ -62,7 +62,7 @@ export default function GameManager({ children }: Props) {
     
     // initialize
     useEffect(() => {
-        GLOBALS.keyUnitsEnabled = true;
+        FLAGS.keyUnitsEnabled = true;
         museEmitter.setMaxListeners(100);
         
         const metadata = params as ChartMetadata;
@@ -94,7 +94,7 @@ export default function GameManager({ children }: Props) {
     }, []);
     
     // disable key presses when paused
-    useEffect(() => { GLOBALS.keyUnitsEnabled = aud.playing }, [aud.playing]);
+    useEffect(() => { FLAGS.keyUnitsEnabled = aud.playing }, [aud.playing]);
     
     // game loop
     useEffect(() => {

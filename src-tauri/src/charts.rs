@@ -1,7 +1,8 @@
-use std::fs;
+use std::{fs, io::{Cursor, Seek, Write}};
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
+use zip::{write::SimpleFileOptions, ZipWriter};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChartMetadata {
@@ -37,4 +38,29 @@ pub fn get_all_charts(app: AppHandle) -> Result<Vec<ChartMetadata>, String> {
             })
             .collect()),
     }
+}
+
+
+fn add_file_to_zip<W: Write + Seek>(zip: &mut ZipWriter<W>, zip_filepath: &str, filepath: &str) -> Result<(), String> {
+    let data = fs::read(filepath).map_err(|e| e.to_string())?;
+    
+    zip.start_file(zip_filepath, SimpleFileOptions::default()).map_err(|e| e.to_string())?;
+    zip.write_all(&data).map_err(|e| e.to_string())?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub fn zip_chart(chart_folder: &str, audio_ext: &str, img_ext: Option<&str>) -> Result<Vec<u8>, String> {
+    
+    let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+    add_file_to_zip(&mut zip, "chart.txt", &format!("{chart_folder}\\chart.txt"))?;
+    add_file_to_zip(&mut zip, "metadata.json", &format!("{chart_folder}\\metadata.json"))?;
+    add_file_to_zip(&mut zip, &format!("audio.{audio_ext}"), &format!("{chart_folder}\\audio.{audio_ext}"))?;
+    if let Some(img_ext) = img_ext {
+        add_file_to_zip(&mut zip, &format!("img.{img_ext}"), &format!("{chart_folder}\\img.{img_ext}"))?;
+    }
+    
+    let zip_buffer = zip.finish().map_err(|e| e.to_string())?.into_inner();
+    Ok(zip_buffer)
 }

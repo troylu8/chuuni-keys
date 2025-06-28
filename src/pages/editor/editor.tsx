@@ -12,7 +12,7 @@ import EditorKeyboard from "./editor-keyboard";
 import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { getChartFolder, GLOBALS, stringifyIgnoreNull } from "../../lib/globals";
+import { getChartFolder, FLAGS, stringifyIgnoreNull } from "../../lib/globals";
 
 
 enum ActiveModal { NONE, TIMING, DETAILS, CONFIRM_QUIT_TO_MENU, CONFIRM_QUIT_APP };
@@ -60,12 +60,12 @@ export default function Editor() {
     useEffect(() => { aud.loadAudio(`${savedChartFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
     
     const [activeModal, setActiveModalInner] = useState(() => {
-        GLOBALS.keyUnitsEnabled = true;
+        FLAGS.keyUnitsEnabled = true;
         return isNew? ActiveModal.TIMING : ActiveModal.NONE;
     });
     function setActiveModal(modal: ActiveModal) {
         aud.setPlaying(false);
-        GLOBALS.keyUnitsEnabled = modal == ActiveModal.NONE;
+        FLAGS.keyUnitsEnabled = modal == ActiveModal.NONE;
         setActiveModalInner(modal);
     }
     
