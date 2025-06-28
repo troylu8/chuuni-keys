@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import playSfx, { SFX } from "../lib/sfx";
-import globals from "../lib/globals";
 import { KEY_SIZE } from "./keyboard-layout";
+import { GLOBALS } from "../lib/globals";
 
 
 
@@ -35,7 +35,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     useEffect(() => {
         
         function handleKeyDown(e: KeyboardEvent) {
-            if (globals.keyUnitsEnabled && e.key === keyCode && noModifiersPressed(e) ) {
+            if (GLOBALS.keyUnitsEnabled && e.key === keyCode && noModifiersPressed(e) ) {
                 setPressed(true);
                 hit();
             }
@@ -57,7 +57,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);
     return (
         <div
-            onClick={() => {if (globals.keyUnitsEnabled) hit()}}
+            onClick={() => {if (GLOBALS.keyUnitsEnabled) hit()}}
             style={{
                 width: KEY_SIZE, 
                 height: KEY_SIZE,

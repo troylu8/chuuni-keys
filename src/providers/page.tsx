@@ -20,16 +20,14 @@ export enum Page {
     MAIN_MENU,
     SETTINGS,
     EDIT_MENU,
-    SONG_SELECT,
+    CHART_SELECT,
     GAME,
     EDITOR,
 }
 
-/** [metadata, song folder] */
-export type GameAndEditorParams = [ChartMetadata, string]
-export type SongSelectParams = { isEditing: boolean }
+export type ChartSelectParams = { isEditing: boolean }
 
-export type PageParams = [Page] | [ Page, GameAndEditorParams | SongSelectParams];
+export type PageParams = [Page] | [ Page, ChartMetadata | ChartSelectParams];
 
 const PageContext = createContext<[PageParams, (next: PageParams) => void] | null>(null);
 
@@ -42,7 +40,6 @@ type Props = Readonly<{
 }>
 export default function PageProvider({ children }: Props) {
     const pageParamsState = useState<PageParams>([Page.MAIN_MENU]);
-    
     return (
         <PageContext.Provider value={pageParamsState}>
             { children }

@@ -2,8 +2,8 @@ import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { usePlayback } from "./playback";
-import { GameAndEditorParams, Page, usePage } from "./page";
-import globals from '../lib/globals';
+import { ChartMetadata, Page, usePage } from "./page";
+import { getChartFolder as getChartFolder, GLOBALS } from '../lib/globals';
 
 export const ACTIVATION_DURATION = 800;
 export const HITRING_DURATION = 400;
@@ -62,14 +62,15 @@ export default function GameManager({ children }: Props) {
     
     // initialize
     useEffect(() => {
-        globals.keyUnitsEnabled = true;
+        GLOBALS.keyUnitsEnabled = true;
         museEmitter.setMaxListeners(100);
         
-        const [{ audio_ext }, songFolder] = params as GameAndEditorParams;
+        const metadata = params as ChartMetadata;
         
         (async () => {
-            await aud.loadAudio(`${songFolder}\\audio.${audio_ext}`);
-            const events = await readChartFile(songFolder + "chart.txt");
+            const chartFolder = getChartFolder(metadata);
+            await aud.loadAudio(`${chartFolder}\\audio.${metadata.audio_ext}`);
+            const events = await readChartFile(chartFolder + "\\chart.txt");
             
             resetEvents();
                 
@@ -93,7 +94,7 @@ export default function GameManager({ children }: Props) {
     }, []);
     
     // disable key presses when paused
-    useEffect(() => { globals.keyUnitsEnabled = aud.playing }, [aud.playing]);
+    useEffect(() => { GLOBALS.keyUnitsEnabled = aud.playing }, [aud.playing]);
     
     // game loop
     useEffect(() => {
@@ -130,7 +131,7 @@ export default function GameManager({ children }: Props) {
         aud.setPlaying(true);
     }
     function stopGame() {
-        setPage([Page.SONG_SELECT, { isEditing: false }]);
+        setPage([Page.CHART_SELECT, { isEditing: false }]);
         aud.setPlaying(false);
     }
     

@@ -11,7 +11,7 @@ export default function Background({ imgPath, imgCacheBust }: Props) {
     return (
         <>
             { imgPath &&
-                <div className="fixed cover">
+                <div className="absolute cover">
                     <img 
                         src={imgCacheBust? `${src}?v=${imgCacheBust}` : src}
                         className="w-full h-full object-cover brightness-50"

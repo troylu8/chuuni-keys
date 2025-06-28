@@ -1,4 +1,4 @@
-import { ChartMetadata, GameAndEditorParams, Page, usePage } from "../../providers/page";
+import { ChartMetadata, Page, usePage } from "../../providers/page";
 import { usePlayback } from "../../providers/playback";
 import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
@@ -11,8 +11,8 @@ import createTree, { Tree } from "functional-red-black-tree";
 import EditorKeyboard from "./editor-keyboard";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
-import globals from "../../lib/globals";
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getChartFolder, GLOBALS } from "../../lib/globals";
 
 
 enum ActiveModal { NONE, TIMING, DETAILS, CONFIRM_QUIT_TO_MENU, CONFIRM_QUIT_APP };
@@ -44,7 +44,8 @@ function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEve
 
 export default function Editor() {
     const [[,params], setPageParams] = usePage();
-    const [savedMetadata, songFolder] = params as GameAndEditorParams;
+    const savedMetadata = params as ChartMetadata;
+    const chartFolder = getChartFolder(savedMetadata);
     
     const [metadata, setMetadataInner] = useState<ChartMetadata & {imgCacheBust?: string}>(savedMetadata);
     async function setMetadata(metadata: ChartMetadata, save: boolean = false, imgCacheBust?: string) {
@@ -55,15 +56,15 @@ export default function Editor() {
     
     const aud = usePlayback();
     // load audio file on init
-    useEffect(() => { aud.loadAudio(`${songFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
+    useEffect(() => { aud.loadAudio(`${chartFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
     
     const [activeModal, setActiveModalInner] = useState(() => {
-        globals.keyUnitsEnabled = true;
+        GLOBALS.keyUnitsEnabled = true;
         return ActiveModal.NONE;
     });
     function setActiveModal(modal: ActiveModal) {
         aud.setPlaying(false);
-        globals.keyUnitsEnabled = modal == ActiveModal.NONE;
+        GLOBALS.keyUnitsEnabled = modal == ActiveModal.NONE;
         setActiveModalInner(modal);
     }
     
@@ -88,7 +89,7 @@ export default function Editor() {
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     const first_event_ms = events.begin.value?.[0] ?? null;
     useEffect(() => {
-        readChartFile(songFolder + "chart.txt").then(events => {
+        readChartFile(chartFolder + "\\chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             for (const event of events) {
@@ -97,7 +98,7 @@ export default function Editor() {
             
             setEvents(tree);
         });
-    }, [songFolder]);
+    }, [chartFolder]);
     
     /** [`true/false` = added/removed event, event] */
     const historyRef = useRef<[boolean, MuseEvent][]>([]);
@@ -179,8 +180,8 @@ export default function Editor() {
             res.push(event.join(" "));
         }
         
-        await writeTextFile(songFolder + "chart.txt", res.join("\n"));
-        await writeTextFile(songFolder + "metadata.json", JSON.stringify(newMetadata, null, 4));
+        await writeTextFile(chartFolder + "\\chart.txt", res.join("\n"));
+        await writeTextFile(chartFolder + "\\metadata.json", JSON.stringify(newMetadata, null, 4));
         setSaved(true);
     }
     function handleQuit() {
@@ -258,7 +259,7 @@ export default function Editor() {
     
     return (
         <>
-            <Background imgPath={metadata.img_ext && `${songFolder}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
+            <Background imgPath={metadata.img_ext && `${chartFolder}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
@@ -311,7 +312,6 @@ export default function Editor() {
                     }
                     { activeModal == ActiveModal.DETAILS && 
                         <DetailsModal
-                            songFolder={songFolder}
                             metadata={metadata}
                             setMetadata={setMetadata}
                             onClose={() => setActiveModal(ActiveModal.NONE)}

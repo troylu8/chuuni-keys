@@ -2,7 +2,7 @@ import EditMenu from "./pages/edit-menu/edit-menu";
 import Editor from "./pages/editor/editor";
 import Game from "./pages/game/game";
 import MainMenu from "./pages/main-menu/main-menu";
-import SongSelect from "./pages/song-select/song-select";
+import ChartSelect from "./pages/chart-select/chart-select";
 import PageProvider, { usePage, Page } from "./providers/page";
 import PlaybackProvider, { usePlayback } from "./providers/playback";
 import "./styles.css"
@@ -29,7 +29,7 @@ function ActivePage() {
     // spacebar to toggle music
     useEffect(() => {
         function toggleMusic(e: KeyboardEvent) {
-            if ((page == Page.MAIN_MENU || page == Page.SONG_SELECT) && e.key == " ") {
+            if ((page == Page.MAIN_MENU || page == Page.CHART_SELECT) && e.key == " ") {
                 setPlaying(!playing);
             }
         }
@@ -43,7 +43,7 @@ function ActivePage() {
             {page == Page.MAIN_MENU && <MainMenu />}
             {page == Page.SETTINGS && <Settings />}
             {page == Page.EDIT_MENU && <EditMenu />}
-            {page == Page.SONG_SELECT && <SongSelect />}
+            {page == Page.CHART_SELECT && <ChartSelect />}
             {page == Page.GAME && <Game />}
             {page == Page.EDITOR && <Editor />}
         </>

@@ -5,16 +5,17 @@ import { ChartMetadata } from "../../providers/page";
 import { openPath } from '@tauri-apps/plugin-opener';
 import { copyFile, remove } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';
+import { getChartFolder } from '../../lib/globals';
 
 
 
 type Props = Readonly<{
-    songFolder: string,
     metadata: ChartMetadata
     setMetadata: (metadata: ChartMetadata, save?: boolean, imgCacheBust?: string) => void
     onClose: () => void
 }>
-export default function DetailsModal({ songFolder, metadata, setMetadata, onClose }: Props) {
+export default function DetailsModal({ metadata, setMetadata, onClose }: Props) {
+    const chartFolder = getChartFolder(metadata);
     
     function bindMetadataText(field: keyof ChartMetadata): [string, (txt: string) => any] {
         return [
@@ -43,11 +44,11 @@ export default function DetailsModal({ songFolder, metadata, setMetadata, onClos
         const newImgExt = await extname(filepath)
         const oldImgExt = metadata.img_ext;
         
-        await copyFile(filepath, `${songFolder}\\img.${newImgExt}`);
+        await copyFile(filepath, `${chartFolder}\\img.${newImgExt}`);
         
         // delete old img if necessary (if same exts, then file will be overwritten so no need to delete)
         if (oldImgExt != newImgExt) {
-            await remove(`${songFolder}\\img.${oldImgExt}`);
+            await remove(`${chartFolder}\\img.${oldImgExt}`);
         }
         
         setMetadata(
@@ -83,8 +84,8 @@ export default function DetailsModal({ songFolder, metadata, setMetadata, onClos
                 
                 <button
                     style={{gridColumn: "1 / -1"}} 
-                    onClick={() => openPath(songFolder)}
-                > open song folder </button>
+                    onClick={() => openPath(chartFolder)}
+                > open chart folder </button>
             </div>
         </Modal>
     );

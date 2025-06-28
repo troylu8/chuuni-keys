@@ -5,7 +5,7 @@ export default function EditMenu() {
     
     return (
         <div className="absolute cover flex flex-col justify-center items-center gap-5">
-            <button onClick={() => setPageParams([Page.SONG_SELECT, { isEditing: true }])}> edit existing chart </button>
+            <button onClick={() => setPageParams([Page.CHART_SELECT, { isEditing: true }])}> edit existing chart </button>
             
             <p> or </p>
             

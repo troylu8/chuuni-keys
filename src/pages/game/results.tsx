@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { GameAndEditorParams, Page, usePage } from "../../providers/page";
+import { useEffect } from "react";
+import { ChartMetadata, Page, usePage } from "../../providers/page";
 import { useStats } from "../../providers/score";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { getChartFolder } from "../../lib/globals";
 
 const SCORE_WEIGHTS = {
     perfect: 3,
@@ -22,9 +23,9 @@ function calculateLetter(accuracy: number, fullCombo: boolean) {
 
 export default function Results() {
     const [[,params], setPage] = usePage();
-    const { perfect, good, miss, maxCombo } = useStats();
+    const metadata = params as ChartMetadata;
     
-    const [] = useState("");
+    const { perfect, good, miss, maxCombo } = useStats();
     
     const fullCombo = miss == 0;
     
@@ -41,20 +42,19 @@ export default function Results() {
     
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === "Escape") handleToSongSelect();
+            if (e.key === "Escape") handleToChartSelect();
         }
         window.addEventListener("keydown", handleKeyDown);
         return () => { window.removeEventListener("keydown", handleKeyDown); }
-    }, [params]);
+    }, [metadata]);
     
     
-    function handleToSongSelect() {
-        setPage([Page.SONG_SELECT, {isEditing: false}]); 
+    function handleToChartSelect() {
+        setPage([Page.CHART_SELECT, {isEditing: false}]); 
         
         if (!params) return;
-        const [, songFolder] = params as GameAndEditorParams;
         writeTextFile(
-            songFolder + "leaderboard.csv", 
+            getChartFolder(metadata) + "\\leaderboard.csv", 
             `${Date.now()},${accuracyPercent},${maxCombo},${letter}${fullCombo? ",FC" : ""}\n`,
             {append: true}
         );
@@ -77,7 +77,7 @@ export default function Results() {
             </div>
             
             <button 
-                onClick={handleToSongSelect}
+                onClick={handleToChartSelect}
                 className="self-center"
             > back to song select </button>
         </div>

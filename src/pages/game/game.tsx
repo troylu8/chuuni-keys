@@ -7,7 +7,8 @@ import Background from "../../components/background";
 import Combo from "./combo";
 import Results from "./results";
 import KeyUnitGame from "./key-unit-game";
-import { GameAndEditorParams, usePage } from "../../providers/page";
+import { ChartMetadata, usePage } from "../../providers/page";
+import { getChartFolder } from "../../lib/globals";
 
 export default function Game() {
     return (
@@ -20,11 +21,11 @@ export default function Game() {
 function GameInner() {
     const [gameStage] = useGameStage();
     const [[, params]] = usePage();
-    const [ { img_ext }, songFolder ] = params as GameAndEditorParams;
+    const metadata = params as ChartMetadata;
 
     return (
         <div className="fixed cover">
-            <Background imgPath={img_ext && `${songFolder}\\img.${img_ext}`} />
+            <Background imgPath={metadata.img_ext && `${getChartFolder(metadata)}\\img.${metadata.img_ext}`} />
             { gameStage == GameStage.LOADING && <p> loading... </p> }
             
             <DeltaProvider>
