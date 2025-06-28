@@ -9,7 +9,7 @@ import DetailsModal from "./details-modal";
 import { MuseEvent, readChartFile } from "../../providers/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
 import EditorKeyboard from "./editor-keyboard";
-import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getChartFolder, GLOBALS } from "../../lib/globals";
@@ -45,7 +45,7 @@ function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEve
 export default function Editor() {
     const [[,params], setPageParams] = usePage();
     const { metadata: savedMetadata, isNew } = params as EditorParams;
-    const chartFolder = getChartFolder(savedMetadata);
+    const savedChartFolder = getChartFolder(savedMetadata);
     
     const [metadata, setMetadataInner] = useState<ChartMetadata & {imgCacheBust?: string}>(savedMetadata);
     async function setMetadata(metadata: ChartMetadata, save: boolean = false, imgCacheBust?: string) {
@@ -53,14 +53,15 @@ export default function Editor() {
         if (save) await handleSave(metadata);
         else            setSaved(false);
     }
+    const chartFolder = getChartFolder(metadata);
     
     const aud = usePlayback();
     // load audio file on init
-    useEffect(() => { aud.loadAudio(`${chartFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
+    useEffect(() => { aud.loadAudio(`${savedChartFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
     
     const [activeModal, setActiveModalInner] = useState(() => {
         GLOBALS.keyUnitsEnabled = true;
-        return ActiveModal.NONE;
+        return isNew? ActiveModal.TIMING : ActiveModal.NONE;
     });
     function setActiveModal(modal: ActiveModal) {
         aud.setPlaying(false);
@@ -89,7 +90,7 @@ export default function Editor() {
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     const first_event_ms = events.begin.value?.[0] ?? null;
     useEffect(() => {
-        readChartFile(chartFolder + "\\chart.txt").then(events => {
+        readChartFile(savedChartFolder + "\\chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             for (const event of events) {
@@ -98,7 +99,7 @@ export default function Editor() {
             
             setEvents(tree);
         });
-    }, [chartFolder]);
+    }, [savedChartFolder]);
     
     /** [`true/false` = added/removed event, event] */
     const historyRef = useRef<[boolean, MuseEvent][]>([]);
@@ -171,17 +172,23 @@ export default function Editor() {
         });
     }
     
+    const prevChartFolderRef = useRef(savedChartFolder);
+    
     const [saved, setSaved] = useState(true);
     async function handleSave(newMetadata: ChartMetadata = metadata) {
-        if (!events) return;
+        const newChartFolder = getChartFolder(newMetadata);
         
-        const res = [];
-        for (const event of events.values) {
-            res.push(event.join(" "));
+        // rename chart folder to match new title
+        const prevChartFolder = prevChartFolderRef.current;
+        if (chartFolder != prevChartFolder) {
+            await rename(prevChartFolder, chartFolder);
+            prevChartFolderRef.current = chartFolder;
         }
         
-        await writeTextFile(chartFolder + "\\chart.txt", res.join("\n"));
-        await writeTextFile(chartFolder + "\\metadata.json", JSON.stringify(newMetadata, null, 4));
+        await Promise.all([
+            writeTextFile(newChartFolder + "\\chart.txt", events.values.map(e => e.join(" ")).join("\n")),
+            writeTextFile(newChartFolder + "\\metadata.json", JSON.stringify(newMetadata, null, 4)),
+        ]);
         setSaved(true);
     }
     function handleQuit() {
@@ -259,14 +266,14 @@ export default function Editor() {
     
     return (
         <>
-            <Background imgPath={metadata.img_ext && `${chartFolder}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
+            <Background imgPath={metadata.img_ext && `${savedChartFolder}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
                 <nav className="flex flex-col gap-5 mb-8 z-20">
                     <div className="relative flex gap-1">
                         <MuseButton onClick={handleQuit}> quit </MuseButton>
-                        <MuseButton onClick={handleSave}> save {!saved && "*"} </MuseButton>
+                        <MuseButton onClick={() => handleSave()}> save {!saved && "*"} </MuseButton>
                         <div className="grow flex flex-row-reverse gap-1">
                             <MuseButton onClick={() => setActiveModal(ActiveModal.DETAILS)}> details </MuseButton>
                             <MuseButton onClick={() => setActiveModal(ActiveModal.TIMING)}> timing </MuseButton>
@@ -321,11 +328,9 @@ export default function Editor() {
                 
                 {/* bottom row */}
                 <nav className="flex gap-2 items-center">
-                    <div className="min-w-20 max-w-20">
-                        <MuseButton onClick={() => aud.setPlaying(!aud.playing)}> 
-                            {aud.playing? "pause" : "play"} 
-                        </MuseButton>
-                    </div>
+                    <MuseButton className="min-w-20 max-w-20" onClick={() => aud.setPlaying(!aud.playing)}> 
+                        {aud.playing? "pause" : "play"} 
+                    </MuseButton>
                     
                     <p className="text-xs"> {timeDisplay(position)} </p>
                     
@@ -349,7 +354,7 @@ type ConfirmQuitModalProps = Readonly<{
 function ConfirmQuitModal({ onClose, saveChanges, quit }: ConfirmQuitModalProps) {
     return (
         <Modal title="you have unsaved changes!" onClose={onClose}>
-            <div className="flex gap-3">
+            <div className="flex gap-2 p-2">
                 <MuseButton onClick={quit}> discard changes </MuseButton>
                 <MuseButton onClick={() => saveChanges().then(quit)}> save and quit </MuseButton>
             </div>

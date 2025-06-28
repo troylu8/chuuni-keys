@@ -1,7 +1,6 @@
 import { ChartMetadata, Page, ChartSelectParams, usePage } from "../../providers/page";
 import { useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import MuseButton from '../../components/muse-button';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";

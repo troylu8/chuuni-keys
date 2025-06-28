@@ -52,9 +52,7 @@ export default function TimingEditor({ onClose }: Props) {
     
     return (
         <div className="absolute cover flex flex-col items-center justify-center bg-gray-500 gap-10">
-            <div className="absolute left-1 top-1">
-                <MuseButton onClick={handleClose}> exit </MuseButton>
-            </div>
+            <MuseButton className="absolute left-1 top-1" onClick={handleClose}> exit </MuseButton>
             <input 
                 type="number" 
                 value={settings.offset}

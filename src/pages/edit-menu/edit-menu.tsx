@@ -60,21 +60,21 @@ export default function EditMenu() {
     }, []);
     
     return (
-        <div className="absolute cover flex flex-col justify-center items-center gap-5">
+        <div className="absolute cover flex flex-col justify-center items-center gap-3">
             <MainMenuButton />
             
             <MuseButton onClick={() => setPageParams([Page.CHART_SELECT, { isEditing: true }])}> edit existing chart </MuseButton>
+                
+            <h2 className='mt-6'> create new chart: </h2>
+            <MuseButton onClick={handleUploadAudio}> upload audio file </MuseButton>
             
-            <div 
-                className="
-                    outline-dashed outline-2 w-48 h-32 rounded-lg
-                    flex justify-center items-center
-                "
-            >
-                <span className="text-center"> drag audio file here to create new chart </span>
+            <div className="
+                outline-dashed outline-2 w-48 h-32 rounded-lg
+                flex justify-center items-center
+            ">
+                <span className="text-center"> or drag audio file here </span>
             </div>
             
-            <MuseButton onClick={handleUploadAudio}> upload audio file </MuseButton>
         </div>
     );
 }

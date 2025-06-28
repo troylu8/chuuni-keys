@@ -31,7 +31,7 @@ export default function TextInput({
             <input
                 placeholder={placeholder}
                 onInput={(e) => setText(e.currentTarget.value) }
-                className={`${className} w-full rounded-sm ${showCharLimit && "pr-15"} outline-2 ${!valid && "outline-error text-error" }`}
+                className={`${className} w-full rounded-lg outline-0 ${showCharLimit && "pr-15"} border-2 p-1 ${!valid && "border-error text-error" }`}
                 value={text}
                 onKeyDown={handleKeyDown}
             />

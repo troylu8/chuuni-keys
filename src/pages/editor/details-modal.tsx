@@ -6,6 +6,7 @@ import { openPath } from '@tauri-apps/plugin-opener';
 import { copyFile, remove } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';
 import { getChartFolder } from '../../lib/globals';
+import MuseButton from '../../components/muse-button';
 
 
 
@@ -30,7 +31,6 @@ export default function DetailsModal({ metadata, setMetadata, onClose }: Props) 
     function handleClose() {
         if (metadata.title != undefined) onClose();
     }
-    
     
     async function handleUploadImg() {
         const imgFilepath = await open({
@@ -57,17 +57,25 @@ export default function DetailsModal({ metadata, setMetadata, onClose }: Props) 
         
         setMetadata(
             { ...metadata, img_ext: newImgExt }, 
-            true,                           // save
-            "" + Date.now()                 // image cache bust
+            true,                                   // save chart
+            "" + Date.now()                         // image cache bust
         );
     }
+    
+    function handlePublish() {
+        //TODO
+    }
+    
 
     return (
         <Modal title="details" onClose={handleClose}>
-            <div style={{
-                display: "grid",
-                gridTemplateColumns: "fit-content(100%) 1fr",
-            }} className="gap-3 min-w-[300px]">
+            <div 
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "fit-content(100%) 1fr",
+                }} 
+                className="gap-3 px-3 pb-3 [&>label]:self-center"
+            >
                 <label> title </label>
                 <TextInput 
                     bind={bindMetadataText("title")} 
@@ -86,10 +94,16 @@ export default function DetailsModal({ metadata, setMetadata, onClose }: Props) 
                 <label> chart </label>
                 <TextInput bind={bindMetadataText("credit_chart")}  placeholder="who mapped this chart?"/>
                 
-                <button
-                    style={{gridColumn: "1 / -1"}} 
-                    onClick={() => openPath(chartFolder)}
-                > open chart folder </button>
+                <MuseButton 
+                    className='self-center col-start-1 -col-end-1 mx-auto'
+                    onClick={() => openPath(chartFolder)}> open chart folder 
+                </MuseButton>
+                
+                <MuseButton 
+                    className='self-center col-start-1 -col-end-1 mx-auto'
+                    onClick={handlePublish}> publish to internet! 
+                </MuseButton>
+                
             </div>
         </Modal>
     );

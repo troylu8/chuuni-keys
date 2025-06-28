@@ -82,3 +82,15 @@ button {
         opacity: 0;
     }
 }
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 99999px;
+    background: var(--color-foreground);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-color1);
+}

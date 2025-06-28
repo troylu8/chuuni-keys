@@ -5,10 +5,8 @@ export default function MainMenuButton() {
     const [, setPageParams] = usePage();
     
     return (
-        <div className="absolute top-1 left-1 z-10">
-            <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}>
-                main menu
-            </MuseButton>
-        </div>
+        <MuseButton className="absolute top-1 left-1 z-10" onClick={() => setPageParams([Page.MAIN_MENU])}>
+            main menu
+        </MuseButton>
     );
 }
