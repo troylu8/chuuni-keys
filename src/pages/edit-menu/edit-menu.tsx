@@ -80,7 +80,7 @@ export default function EditMenu() {
 }
 
 function genID() {
-    const symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
+    const symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
     const res = [];
     for (let i = 0; i < 10; i++) {
         res.push(symbols[Math.floor(Math.random() * 64)]);

@@ -3,9 +3,9 @@ import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
 import { ChartMetadata } from "../../providers/page";
 import { openPath } from '@tauri-apps/plugin-opener';
-import { copyFile, remove } from '@tauri-apps/plugin-fs';
+import { copyFile, remove, writeFile } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';
-import { getChartFolder, SERVER_URL } from '../../lib/globals';
+import { getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/globals';
 import MuseButton from '../../components/muse-button';
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
@@ -125,14 +125,23 @@ function PublishModal({ metadata, save, onClose }: PublishPopupProps) {
     const chartFolder = getChartFolder(metadata);
     
     async function publish() {
-        const zipBuffer = await invoke<ArrayBuffer>("zip_chart", { 
+        console.log("zipping..");
+        const zipBytes = await invoke<number[]>("zip_chart", { 
             chartFolder, 
             audioExt: metadata.audio_ext,
-            imgExt: undefined
+            imgExt: metadata.img_ext
         });
+        const zipBuffer = new Uint8Array(zipBytes);
         
+        console.log("writing debug zip..");
+        await writeFile(USERDATA_DIR + "\\test.zip", zipBuffer);
+        
+        console.log("making post req..");
         const resp = await fetch(`${SERVER_URL}/charts`, {method: "POST", body: zipBuffer});
-        console.log(await resp.json());
+        if (resp.ok) {
+            const [id, deletion_key]: [string, string] = await resp.json();
+            localStorage.setItem(id, deletion_key);
+        }
     }
     
     return (

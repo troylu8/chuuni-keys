@@ -52,7 +52,6 @@ fn add_file_to_zip<W: Write + Seek>(zip: &mut ZipWriter<W>, zip_filepath: &str, 
 
 #[tauri::command]
 pub fn zip_chart(chart_folder: &str, audio_ext: &str, img_ext: Option<&str>) -> Result<Vec<u8>, String> {
-    
     let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
     add_file_to_zip(&mut zip, "chart.txt", &format!("{chart_folder}\\chart.txt"))?;
     add_file_to_zip(&mut zip, "metadata.json", &format!("{chart_folder}\\metadata.json"))?;
