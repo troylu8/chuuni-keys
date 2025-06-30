@@ -1,8 +1,11 @@
-use std::{fs, io::{Cursor, Seek, Write}};
+use std::{
+    fs,
+    io::{Cursor, Seek, Write},
+};
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use zip::{write::SimpleFileOptions, ZipWriter};
+use zip::{write::SimpleFileOptions, ZipArchive, ZipWriter};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChartMetadata {
@@ -40,26 +43,59 @@ pub fn get_all_charts(app: AppHandle) -> Result<Vec<ChartMetadata>, String> {
     }
 }
 
-
-fn add_file_to_zip<W: Write + Seek>(zip: &mut ZipWriter<W>, zip_filepath: &str, filepath: &str) -> Result<(), String> {
+fn add_file_to_zip<W: Write + Seek>(
+    zip: &mut ZipWriter<W>,
+    zip_filepath: &str,
+    filepath: &str,
+) -> Result<(), String> {
     let data = fs::read(filepath).map_err(|e| e.to_string())?;
-    
-    zip.start_file(zip_filepath, SimpleFileOptions::default()).map_err(|e| e.to_string())?;
+
+    zip.start_file(zip_filepath, SimpleFileOptions::default())
+        .map_err(|e| e.to_string())?;
     zip.write_all(&data).map_err(|e| e.to_string())?;
-    
+
     Ok(())
 }
 
 #[tauri::command]
-pub fn zip_chart(chart_folder: &str, audio_ext: &str, img_ext: Option<&str>) -> Result<Vec<u8>, String> {
+pub fn zip_chart(
+    chart_folder: &str,
+    audio_ext: &str,
+    img_ext: Option<&str>,
+) -> Result<Vec<u8>, String> {
     let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
     add_file_to_zip(&mut zip, "chart.txt", &format!("{chart_folder}\\chart.txt"))?;
-    add_file_to_zip(&mut zip, "metadata.json", &format!("{chart_folder}\\metadata.json"))?;
-    add_file_to_zip(&mut zip, &format!("audio.{audio_ext}"), &format!("{chart_folder}\\audio.{audio_ext}"))?;
+    add_file_to_zip(
+        &mut zip,
+        "metadata.json",
+        &format!("{chart_folder}\\metadata.json"),
+    )?;
+    add_file_to_zip(
+        &mut zip,
+        &format!("audio.{audio_ext}"),
+        &format!("{chart_folder}\\audio.{audio_ext}"),
+    )?;
     if let Some(img_ext) = img_ext {
-        add_file_to_zip(&mut zip, &format!("img.{img_ext}"), &format!("{chart_folder}\\img.{img_ext}"))?;
+        add_file_to_zip(
+            &mut zip,
+            &format!("img.{img_ext}"),
+            &format!("{chart_folder}\\img.{img_ext}"),
+        )?;
     }
-    
+
     let zip_buffer = zip.finish().map_err(|e| e.to_string())?.into_inner();
     Ok(zip_buffer)
+}
+
+#[tauri::command]
+pub fn unzip_chart(app: AppHandle, buffer: Vec<u8>) -> Result<ChartMetadata, String> {
+    let app_data_local = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    app_data_local.join("userdata/charts/")
+    
+    let mut zip = ZipArchive::new(Cursor::new(buffer)).map_err(|e| e.to_string())?;
+    let metadata = zip.by_name("metadata.json").map_err(|e| e.to_string())?;
+    metadata.read_to_end(buf) // TODO
+    zip.extract(chart_folder).map_err(|e| e.to_string())?;
+    
+    Ok(())
 }

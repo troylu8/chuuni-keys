@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";
+import { getChartFolder, SERVER_URL } from "../../lib/globals";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -16,7 +17,7 @@ export default function ChartSelect() {
     
     const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
     const [[,params], setPageParams] = usePage();
-    const { isEditing } = params as ChartSelectParams;
+    const { isEditing, activeChartId } = params as ChartSelectParams;
     
     
     // smooth scrolling
@@ -95,11 +96,32 @@ export default function ChartSelect() {
             entry.style.left = listRect.width * 0.45 - deltaX + "px"; 
         }
     }
-        
+    
+    // initialize charts
     useEffect(() => {
         invoke<ChartMetadata[]>("get_all_charts").then(charts => {
             setCharts(charts);
-            setActiveChart(charts?.[0] ?? null);
+            
+            if (activeChartId != undefined) {
+                const activeChart = charts.find(chart => chart.id == activeChartId);
+                if (activeChart) {
+                    setActiveChart(activeChart);
+                }
+                else {
+                    fetch(SERVER_URL + "/download/" + activeChartId)
+                    .then(resp => {
+                        if (resp.ok) return resp.json();
+                    })
+                    .then(buffer => {
+                        invoke("unzip_chart", { buffer: new Uint8Array(buffer as number[]) })
+                        .then(chartMetadata => {
+                            setCharts([...charts, chartMetadata as ChartMetadata]);
+                            setActiveChart(chartMetadata as ChartMetadata);
+                        })
+                    })
+                }
+            }
+            else setActiveChart(charts?.[0] ?? null);
         });
         
         window.addEventListener("resize", updateEntryPositions);

@@ -1,4 +1,5 @@
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
+import { getCurrent, onOpenUrl } from '@tauri-apps/plugin-deep-link';
 
 export type ChartMetadata = {
     id: string,
@@ -26,7 +27,7 @@ export enum Page {
 }
 
 export type EditorParams = { metadata: ChartMetadata, isNew?: boolean }
-export type ChartSelectParams = { isEditing: boolean }
+export type ChartSelectParams = { isEditing: boolean, activeChartId?: string }
 
 export type PageParams = [Page] | [ Page, ChartMetadata | ChartSelectParams | EditorParams];
 
@@ -40,9 +41,27 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function PageProvider({ children }: Props) {
-    const pageParamsState = useState<PageParams>([Page.MAIN_MENU]);
+    const [page, setPageParams] = useState<PageParams>([Page.MAIN_MENU]);
+    
+    useEffect(() => {
+        function handleDeepLink(url?: string) {
+            if (url == undefined) return;
+            
+            // urls look like chuuni://play/<chart-id>
+            const [key, value] = url.split("://")[1].split("/");
+            if (key == "play") {
+                setPageParams([Page.CHART_SELECT, { isEditing: false, activeChartId: value }]);
+            }
+        } 
+        
+        getCurrent().then(urls => handleDeepLink(urls?.[0]));
+        const unlisten = onOpenUrl(urls => handleDeepLink(urls[0]));
+        
+        return () => { unlisten.then(unlisten => unlisten()); }
+    }, []);
+    
     return (
-        <PageContext.Provider value={pageParamsState}>
+        <PageContext.Provider value={[page, setPageParams]}>
             { children }
         </PageContext.Provider>
     );

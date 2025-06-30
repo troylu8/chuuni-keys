@@ -12,12 +12,22 @@
         "dialog:default",
         "core:window:allow-destroy",
         {
-            "identifier": "opener:allow-open-path",
+            "identifier": "opener:allow-reveal-item-in-dir",
             "allow": [
                 {
                     "path": "$APPLOCALDATA/**/*"
                 }
             ]
-        }
+        },
+        {
+            "identifier": "opener:allow-open-url",
+            "allow": [
+                {
+                    "path": "$APPLOCALDATA/**/*"
+                }
+            ]
+        },
+        "core:event:default",
+        "deep-link:default"
     ]
 }

@@ -2,7 +2,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
 import { ChartMetadata } from "../../providers/page";
-import { openPath } from '@tauri-apps/plugin-opener';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { copyFile, remove, writeFile } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';
 import { getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/globals';
@@ -96,7 +96,7 @@ export default function DetailsModal({ metadata, handleSave, setMetadata, onClos
                 
                 <MuseButton 
                     className='self-center col-start-1 -col-end-1 mx-auto'
-                    onClick={() => openPath(chartFolder)}> open chart folder 
+                    onClick={() => revealItemInDir(chartFolder)}> open chart folder 
                 </MuseButton>
                 
                 <MuseButton 
