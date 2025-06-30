@@ -551,6 +551,7 @@ dependencies = [
 name = "chuuni-keys"
 version = "0.1.0"
 dependencies = [
+ "filenamify",
  "rand 0.9.1",
  "serde",
  "serde_json",
@@ -867,7 +868,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1100,6 +1101,16 @@ checksum = "38e2275cc4e4fc009b0669731a1e5ab7ebf11f469eaede2bab9309a5b4d6057f"
 dependencies = [
  "memoffset",
  "rustc_version",
+]
+
+[[package]]
+name = "filenamify"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbc3ee3cc020bf3d428d14f0d9e4d4cb2c72df564d6a8e8b06b472b5c5d00671"
+dependencies = [
+ "lazy_static",
+ "regex",
 ]
 
 [[package]]

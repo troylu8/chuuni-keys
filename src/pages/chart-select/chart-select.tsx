@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";
-import { getChartFolder, SERVER_URL } from "../../lib/globals";
+import { SERVER_URL } from "../../lib/globals";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -110,13 +110,14 @@ export default function ChartSelect() {
                 else {
                     fetch(SERVER_URL + "/download/" + activeChartId)
                     .then(resp => {
-                        if (resp.ok) return resp.json();
+                        if (resp.ok) return resp.bytes();
                     })
                     .then(buffer => {
-                        invoke("unzip_chart", { buffer: new Uint8Array(buffer as number[]) })
+                        console.log(buffer);
+                        invoke<ChartMetadata>("unzip_chart", { buffer })
                         .then(chartMetadata => {
-                            setCharts([...charts, chartMetadata as ChartMetadata]);
-                            setActiveChart(chartMetadata as ChartMetadata);
+                            setCharts([...charts, chartMetadata]);
+                            setActiveChart(chartMetadata);
                         })
                     })
                 }

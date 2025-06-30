@@ -1,11 +1,14 @@
 use std::{
     fs,
-    io::{Cursor, Seek, Write},
+    io::{Cursor, Read, Seek, Write},
 };
 
 use serde::{Deserialize, Serialize};
+use serde_json::Deserializer;
 use tauri::{AppHandle, Manager};
 use zip::{write::SimpleFileOptions, ZipArchive, ZipWriter};
+use filenamify::filenamify;
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChartMetadata {
@@ -89,13 +92,25 @@ pub fn zip_chart(
 
 #[tauri::command]
 pub fn unzip_chart(app: AppHandle, buffer: Vec<u8>) -> Result<ChartMetadata, String> {
-    let app_data_local = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
-    app_data_local.join("userdata/charts/")
     
+    println!("read zip", );
     let mut zip = ZipArchive::new(Cursor::new(buffer)).map_err(|e| e.to_string())?;
-    let metadata = zip.by_name("metadata.json").map_err(|e| e.to_string())?;
-    metadata.read_to_end(buf) // TODO
+    
+    
+    let mut metadata_json = String::new();
+    {
+        println!("reading md", );
+        let mut metadata_file = zip.by_name("metadata.json").map_err(|e| e.to_string())?;
+        metadata_file.read_to_string(&mut metadata_json).map_err(|e| e.to_string())?;
+    }
+    
+    println!("deserializing", );
+    let metadata: ChartMetadata = serde_json::from_str(&metadata_json).map_err(|e| e.to_string())?;
+    
+    println!("extracting", );
+    let app_data_local = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    let chart_folder = app_data_local.join(format!("userdata/charts/{} {}", metadata.id, filenamify(&metadata.title)));
     zip.extract(chart_folder).map_err(|e| e.to_string())?;
     
-    Ok(())
+    Ok(metadata)
 }
