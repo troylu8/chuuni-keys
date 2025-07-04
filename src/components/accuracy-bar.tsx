@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useDelta, getPraise, GOOD_THRESHOLD } from "../providers/score";
+import { resetAnimation } from "../lib/globals";
 
 type Props = Readonly<{
     showRawDeltas?: boolean
@@ -12,16 +13,7 @@ export default function AccuracyBar({showRawDeltas}: Props) {
     
     const praiseLabelRef = useRef<HTMLParagraphElement | null>(null);
     
-    function resetPraiseFadeOutAnim() {
-        const praiseLabel = praiseLabelRef.current;
-        if (!praiseLabel) return;
-        
-        // https://stackoverflow.com/questions/6268508/restart-animation-in-css3-any-better-way-than-removing-the-element
-        praiseLabel.style.animation = "none";
-        praiseLabel.offsetHeight;
-        praiseLabel.style.animation = "";
-    }
-    
+    // listen to delta events
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {
             if (delta == "miss") setPraise("miss");
@@ -31,7 +23,8 @@ export default function AccuracyBar({showRawDeltas}: Props) {
                     setDeltas(prev => [...prev, [Math.random(), delta as number]]);
                 }
             }
-            resetPraiseFadeOutAnim();
+            if (praiseLabelRef.current) 
+                resetAnimation(praiseLabelRef.current)
         });
         
         return unlisten;
@@ -47,7 +40,13 @@ export default function AccuracyBar({showRawDeltas}: Props) {
     
     return (
         <div className="relative w-25 h-[2px] rounded-full bg-foreground">
-            <p ref={praiseLabelRef} className="absolute left-1/2 -translate-x-1/2 bottom-5 text-xl anim-fade-out"> {praise} </p>
+            <div className="
+                absolute left-1/2 -translate-x-1/2 bottom-0 -translate-y-full
+                h-[7vh] flex justify-center items-center
+            ">
+                <p ref={praiseLabelRef} className="anim-praise"> {praise} </p>
+            </div>
+            
             <AccuracyTick delta={0} color="var(--foreground)" />
             {
                 deltas.map(([id, delta]) => <AccuracyTick key={id} delta={delta} color="var(--foreground)" onEnd={popDelta} />)

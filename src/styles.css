@@ -68,11 +68,16 @@ button {
     translate: -50% 0;
 }
 
-.anim-fade-out {
-    animation: fade-out 1.2s ease-out forwards;
+.anim-praise {
+    animation: anim-praise 1.2s ease-out forwards;
 }
-@keyframes fade-out {
+@keyframes anim-praise {
     0% {
+        opacity: 0;
+        font-size: 7vh;
+    }
+    4% {
+        font-size: 5vh;
         opacity: 1;
     }
     30% {
@@ -80,6 +85,21 @@ button {
     }
     100% {
         opacity: 0;
+        font-size: 5vh;
+    }
+}
+.anim-combo {
+    animation: anim-combo 1.2s ease-out forwards;
+}
+@keyframes anim-combo {
+    0% {
+        font-size: 6vh;
+    }
+    4% {
+        font-size: 5vh;
+    }
+    100% {
+        font-size: 5vh;
     }
 }
 

@@ -24,9 +24,11 @@ export default function PauseModal() {
         <>
             { !playing && 
                 <Modal title="paused">
-                    <MuseButton onClick={() => setPlaying(true)}> resume </MuseButton>
-                    <MuseButton onClick={restartGame}> restart </MuseButton>
-                    <MuseButton onClick={stopGame}> quit </MuseButton>
+                    <div className="flex flex-col gap-3 p-2">
+                        <MuseButton onClick={() => setPlaying(true)}> resume </MuseButton>
+                        <MuseButton onClick={restartGame}> restart </MuseButton>
+                        <MuseButton onClick={stopGame}> quit </MuseButton>
+                    </div>
                 </Modal>
             }
         </>
