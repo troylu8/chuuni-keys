@@ -4,7 +4,8 @@ import { invoke } from '@tauri-apps/api/core';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";
-import { SERVER_URL } from "../../lib/globals";
+import { getChartFolder, SERVER_URL } from "../../lib/globals";
+import { usePlayback } from "../../providers/playback";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -14,6 +15,8 @@ function distToCircle(x: number, radius: number) {
 }
 
 export default function ChartSelect() {
+    
+    const aud = usePlayback();
     
     const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
     const [[,params], setPageParams] = usePage();
@@ -62,7 +65,18 @@ export default function ChartSelect() {
     }, [chartListRef.current]);
     
     
-    const [activeChart, setActiveChart] = useState<ChartMetadata | null>(null);
+    const [activeChart, setActiveChartInner] = useState<ChartMetadata | null>(null);
+    async function setActiveChart(metadata: ChartMetadata) {
+        setActiveChartInner(metadata);
+        const loadedNewSong = await aud.loadAudio(`${getChartFolder(metadata)}\\audio.${metadata.audio_ext}`, {restart: false});
+        if (loadedNewSong) {
+            aud.seek(metadata.preview_time);
+            await aud.setPlaying(true);
+        }
+        else if (!aud.playing) {
+            await aud.setPlaying(true);
+        }
+    }
     
     function updateEntryPositions() {
         const chartList = chartListRef.current;

@@ -1,17 +1,22 @@
+import MuseButton from "../../components/muse-button";
 import { ChartMetadata } from "../../providers/page";
 
 
 type Props = Readonly<{
     metadata: ChartMetadata
     setMetadata: (metadata: ChartMetadata) => void
+    setOffsetHere: () => any
+    setPreviewHere: () => any
 }>
-export default function TimingTab({ metadata, setMetadata }: Props) {
+export default function TimingTab({ metadata, setMetadata, setOffsetHere, setPreviewHere }: Props) {
     return (
         <div className="absolute cover flex justify-center items-center">
             <div className="w-fit bg-background p-3 rounded-md">
+                <MuseButton onClick={setOffsetHere}> set offset to current position </MuseButton>
                 <NumberInput label="BPM" value={metadata.bpm} onChange={bpm => setMetadata({...metadata, bpm})} />
                 <NumberInput label="measure size" value={metadata.measure_size} onChange={measure_size => setMetadata({...metadata, measure_size})} />
                 <NumberInput label="snaps" value={metadata.snaps} onChange={snaps => setMetadata({...metadata, snaps})} />
+                <MuseButton onClick={setPreviewHere}> set preview time to current position </MuseButton>
             </div>
         </div>
     );

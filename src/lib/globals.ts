@@ -6,10 +6,9 @@ export function stringifyIgnoreNull(obj: any) {
 }
 
 /**
- * https://stackoverflow.com/questions/6268508/restart-animation-in-css3-any-better-way-than-removing-the-element
- * 
  * Assumes the given element has an animation attached via className
- */
+ * https://stackoverflow.com/questions/6268508/restart-animation-in-css3-any-better-way-than-removing-the-element
+*/
 export function resetAnimation(element: HTMLElement) {
     element.style.animation = "none";
     void element.offsetHeight;

@@ -69,7 +69,7 @@ export default function Results() {
                 <span style={{color: PRAISE_COLORS["good"]}}> {good} </span> /
                 <span style={{color: PRAISE_COLORS["miss"]}}> {miss} </span>
             </p>
-            <div className="grid grid-cols-2 gap-3 ">
+            <div className="grid grid-cols-2 gap-y-3 gap-x-6 ">
                 <p className="text-end"> accuracy </p>
                 <p> { accuracyPercent }% </p>
                 

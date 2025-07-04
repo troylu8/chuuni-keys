@@ -4,7 +4,6 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use serde_json::Deserializer;
 use tauri::{AppHandle, Manager};
 use zip::{write::SimpleFileOptions, ZipArchive, ZipWriter};
 use filenamify::filenamify;
@@ -16,6 +15,8 @@ pub struct ChartMetadata {
     title: String,
 
     bpm: f32,
+    first_beat: f32,
+    preview_time: f32,
     measure_size: usize,
     snaps: usize,
 

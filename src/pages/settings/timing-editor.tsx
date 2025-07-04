@@ -25,7 +25,7 @@ export default function TimingEditor({ onClose }: Props) {
     
     useEffect(() => {
         appLocalDataDir().then(applocaldatadir => {
-            loadAudio(applocaldatadir + "\\userdata\\metronome.mp3", true);
+            loadAudio(applocaldatadir + "\\userdata\\metronome.mp3", {startPlaying: true});
         });
         
         let prevI = 0;

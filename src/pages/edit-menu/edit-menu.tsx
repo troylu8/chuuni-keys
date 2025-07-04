@@ -16,6 +16,8 @@ export default function EditMenu() {
             id: genID(),
             title: 'no title yet',
             bpm: 120,
+            first_beat: 0,
+            preview_time: 0,
             measure_size: 4,
             snaps: 1,
             audio_ext: await extname(audioFilepath)

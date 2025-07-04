@@ -8,13 +8,15 @@ type PosUpdateUnlisten = () => void
 
 type Playback = {
     playing: boolean,
-    loadAudio: (src: string, play?: boolean) => Promise<void>,
+    loadAudio: (src: string, options?: { startPlaying?: boolean, restart?: boolean }) => Promise<boolean>,
     setPlaying: (next: boolean) => Promise<void>,
     getTruePosition: () => number,
     getOffsetPosition: () => number,
     duration: number,
     seek: (ms: number) => void,
-    addPosUpdateListener: (listener: PosUpdateListener) => PosUpdateUnlisten
+    addPosUpdateListener: (listener: PosUpdateListener) => PosUpdateUnlisten,
+    speed: number,
+    setAudioSpeed: (speed: number) => void,
 }
 const PlaybackContext = createContext<Playback | null>(null);
 
@@ -32,6 +34,7 @@ export default function PlaybackProvider({ children }: Props) {
     const audio = useRef<HTMLAudioElement>(new Audio()).current;
     const [playing, setPlayingInner] = useState(false);
     const [duration, setDuration] = useState(0);
+    const [speed, setSpeed] = useState(1);
     
     const posEmitter = useRef(new EventEmitter()).current;
     useEffect(() => {posEmitter.setMaxListeners(100)}, []);
@@ -54,10 +57,17 @@ export default function PlaybackProvider({ children }: Props) {
         }
     }, [offset]);
     
-    async function loadAudio(src: string, play: boolean = false) {
-        audio.src = convertFileSrc(src);
+    async function loadAudio(src: string, options?: { startPlaying?: boolean, restart?: boolean }) {
+        const newSrc = convertFileSrc(src);
+        if (options?.restart === false && audio.src == newSrc) 
+            return false;
+        
+        audio.src = newSrc;
         audio.load();
-        await setPlaying(play);
+        setDuration(audio.duration);
+        setAudioSpeed(1);
+        await setPlaying(options?.startPlaying ?? false);
+        return true;
     }
     
     async function setPlaying(next: boolean) {
@@ -90,8 +100,13 @@ export default function PlaybackProvider({ children }: Props) {
         return () => posEmitter.removeListener("pos-update", listener);
     }
     
+    function setAudioSpeed(speed: number) {
+        setSpeed(speed);
+        audio.playbackRate = speed;
+    }
+    
     return (
-        <PlaybackContext.Provider value={{playing, loadAudio, setPlaying, getTruePosition, getOffsetPosition, seek, duration, addPosUpdateListener}}>
+        <PlaybackContext.Provider value={{ playing, loadAudio, setPlaying, getTruePosition, getOffsetPosition, seek, duration, addPosUpdateListener, speed, setAudioSpeed }}>
             { children }
         </PlaybackContext.Provider>
     );

@@ -6,6 +6,8 @@ export type ChartMetadata = {
     title: string,
     
     bpm: number,
+    first_beat: number,
+    preview_time: number,
     measure_size: number,
     snaps: number,
     

@@ -13,25 +13,26 @@ export function getBeatDuration(bpm: number) {
 
 type Props = Readonly<{
     bpm: number
+    firstBeat: number
     measureSize: number
     snaps: number
     offsetPosition: number
+    previewTime: number
     duration: number
     events: Tree<number, MuseEvent>
     setPosition: (pos: number) => void
     deleteEvent: (e: MuseEvent) => void
 }>
-export default function Inspector({ bpm, measureSize, snaps, offsetPosition, duration, events, setPosition, deleteEvent }: Props) {
-    
-    const first_event_ms = events.begin.value?.[0] ?? null;
+export default function Inspector({ bpm, firstBeat, measureSize, snaps, offsetPosition, previewTime, duration, events, setPosition, deleteEvent }: Props) {
     
     const MS_PER_BEAT = getBeatDuration(bpm);
-    const PX_PER_BEAT = MS_PER_BEAT && MS_PER_BEAT * PX_PER_MS;
-    const PX_PER_SNAP = PX_PER_BEAT && PX_PER_BEAT / (snaps + 1);
+    const PX_PER_BEAT = MS_PER_BEAT * PX_PER_MS;
+    const PX_PER_SNAP = PX_PER_BEAT / (snaps + 1);
     
-    const ABS_FIRST_PX = first_event_ms && first_event_ms * PX_PER_MS!;
+    const ABS_FIRST_PX = firstBeat * PX_PER_MS;
+    
     function diffToNext(absPx: number, size: number) {
-        const pxAfterFirst = absPx - ABS_FIRST_PX!;
+        const pxAfterFirst = absPx - ABS_FIRST_PX;
         if (pxAfterFirst < 0) return -pxAfterFirst;
         return pxAfterFirst % size == 0? 0 : size - pxAfterFirst % size;
     }
@@ -58,12 +59,12 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
     
     const inspectorElements = [];
     const firstBeatPx = startPx + diffToNext(absStartPx, PX_PER_BEAT);
-    let beat = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_BEAT) - ABS_FIRST_PX!) / PX_PER_BEAT);
+    let beat = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_BEAT) - ABS_FIRST_PX) / PX_PER_BEAT);
     for (let px = firstBeatPx; px <= endPx; px += PX_PER_BEAT) {
         inspectorElements.push(
             <div 
                 key={px} 
-                style={{left: px, height: beat % measureSize! == 0? 18 : 12}} 
+                style={{left: px, height: beat % measureSize == 0? 18 : 12}} 
                 className="inspector-tick bg-foreground">
             </div>
         );
@@ -71,7 +72,7 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         beat++;
     }
     const firstSnapPx = startPx + diffToNext(absStartPx, PX_PER_SNAP);
-    let snap = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_SNAP) - ABS_FIRST_PX!) / PX_PER_SNAP);
+    let snap = Math.round((absStartPx + diffToNext(absStartPx, PX_PER_SNAP) - ABS_FIRST_PX) / PX_PER_SNAP);
     for (let px = firstSnapPx; px <= endPx; px += PX_PER_SNAP) {
         if (snap % (snaps + 1) != 0) {
             inspectorElements.push(
@@ -85,18 +86,22 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         snap++;
     }
     
+    /** use the resulting value on the "left: ___px" css property */
+    function getPosOnInspector(ms: number) {
+        const absPx = ms * PX_PER_MS;
+        return absPx - absStartPx + startPx;
+    }
+    
     // [px, event]
     const allCols: [number, MuseEvent[]][] = [];
     let prevMs = -1;
     events?.forEach( // calculate visible columns
         (_, event) => {
             const ms = event[0];
-            const absPx = ms * PX_PER_MS;
-            const px = absPx - absStartPx + startPx;
             
             // if time changed, start a new column
             if (ms != prevMs) {
-                allCols.push([px, [event]]);
+                allCols.push([getPosOnInspector(ms), [event]]);
             }
             
             // time is still the same, add to previous column
@@ -121,15 +126,32 @@ export default function Inspector({ bpm, measureSize, snaps, offsetPosition, dur
         );
     }
     
+    
     return (
         <div ref={contRef} className="relative w-full">
+            
+            {/* horizontal inspector bar */}
             <div 
                 style={{left: startPx, width: endPx - startPx}} 
                 className="absolute bottom-0 h-[3px] bg-foreground rounded-full"
             ></div>
-            <div className="inspector-tick left-1/2 bg-blue-500 h-5"></div>
             
             { inspectorElements }
+            
+            {/* current position marker */}
+            <div className="inspector-tick left-1/2 bg-blue-500 h-5"></div>
+            
+            {/* first beat marker */}
+            <div 
+                style={{left: getPosOnInspector(firstBeat)}} 
+                className="inspector-tick bg-color1 h-5">
+            </div>
+            
+            {/* preview time marker */}
+            <div 
+                style={{left: getPosOnInspector(previewTime)}} 
+                className="inspector-tick bg-color2 h-5">
+            </div>
         </div>
     );
 }

@@ -87,11 +87,10 @@ export default function Editor() {
         return unlisten;
     }, []);
     
-    const ms_per_beat = 60 / metadata.bpm * 1000;
-    const ms_per_snap = ms_per_beat / (metadata.snaps + 1);
+    const MS_PER_BEAT = 60 / metadata.bpm * 1000;
+    const MS_PER_SNAP = MS_PER_BEAT / (metadata.snaps + 1);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
-    const first_event_ms = events.begin.value?.[0] ?? null;
     useEffect(() => {
         readChartFile(savedChartFolder + "\\chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
@@ -213,15 +212,17 @@ export default function Editor() {
     // keybinds and scroll
     useEffect(() => {
         
+        const FIRST_BEAT = metadata.first_beat;
+        
         function onScroll(e: WheelEvent) {
             setPosition(ms => {
                 aud.setPlaying(false);
-                const snapSize = e.ctrlKey ? ms_per_beat : ms_per_snap;
+                const snapSize = e.ctrlKey ? MS_PER_BEAT : MS_PER_SNAP;
                 if (e.deltaY < 0) {
-                    return snapLeft(ms, first_event_ms ?? 0, snapSize);
+                    return snapLeft(ms, FIRST_BEAT, snapSize);
                 }
                 else {
-                    return snapRight(ms, first_event_ms ?? 0, snapSize);
+                    return snapRight(ms, FIRST_BEAT, snapSize);
                 }
             });
         }
@@ -230,18 +231,10 @@ export default function Editor() {
             if (e.key === " ")  
                 aud.setPlaying(!aud.playing);
             else if (e.code === "ShiftLeft") {
-                setPosition(ms => {
-                    if (first_event_ms == null) return ms;
-                    if (ms <= first_event_ms) return 0;
-                    return snapLeft(ms, first_event_ms, ms_per_snap);
-                });
+                setPosition(ms => ms <= FIRST_BEAT ? 0 : snapLeft(ms, FIRST_BEAT, MS_PER_SNAP));
             }
             else if (e.code === "ShiftRight") {
-                setPosition(ms => {
-                    if (first_event_ms == null) return ms;
-                    if (ms < first_event_ms) return first_event_ms;
-                    return snapRight(ms, first_event_ms, ms_per_snap);
-                });
+                setPosition(ms => ms < FIRST_BEAT ? FIRST_BEAT : snapRight(ms, FIRST_BEAT, MS_PER_SNAP));
             }
             else if (e.key === "ArrowLeft")
                 setPosition(prev => prev - 1);
@@ -255,8 +248,7 @@ export default function Editor() {
                 handleRedo()
         }
         
-        
-        if (activeTab == ActiveTab.KEYBOARD && activeModal == ActiveModal.NONE) {
+        if (activeTab != ActiveTab.DETAILS && activeModal == ActiveModal.NONE) {
             window.addEventListener("wheel", onScroll);
             window.addEventListener("keydown", onKeyDown);
         };
@@ -265,7 +257,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [aud.playing, first_event_ms, metadata, activeTab, activeModal]);
+    }, [aud.playing, metadata.first_beat, activeTab, activeModal]);
     
     return (
         <>
@@ -290,6 +282,8 @@ export default function Editor() {
                         measureSize={metadata.measure_size}
                         snaps={metadata.snaps}
                         offsetPosition={position} 
+                        firstBeat={metadata.first_beat}
+                        previewTime={metadata.preview_time}
                         duration={aud.duration} 
                         events={events}
                         setPosition={pos => setPosition(() => pos)}
@@ -319,9 +313,11 @@ export default function Editor() {
                     }
                     
                     { activeTab == ActiveTab.TIMING && 
-                        <TimingTab 
+                        <TimingTab
                             metadata={metadata}
                             setMetadata={setMetadata}
+                            setOffsetHere={() => setMetadata({...metadata, first_beat: position})}
+                            setPreviewHere={() => setMetadata({...metadata, preview_time: position})}
                         />
                     }
                     { activeTab == ActiveTab.DETAILS && 
@@ -334,7 +330,7 @@ export default function Editor() {
                 </div>
                 
                 {/* bottom row */}
-                <nav className="flex gap-2 items-center">
+                <nav className="flex gap-2 items-center z-20">
                     <MuseButton className="min-w-20 max-w-20" onClick={() => aud.setPlaying(!aud.playing)}> 
                         {aud.playing? "pause" : "play"} 
                     </MuseButton>
@@ -342,12 +338,53 @@ export default function Editor() {
                     <p className="text-xs"> {timeDisplay(position)} </p>
                     
                     <SeekBar 
-                        position={position} 
                         duration={aud.duration}  
                         onClick={pos => setPosition(() => pos)}
+                        ticks={[
+                            [metadata.first_beat, "var(--color1)"],
+                            [metadata.preview_time, "var(--color2)"],
+                            [position, "var(--color-blue-500)"],
+                        ]}
                     />
+                    
+                    <SpeedEditor />
                 </nav>
                 
+            </div>
+        </>
+    );
+}
+
+function SpeedButton({ speed }: { speed: number }) {
+    const { speed: audioSpeed, setAudioSpeed } = usePlayback();
+    
+    return (
+        <button
+            onClick={() => setAudioSpeed(speed)}
+            className={`
+                outline-2 outline-foreground font-mono rounded-md
+                ${audioSpeed == speed ? "bg-foreground text-background" : "text-foreground"}
+            `}
+        >
+            { speed * 100 }%
+        </button>
+    )
+}
+function SpeedEditor() {
+    return (
+        <>
+            <div className="relative min-w-10 h-6">
+                <div 
+                    className="
+                        absolute left-0 right-0 bottom-0
+                        flex flex-col gap-2
+                    "
+                >
+                    <SpeedButton speed={2} />
+                    <SpeedButton speed={1} />
+                    <SpeedButton speed={0.5} />
+                    <SpeedButton speed={0.25} />
+                </div>
             </div>
         </>
     );
@@ -387,11 +424,11 @@ function timeDisplay(ms: number) {
 }
 
 type SeekBarProps = Readonly<{
-    position: number,
     duration: number,
-    onClick: (position: number) => any
+    onClick: (position: number) => any,
+    ticks: [number, string][]
 }>
-function SeekBar({ position, duration, onClick }: SeekBarProps) {
+function SeekBar({ duration, onClick, ticks }: SeekBarProps) {
     
     const [cursorPos, setCursorPos] = useState<number | null>(null);
     const container = useRef<HTMLDivElement | null>(null);
@@ -399,6 +436,11 @@ function SeekBar({ position, duration, onClick }: SeekBarProps) {
     function handleSeek() {
         if (cursorPos) 
             onClick(cursorPos / container.current!.clientWidth * duration);
+    }
+    
+    /** use the resulting value on the "left: ___px" css property */
+    function getPosOnSeekBar(ms: number) {
+        return ms / duration * 100 + "%";
     }
     
     return (
@@ -411,10 +453,14 @@ function SeekBar({ position, duration, onClick }: SeekBarProps) {
         >
             <div className="bg-foreground w-full h-[3px] rounded-full"></div>
             
-            <div style={{left: (position / duration * 100) + "%"}} className="seek-bar-tick bg-foreground"></div>
+            {
+                ticks.map(([ms, backgroundColor]) => 
+                    <div style={{left: getPosOnSeekBar(ms), backgroundColor }} className="seek-bar-tick"></div>
+                )
+            }
             
             { cursorPos != null &&
-                <div style={{left: cursorPos}} className="seek-bar-tick bg-foreground opacity-50"></div>
+                <div style={{left: cursorPos}} className="seek-bar-tick bg-blue-500"></div>
             }
         </div>
     )

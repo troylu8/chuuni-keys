@@ -4,9 +4,14 @@ type Props = Readonly<{
     onClick?: () => any
 }>
 export default function MuseButton({ className, children, onClick }: Props) {
+    
     return (
-        <button 
-            onClick={onClick} 
+        <button
+            tabIndex={-1}
+            onClick={e => {
+                e.currentTarget.blur(); // prevent keyboard focus
+                if (onClick) onClick();
+            }}
             className={`${className} px-2 text-background bg-foreground rounded-md`}
         >
             { children }
