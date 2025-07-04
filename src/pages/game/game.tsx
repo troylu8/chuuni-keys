@@ -43,7 +43,7 @@ function GameInner() {
                         
                         <PauseModal />
                         <Combo />
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-[5vh]">
                             <AccuracyBar />
                         </div>
                     </>

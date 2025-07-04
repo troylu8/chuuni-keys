@@ -6,6 +6,10 @@
     --color1: #ceb2dc;
     --color2: #c96b79;
     --error: #833642;
+
+    --perfect: #99cfef;
+    --good: #8eeba2;
+    --miss: #e499a5;
 }
 
 @theme inline {
@@ -14,6 +18,9 @@
     --color-color1: var(--color1);
     --color-color2: var(--color2);
     --color-error: var(--error);
+    --color-perfect: var(--perfect);
+    --color-good: var(--good);
+    --color-miss: var(--miss);
 }
 
 body {
@@ -30,7 +37,7 @@ button {
 }
 
 .anim-accuracy-tick {
-    animation: accuracy-tick 1s ease-out forwards;
+    animation: accuracy-tick 3s ease-out forwards;
 }
 @keyframes accuracy-tick {
     0% {
@@ -113,4 +120,8 @@ button {
 }
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-color1);
+}
+
+.light-text-outline {
+    text-shadow: -1px -1px 0 var(--background), 1px -1px 0 var(--background), -1px 1px 0 var(--background), 1px 1px 0 var(--background);
 }

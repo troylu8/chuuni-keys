@@ -18,7 +18,15 @@ const StatsContext = createContext<Stats | null>(null);
 
 type Delta = number | "miss";
 
-export function getPraise(delta: Delta) {
+export type Praise = "miss" | "" | "perfect" | "good";
+export const PRAISE_COLORS: Record<Praise, string> = {
+    "": "var(--miss)",
+    "miss": "var(--miss)",
+    "good": "var(--good)",
+    "perfect": "var(--perfect)",
+}
+
+export function getPraise(delta: Delta): Praise {
     if (delta == "miss") return "miss";
     delta = Math.abs(delta);
     if (delta < PERFECT_THRESHOLD) return "perfect";

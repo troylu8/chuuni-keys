@@ -23,7 +23,6 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
         if (hitTimes.length == 0) return;
         
         const delta = Math.abs(getOffsetPosition() - hitTimes[0]);
-        console.log(delta);
         if (delta > HIT_THRESHOLD) return; // if not even considered a hit, ignore
         
         broadcastDelta(getOffsetPosition() - hitTimes[0]);

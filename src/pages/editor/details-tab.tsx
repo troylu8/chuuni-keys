@@ -11,14 +11,12 @@ import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 
-
 type Props = Readonly<{
     metadata: ChartMetadata
     setMetadata: (metadata: ChartMetadata, save?: boolean, imgCacheBust?: string) => void
     handleSave: () => Promise<void>
-    onClose: () => void
 }>
-export default function DetailsModal({ metadata, handleSave, setMetadata, onClose }: Props) {
+export default function DetailsTab({ metadata, handleSave, setMetadata }: Props) {
     const chartFolder = getChartFolder(metadata);
     
     function bindMetadataText(field: keyof ChartMetadata): [string, (txt: string) => any] {
@@ -29,10 +27,6 @@ export default function DetailsModal({ metadata, handleSave, setMetadata, onClos
                 setMetadata({...metadata, [field]: input.length == 0 ? undefined : input});
             }
         ];
-    }
-    
-    function handleClose() {
-        if (metadata.title != undefined) onClose();
     }
     
     async function handleUploadImg() {
@@ -68,51 +62,53 @@ export default function DetailsModal({ metadata, handleSave, setMetadata, onClos
     const [publishModalVisible, setPublishModalVisible] = useState(false);
 
     return (
-        <Modal title="details" onClose={handleClose}>
-            <div 
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "fit-content(100%) 1fr",
-                }} 
-                className="gap-3 px-3 pb-3 [&>label]:self-center"
-            >
-                <label> title </label>
-                <TextInput 
-                    bind={bindMetadataText("title")} 
-                    valid={metadata.title != undefined} 
-                    placeholder="title is required!"
-                />
+        <div className="absolute cover flex justify-center items-center">
+            <div className="w-fit bg-background p-3 rounded-md max-h-[70vh] overflow-auto">
+                <div 
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "fit-content(100%) 1fr",
+                    }} 
+                    className="gap-3 px-3 pb-3 [&>label]:self-center"
+                >
+                    <label> title </label>
+                    <TextInput 
+                        bind={bindMetadataText("title")} 
+                        valid={metadata.title != undefined} 
+                        placeholder="title is required!"
+                    />
+                    
+                    <label> image </label>
+                    <button onClick={handleUploadImg}> [select] </button>
+                    
+                    <h2 style={{gridColumn: "1 / -1"}}> credits </h2>
+                    <label> music </label>
+                    <TextInput bind={bindMetadataText("credit_audio")} placeholder="who wrote the song?" />
+                    <label> image </label>
+                    <TextInput bind={bindMetadataText("credit_img")} placeholder="who made the background?" />
+                    <label> chart </label>
+                    <TextInput bind={bindMetadataText("credit_chart")}  placeholder="who mapped this chart?"/>
+                    
+                    <MuseButton 
+                        className='self-center col-start-1 -col-end-1 mx-auto'
+                        onClick={() => revealItemInDir(chartFolder)}> open chart folder 
+                    </MuseButton>
+                    
+                    <MuseButton 
+                        className='self-center col-start-1 -col-end-1 mx-auto'
+                        onClick={() => setPublishModalVisible(true)}> publish to internet! 
+                    </MuseButton>
+                </div>
                 
-                <label> image </label>
-                <button onClick={handleUploadImg}> [select] </button>
-                
-                <h2 style={{gridColumn: "1 / -1"}}> credits </h2>
-                <label> music </label>
-                <TextInput bind={bindMetadataText("credit_audio")} placeholder="who wrote the song?" />
-                <label> image </label>
-                <TextInput bind={bindMetadataText("credit_img")} placeholder="who made the background?" />
-                <label> chart </label>
-                <TextInput bind={bindMetadataText("credit_chart")}  placeholder="who mapped this chart?"/>
-                
-                <MuseButton 
-                    className='self-center col-start-1 -col-end-1 mx-auto'
-                    onClick={() => revealItemInDir(chartFolder)}> open chart folder 
-                </MuseButton>
-                
-                <MuseButton 
-                    className='self-center col-start-1 -col-end-1 mx-auto'
-                    onClick={() => setPublishModalVisible(true)}> publish to internet! 
-                </MuseButton>
+                { publishModalVisible && 
+                    <PublishModal 
+                        metadata={metadata} 
+                        save={handleSave}
+                        onClose={() => setPublishModalVisible(false)} 
+                    /> 
+                }
             </div>
-            
-            { publishModalVisible && 
-                <PublishModal 
-                    metadata={metadata} 
-                    save={handleSave}
-                    onClose={() => setPublishModalVisible(false)} 
-                /> 
-            }
-        </Modal>
+        </div>
     );
 }
 

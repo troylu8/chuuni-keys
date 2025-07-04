@@ -67,7 +67,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             }}
             className={`
                 flex flex-col-reverse rounded-xl relative
-                ${pressed? "bg-foreground text-background" : "bg-background opacity-25" }
+                ${pressed? "bg-color1 text-background" : "bg-background opacity-25" }
                 ${labelCentered? "items-center justify-center" : "[&>span]:ml-3"}
                 ${activated && "opacity-100 transition-opacity"}
             `}
@@ -91,7 +91,7 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-color2 outline-5 pointer-events-none"
+                className="absolute outline-color1 outline-5 pointer-events-none"
                 style={{
                     top: -gap,
                     bottom: -gap,

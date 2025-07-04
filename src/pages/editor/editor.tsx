@@ -4,8 +4,6 @@ import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
 import Modal from "../../components/modal";
-import TimingModal from "./timing-modal";
-import DetailsModal from "./details-modal";
 import { MuseEvent, readChartFile } from "../../providers/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
 import EditorKeyboard from "./editor-keyboard";
@@ -13,9 +11,12 @@ import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getChartFolder, FLAGS, stringifyIgnoreNull } from "../../lib/globals";
+import TimingTab from "./timing-tab";
+import DetailsTab from "./details-tab";
 
 
-enum ActiveModal { NONE, TIMING, DETAILS, CONFIRM_QUIT_TO_MENU, CONFIRM_QUIT_APP };
+enum ActiveTab { KEYBOARD, TIMING, DETAILS };
+enum ActiveModal { NONE, CONFIRM_QUIT_TO_MENU, CONFIRM_QUIT_APP }
 
 function snapLeft(ms: number, startingFrom: number, size: number) {
     const beat = (ms - startingFrom) / size;
@@ -59,15 +60,17 @@ export default function Editor() {
     // load audio file on init
     useEffect(() => { aud.loadAudio(`${savedChartFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
     
-    const [activeModal, setActiveModalInner] = useState(() => {
+    const [activeTab, setActiveTabInner] = useState(() => {
         FLAGS.keyUnitsEnabled = true;
-        return isNew? ActiveModal.TIMING : ActiveModal.NONE;
+        return isNew? ActiveTab.TIMING : ActiveTab.KEYBOARD;
     });
-    function setActiveModal(modal: ActiveModal) {
+    function setActiveTab(tab: ActiveTab) {
         aud.setPlaying(false);
-        FLAGS.keyUnitsEnabled = modal == ActiveModal.NONE;
-        setActiveModalInner(modal);
+        FLAGS.keyUnitsEnabled = tab == ActiveTab.KEYBOARD;
+        setActiveTabInner(tab);
     }
+    
+    const [activeModal, setActiveModal] = useState(ActiveModal.NONE);
     
     
     const [position, setPositionInner] = useState(0);
@@ -153,7 +156,7 @@ export default function Editor() {
     }
     
     function toggleEventHere(key: string) {
-        console.log(activeModal);
+        console.log(activeTab);
         const pos = aud.getTruePosition();
         setSaved(false);
         
@@ -253,7 +256,7 @@ export default function Editor() {
         }
         
         
-        if (activeModal == ActiveModal.NONE) {
+        if (activeTab == ActiveTab.KEYBOARD && activeModal == ActiveModal.NONE) {
             window.addEventListener("wheel", onScroll);
             window.addEventListener("keydown", onKeyDown);
         };
@@ -262,7 +265,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [aud.playing, first_event_ms, metadata, activeModal]);
+    }, [aud.playing, first_event_ms, metadata, activeTab, activeModal]);
     
     return (
         <>
@@ -275,8 +278,10 @@ export default function Editor() {
                         <MuseButton onClick={handleQuit}> quit </MuseButton>
                         <MuseButton onClick={() => handleSave()}> save {!saved && "*"} </MuseButton>
                         <div className="grow flex flex-row-reverse gap-1">
-                            <MuseButton onClick={() => setActiveModal(ActiveModal.DETAILS)}> details </MuseButton>
-                            <MuseButton onClick={() => setActiveModal(ActiveModal.TIMING)}> timing </MuseButton>
+                            {/* TODO: visual indicator which is active */}
+                            <MuseButton onClick={() => setActiveTab(ActiveTab.DETAILS)}> details </MuseButton>
+                            <MuseButton onClick={() => setActiveTab(ActiveTab.TIMING)}> timing </MuseButton>
+                            <MuseButton onClick={() => setActiveTab(ActiveTab.KEYBOARD)}> keyboard </MuseButton>
                         </div>
                     </div>
                     
@@ -297,9 +302,7 @@ export default function Editor() {
                 
                 {/* center */}
                 <div className="relative grow">
-                    <EditorKeyboard events={events} position={position} onHit={toggleEventHere} />
-                    
-                    { (activeModal == ActiveModal.CONFIRM_QUIT_TO_MENU || activeModal == ActiveModal.CONFIRM_QUIT_APP) && 
+                    { (activeModal != ActiveModal.NONE) && 
                         <ConfirmQuitModal 
                             onClose={() => setActiveModal(ActiveModal.NONE)}
                             saveChanges={handleSave}
@@ -310,19 +313,22 @@ export default function Editor() {
                             }}
                         />
                     }
-                    { activeModal == ActiveModal.TIMING && 
-                        <TimingModal 
+                    
+                    { activeTab == ActiveTab.KEYBOARD &&
+                        <EditorKeyboard events={events} position={position} onHit={toggleEventHere} />
+                    }
+                    
+                    { activeTab == ActiveTab.TIMING && 
+                        <TimingTab 
                             metadata={metadata}
                             setMetadata={setMetadata}
-                            onClose={() => setActiveModal(ActiveModal.NONE)}
                         />
                     }
-                    { activeModal == ActiveModal.DETAILS && 
-                        <DetailsModal
+                    { activeTab == ActiveTab.DETAILS && 
+                        <DetailsTab
                             metadata={metadata}
                             setMetadata={setMetadata}
                             handleSave={handleSave}
-                            onClose={() => setActiveModal(ActiveModal.NONE)}
                         />
                     }
                 </div>

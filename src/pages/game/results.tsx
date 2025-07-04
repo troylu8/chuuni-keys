@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { ChartMetadata, Page, usePage } from "../../providers/page";
-import { useStats } from "../../providers/score";
+import { PRAISE_COLORS, useStats } from "../../providers/score";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { getChartFolder } from "../../lib/globals";
+import MuseButton from "../../components/muse-button";
 
 const SCORE_WEIGHTS = {
     perfect: 3,
@@ -61,12 +62,12 @@ export default function Results() {
     }
     
     return (
-        <div className="absolute cover flex flex-col justify-center items-center gap-3 z-20">
-            <p className="text-9xl"> {letter} </p>
+        <div className="absolute cover flex flex-col justify-center items-center gap-3 z-20 text-background text-[5vh]">
+            <p style={{fontSize: "7em", lineHeight: 1}}> {letter} </p>
             <p>
-                <span> {perfect} </span> /
-                <span> {good} </span> /
-                <span> {miss} </span>
+                <span style={{color: PRAISE_COLORS["perfect"]}}> {perfect} </span> /
+                <span style={{color: PRAISE_COLORS["good"]}}> {good} </span> /
+                <span style={{color: PRAISE_COLORS["miss"]}}> {miss} </span>
             </p>
             <div className="grid grid-cols-2 gap-3 ">
                 <p className="text-end"> accuracy </p>
@@ -76,10 +77,10 @@ export default function Results() {
                 <p> { maxCombo }x </p>
             </div>
             
-            <button 
+            <MuseButton 
                 onClick={handleToChartSelect}
-                className="self-center"
-            > back to song select </button>
+                className="self-center mt-[10vh]"
+            > back to song select </MuseButton>
         </div>
     )
 }
