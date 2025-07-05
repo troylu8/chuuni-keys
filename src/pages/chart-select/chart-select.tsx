@@ -1,11 +1,11 @@
-import { ChartMetadata, Page, ChartSelectParams, usePage } from "../../providers/page";
+import { ChartMetadata, Page, ChartSelectParams, usePage } from "../../contexts/page";
 import { useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";
 import { flags, getChartFolder, SERVER_URL } from "../../lib/globals";
-import { usePlayback } from "../../providers/playback";
+import bgm from "../../lib/sound";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -15,8 +15,6 @@ function distToCircle(x: number, radius: number) {
 }
 
 export default function ChartSelect() {
-    
-    const aud = usePlayback();
     
     const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
     const [[,params], setPageParams] = usePage();
@@ -70,14 +68,22 @@ export default function ChartSelect() {
     async function setActiveChart(metadata: ChartMetadata) {
         setActiveChartInner(metadata);
         flags.lastActiveChartId = metadata.id;
-        const loadedNewSong = await aud.loadAudio(`${getChartFolder(metadata)}\\audio.${metadata.audio_ext}`, {restart: false});
-        if (loadedNewSong) {
-            aud.seek(metadata.preview_time);
-            await aud.setPlaying(true);
+        
+        const activeSongSrc = `${getChartFolder(metadata)}\\audio.${metadata.audio_ext}`;
+        
+        // this is a different song, so play it from the preview point
+        if (bgm.src != activeSongSrc) {
+            bgm.src = activeSongSrc;
+            bgm.pos = metadata.preview_time;
+            await bgm.play();
         }
-        else if (!aud.playing) {
-            await aud.setPlaying(true);
+        
+        // this song is active but it was paused, so resume it
+        else if (bgm.paused) {
+            await bgm.play();
         }
+        
+        // if the this song is active and playing, do nothing (let it continue playing)
     }
     
     function updateEntryPositions() {
@@ -129,7 +135,6 @@ export default function ChartSelect() {
                         if (resp.ok) return resp.bytes();
                     })
                     .then(buffer => {
-                        console.log(buffer);
                         invoke<ChartMetadata>("unzip_chart", { buffer })
                         .then(chartMetadata => {
                             setCharts([...charts, chartMetadata]);

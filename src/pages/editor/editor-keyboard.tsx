@@ -1,27 +1,26 @@
 import { Tree } from "functional-red-black-tree";
 import { KeyUnit } from "../../components/key-unit";
 import KeyboardLayout from "../../components/keyboard-layout";
-import { ACTIVATION_DURATION, HITRING_DURATION, MuseEvent } from "../../providers/game-manager";
+import { ACTIVATION_DURATION, HITRING_DURATION, MuseEvent } from "../../contexts/game-manager";
 import { useRef } from "react";
-import playSfx, { SFX } from "../../lib/sound";
-import { usePlayback } from "../../providers/playback";
+import bgm, { playSfx } from "../../lib/sound";
+import { useBgmPos } from "../../contexts/bgm-state";
 
 const PAST_VISIBILITY_DISTANCE = 500;
 
 type Props = Readonly<{
     events: Tree<number, MuseEvent>
-    position: number
     onHit: (key: string) => any
 }>
-export default function EditorKeyboard({ events, position, onHit }: Props) {
+export default function EditorKeyboard({ events, onHit }: Props) {
+    const pos = useBgmPos();
     
-    const { playing } = usePlayback();
     const nextNoteTimeRef = useRef<number | undefined>(events.begin.value?.[0]);
     
-    const nextNoteTime = events.ge(position).value?.[0];
+    const nextNoteTime = events.ge(pos).value?.[0];
     
     if (nextNoteTimeRef.current != nextNoteTime) {
-        if (playing) playSfx(SFX.HITSOUND, 0.2);
+        if (!bgm.paused) playSfx("hitsound", 0.2);
         nextNoteTimeRef.current = nextNoteTime;
     }
     
@@ -33,7 +32,7 @@ export default function EditorKeyboard({ events, position, onHit }: Props) {
         (hitTime, event) => {
             if (event[1].startsWith(":")) {
                 const key = event[1].substring(1);
-                const progress = (hitTime - position) / HITRING_DURATION;
+                const progress = (hitTime - pos) / HITRING_DURATION;
                 if (visibleProgresses[key]) {
                     visibleProgresses[key].push(progress);
                 }
@@ -42,7 +41,7 @@ export default function EditorKeyboard({ events, position, onHit }: Props) {
                 }
             }
         },
-        position - PAST_VISIBILITY_DISTANCE, position + ACTIVATION_DURATION
+        pos - PAST_VISIBILITY_DISTANCE, pos + ACTIVATION_DURATION
     );
     
     return (

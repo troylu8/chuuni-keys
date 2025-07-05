@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { GOOD_THRESHOLD, useDelta } from "../../providers/score";
-import { useMuseEvents } from "../../providers/game-manager";
+import { GOOD_THRESHOLD, useDelta } from "../../contexts/score";
+import { useMuseEvents } from "../../contexts/game-manager";
 import { resetAnimation } from "../../lib/globals";
 
 export default function Combo() {

@@ -41,7 +41,6 @@ export default function SettingsProvider({ children }: Props) {
                     throw new Error("value of settings.json is invalid"); 
                 }
             }
-            console.log(settings);
             setSettingsInner(settings);
         })
         .catch(console.error); // do nothing on error, leaving the default settings

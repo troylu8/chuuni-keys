@@ -1,6 +1,10 @@
 import { Tree } from "functional-red-black-tree";
 import { useEffect, useRef, useState } from "react";
-import { MuseEvent } from "../../providers/game-manager";
+import { MuseEvent } from "../../contexts/game-manager";
+import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
+import { useSettings } from "../../contexts/settings";
+import { ChartMetadata } from "../../contexts/page";
+import bgm from "../../lib/sound";
 
 const PX_PER_MS = 0.1;
 
@@ -12,24 +16,21 @@ export function getBeatDuration(bpm: number) {
 }
 
 type Props = Readonly<{
-    bpm: number
-    firstBeat: number
-    measureSize: number
-    snaps: number
-    offsetPosition: number
-    previewTime: number
-    duration: number
+    metadata: ChartMetadata
     events: Tree<number, MuseEvent>
-    setPosition: (pos: number) => void
     deleteEvent: (e: MuseEvent) => void
 }>
-export default function Inspector({ bpm, firstBeat, measureSize, snaps, offsetPosition, previewTime, duration, events, setPosition, deleteEvent }: Props) {
+export default function Inspector({ metadata, events, deleteEvent }: Props) {
+    const {bpm, first_beat, measure_size, snaps, preview_time} = metadata;
+    const [{offset}] = useSettings();
+    const offsetPos = useBgmPos() + offset;
+    const { duration } = useBgmState();
     
     const MS_PER_BEAT = getBeatDuration(bpm);
     const PX_PER_BEAT = MS_PER_BEAT * PX_PER_MS;
     const PX_PER_SNAP = PX_PER_BEAT / (snaps + 1);
     
-    const ABS_FIRST_PX = firstBeat * PX_PER_MS;
+    const ABS_FIRST_PX = first_beat * PX_PER_MS;
     
     function diffToNext(absPx: number, size: number) {
         const pxAfterFirst = absPx - ABS_FIRST_PX;
@@ -51,7 +52,7 @@ export default function Inspector({ bpm, firstBeat, measureSize, snaps, offsetPo
     
     
     // regarding horizontal bar
-    const absCenterPx = offsetPosition * PX_PER_MS;
+    const absCenterPx = offsetPos * PX_PER_MS;
     const absStartPx = absCenterPx - Math.min(absCenterPx, width/2);
     const absEndPx = Math.min(absCenterPx + width/2, duration * PX_PER_MS);
     const startPx = width/2 - Math.min(absCenterPx, width/2);
@@ -64,7 +65,7 @@ export default function Inspector({ bpm, firstBeat, measureSize, snaps, offsetPo
         inspectorElements.push(
             <div 
                 key={px} 
-                style={{left: px, height: beat % measureSize == 0? 18 : 12}} 
+                style={{left: px, height: beat % measure_size == 0? 18 : 12}} 
                 className="inspector-tick bg-foreground">
             </div>
         );
@@ -120,7 +121,6 @@ export default function Inspector({ bpm, firstBeat, measureSize, snaps, offsetPo
                 key={px + "col"} 
                 px={px} 
                 events={events}
-                setPosition={setPosition}
                 deleteEvent={deleteEvent}
             />
         );
@@ -143,13 +143,13 @@ export default function Inspector({ bpm, firstBeat, measureSize, snaps, offsetPo
             
             {/* first beat marker */}
             <div 
-                style={{left: getPosOnInspector(firstBeat)}} 
+                style={{left: getPosOnInspector(first_beat)}} 
                 className="inspector-tick bg-color1 h-5">
             </div>
             
             {/* preview time marker */}
             <div 
-                style={{left: getPosOnInspector(previewTime)}} 
+                style={{left: getPosOnInspector(preview_time)}} 
                 className="inspector-tick bg-color2 h-5">
             </div>
         </div>
@@ -161,16 +161,20 @@ const MAX_EVENTS_PER_COLUMN = 3;
 type KeyColumnProps = Readonly<{
     px: number
     events: MuseEvent[]
-    setPosition: (pos: number) => void
     deleteEvent: (e: MuseEvent) => void
 }>
-function MuseEventColumn({ px, events, setPosition, deleteEvent }: KeyColumnProps) {
+function MuseEventColumn({ px, events, deleteEvent }: KeyColumnProps) {
     
     // only show the first (MAX_EVENTS_PER_COLUMN) events.
     // 
     // if too many events, show 1 less than (MAX_EVENTS_PER_COLUMN) events 
     // to make room for the ticker with a number label for the # of hidden events
     const visibleEvents = events.length <= MAX_EVENTS_PER_COLUMN ? events : events.slice(0, MAX_EVENTS_PER_COLUMN-1);
+    
+    function setPos(pos: number) {
+        bgm.pause();
+        bgm.pos = pos;
+    }
     
     return (
         <div 
@@ -181,7 +185,7 @@ function MuseEventColumn({ px, events, setPosition, deleteEvent }: KeyColumnProp
                 visibleEvents.map((e, i) => (
                     <MuseEventTicker 
                         key={i} 
-                        onLeftClick={() => setPosition(e[0])}
+                        onLeftClick={() => setPos(e[0])}
                         onRightClick={() => deleteEvent(e)}
                     > { toInspectorDisplay(e[1]) } </MuseEventTicker>
                 ))
@@ -190,7 +194,7 @@ function MuseEventColumn({ px, events, setPosition, deleteEvent }: KeyColumnProp
             {/* the extra ticker showing # of events exceeding MAX_EVENTS_PER_COLUMN */}
             { events.length > MAX_EVENTS_PER_COLUMN && 
                 <MuseEventTicker
-                    onLeftClick={() => setPosition(events[0][0])}
+                    onLeftClick={() => setPos(events[0][0])}
                 > {events.length - MAX_EVENTS_PER_COLUMN + 1} </MuseEventTicker>
             }
         </div>

@@ -1,9 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
-import playSfx, { SFX } from "../lib/sound";
+import { playSfx } from "../lib/sound";
 import { KEY_SIZE } from "./keyboard-layout";
 import { flags } from "../lib/globals";
-
-
 
 
 function noModifiersPressed(e: KeyboardEvent) {
@@ -28,7 +26,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     const [ pressed, setPressed ] = useState(false);
     
     function hit() {
-        playSfx(SFX.HITSOUND, 0.1);
+        playSfx("hitsound", 0.1);
         if (onHit) onHit();
     }
     

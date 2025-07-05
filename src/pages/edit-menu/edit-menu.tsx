@@ -1,7 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import MainMenuButton from "../../components/main-menu-btn";
 import MuseButton from "../../components/muse-button";
-import { ChartMetadata, Page, usePage } from "../../providers/page";
+import { ChartMetadata, Page, usePage } from "../../contexts/page";
 import { copyFile, create, mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
 import { getChartFolder, stringifyIgnoreNull } from '../../lib/globals';
 import { extname } from '@tauri-apps/api/path';

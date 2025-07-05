@@ -2,7 +2,7 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { USERDATA_DIR } from "./globals";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-export enum SFX { HITSOUND }
+type SFX = "hitsound"
 
 
 const audioContext = new AudioContext();
@@ -10,7 +10,7 @@ await audioContext.audioWorklet.addModule(convertFileSrc(USERDATA_DIR + "\\sound
 
 
 const sfxBuffers: Map<SFX, AudioBuffer> = new Map([
-    [SFX.HITSOUND, await getAudioBuffer(USERDATA_DIR + "\\sfx\\hitsound.ogg")]
+    ["hitsound", await getAudioBuffer(USERDATA_DIR + "\\sfx\\hitsound.ogg")]
 ]);;
 
 async function getAudioBuffer(filepath: string) {
@@ -18,7 +18,7 @@ async function getAudioBuffer(filepath: string) {
     return await audioContext.decodeAudioData(bytes.buffer);
 }
 
-export default function playSfx(sfx: SFX, volume: number = 1) {
+export function playSfx(sfx: SFX, volume: number = 1) {
     const source = audioContext.createBufferSource();
     source.buffer = sfxBuffers.get(sfx)!;
 
@@ -33,78 +33,113 @@ export default function playSfx(sfx: SFX, volume: number = 1) {
 }
 
 
-export class AudioPlayer {
-    
-    public src?: string;
-    public playing: boolean = false;
-    public volume: number = 1;
-    public speed: number = 1;
-    
-    private source?: AudioBufferSourceNode;
-    private buffer?: AudioBuffer;
-    private startTime?: number;
-    
-    public async load(src: string) {
-        this.src = src;
-        this.playing = false;
-        
-        this.buffer = await getAudioBuffer(src);
-    }
-    
-    private playFrom(seconds: number) {
-        if (this.source) this.source.stop();
-        
-        // source -> gainNode -> soundtouch? -> dest
-        
-        this.source = audioContext.createBufferSource();
-        this.source.buffer = this.buffer!;
+type PosListener = (pos: number) => any
 
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = this.volume;
-        this.source.connect(gainNode);
+class BgmPlayer {
+    
+    private readonly audio = new Audio();
+    
+    private readonly source = audioContext.createMediaElementSource(this.audio);
+    private readonly gainNode = audioContext.createGain();
+    
+    private readonly posListeners = new Set<PosListener>();
+    private posIntervalId?: NodeJS.Timeout;
+    
+    private _src: string | null = null;
+    
+    public onPlayOrPause?: (paused: boolean) => any; 
+    public onDurationChange?: (duration: number) => any; 
+    public onVolumeChange?: (volume: number) => any; 
+    public onSpeedChange?: (speed: number) => any; 
+    
+    constructor() {
+        // source -> gainNode -> dest
+        this.source.connect(this.gainNode);
+        this.gainNode.connect(audioContext.destination);
+        this.audio.crossOrigin = "anonymous";
+        this.audio.preload = "auto";
         
-        // speeding up audio with soundtouch sounds choppy
-        // if speeding up, accept that the pitch will not be preserved and directly edit source.playbackRate
-        if (this.speed > 1) {
-            this.source.playbackRate.value = this.speed;
-            gainNode.connect(audioContext.destination);
+        this.audio.onloadedmetadata = () => {
+            this.onDurationChange?.call(null, this.duration);
         }
-        
-        // if slowing down, then there is no problem with using soundtouch to slow down while preserving pitch
+    }
+    
+    public get src() {
+        return this._src;
+    }
+    public set src(value) {
+        this._src = value;
+        if (value == null) {
+            this.audio.src = "";
+            this.onDurationChange?.call(null, 0);
+        }
         else {
-            const soundtouch = new AudioWorkletNode(audioContext, 'soundtouch-processor');
-            soundtouch.parameters.get("tempo")!.value = this.speed;
-            
-            gainNode.connect(soundtouch);
-            soundtouch.connect(audioContext.destination);
+            this.audio.src = convertFileSrc(value);    
+            this.audio.load();
         }
+        this.onPlayOrPause?.call(null, true);
+    }
+    
+    private callPosListeners() {
+        for (const listener of this.posListeners) {
+            listener(this.pos);
+        }
+    }
+    
+    public async play() {
+        if (!this.paused) return;
         
-        this.source.start(0, seconds);
-    }
-    
-    public play() {
-        if (this.playing) return;
-        this.playFrom(0);
+        await this.audio.play();
+        this.onPlayOrPause?.call(null, false);
         
-        this.playing = true;
-        this.startTime = audioContext.currentTime;
+        this.posIntervalId = setInterval(() => this.callPosListeners(), 0);
+    }
+    public pause() {
+        if (this.paused) return;
+        
+        this.audio.pause();
+        this.onPlayOrPause?.call(null, true);
+        
+        clearInterval(this.posIntervalId);
+        this.posIntervalId = undefined;
     }
     
-    public get position() {
-        return this.startTime == undefined? 0 : audioContext.currentTime - this.startTime;
+    public get paused() {
+        return this.audio.paused;
     }
     
-    public setVolume(volume: number) {
-        this.volume = Math.max(0, volume);
-        if (this.playing)
-            this.playFrom(this.position);
+    public get volume() {
+        return this.gainNode.gain.value;
+    }
+    public set volume(value: number) {
+        this.gainNode.gain.value = Math.max(0, value);
+        this.onVolumeChange?.call(null, value);
     }
     
-    public setSpeed(speed: number) {
-        this.speed = Math.max(0, speed);
-        if (this.playing)
-            this.playFrom(this.position);
+    public get pos() {
+        return this.audio.currentTime * 1000;
+    }
+    public set pos(value) {
+        this.audio.currentTime = value / 1000;
+        this.callPosListeners();
+    }
+    public addPosListener(listener: PosListener) {
+        this.posListeners.add(listener);
+        return () => { this.posListeners.delete(listener); }
     }
     
+    public get duration() {
+        return this.audio.duration * 1000;
+    }
     
+    public get speed() {
+        return this.audio.playbackRate;
+    }
+    public set speed(value: number) {
+        this.audio.playbackRate = Math.max(0, value);
+        this.onSpeedChange?.call(null, value);
+    }
 }
+
+const bgm = new BgmPlayer();
+export default bgm;

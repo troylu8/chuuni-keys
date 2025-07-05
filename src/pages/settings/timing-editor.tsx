@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { usePlayback } from "../../providers/playback";
-import { useSettings } from "../../providers/settings";
-import { appLocalDataDir } from "@tauri-apps/api/path";
+import { useEffect } from "react";
+import { useBgmPos } from "../../contexts/bgm-state";
+import { useSettings } from "../../contexts/settings";
 import { KeyUnit } from "../../components/key-unit";
-import { HITRING_DURATION } from "../../providers/game-manager";
+import { HITRING_DURATION } from "../../contexts/game-manager";
 import MuseButton from "../../components/muse-button";
 import AccuracyBar from "../../components/accuracy-bar";
-import DeltaProvider, { useDelta } from "../../providers/score";
-import playSfx, { SFX } from "../../lib/sound";
+import DeltaProvider, { useDelta } from "../../contexts/score";
+import bgm, { playSfx } from "../../lib/sound";
+import { USERDATA_DIR } from "../../lib/globals";
 
 const MS_PER_BEAT = 500;
 const MS_FIRST_BEAT = 475;
@@ -19,25 +19,25 @@ type Props = Readonly<{
 }>
 export default function TimingEditor({ onClose }: Props) {
     const [settings, setSettings] = useSettings();
-    const { loadAudio, setPlaying, addPosUpdateListener, seek } = usePlayback();
-    const [sinceLastBeat, setSinceLastBeat] = useState(0);
+    
+    const pos = useBgmPos();
+    const offsetPos = pos + settings.offset;
+    const sinceLastBeat = (offsetPos < MS_FIRST_BEAT)? offsetPos + MS_PER_LOOP - MS_LAST_BEAT : offsetPos % MS_PER_BEAT;
     
     
     useEffect(() => {
-        appLocalDataDir().then(applocaldatadir => {
-            loadAudio(applocaldatadir + "\\userdata\\metronome.mp3", {startPlaying: true});
-        });
+        bgm.src = USERDATA_DIR + "\\metronome.mp3";
+        bgm.play();
         
         let prevI = 0;
         
-        const unlisten = addPosUpdateListener((offsetPos, truePos) => {
-            setSinceLastBeat((offsetPos < MS_FIRST_BEAT)? offsetPos + MS_PER_LOOP - MS_LAST_BEAT : offsetPos % MS_PER_BEAT);
-            if (truePos > MS_PER_LOOP) 
-                seek(truePos - MS_PER_LOOP);
+        const unlisten = bgm.addPosListener(pos => {
+            if (pos > MS_PER_LOOP) 
+                bgm.pos = pos - MS_PER_LOOP;
             
             const i = Math.floor((offsetPos - MS_FIRST_BEAT) / MS_PER_BEAT);
             if (i != prevI && i != -1) {
-                playSfx(SFX.HITSOUND);
+                playSfx("hitsound");
                 prevI = i;
             }
         });
@@ -46,7 +46,7 @@ export default function TimingEditor({ onClose }: Props) {
     }, []);
     
     function handleClose() {
-        setPlaying(false);
+        bgm.pause();
         onClose();
     }
     

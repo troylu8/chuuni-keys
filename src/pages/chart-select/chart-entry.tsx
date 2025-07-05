@@ -1,5 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { ChartMetadata } from "../../providers/page";
+import { ChartMetadata } from "../../contexts/page";
 import { getChartFolder } from "../../lib/globals";
 
 type Props = Readonly<{

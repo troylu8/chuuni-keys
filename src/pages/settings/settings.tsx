@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings as SettingsType, useSettings } from "../../providers/settings";
+import { Settings as SettingsType, useSettings } from "../../contexts/settings";
 import TimingEditor from "./timing-editor";
 import MuseButton from "../../components/muse-button";
 import MainMenuButton from "../../components/main-menu-btn";

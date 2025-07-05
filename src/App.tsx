@@ -1,32 +1,55 @@
-import { USERDATA_DIR } from "./lib/globals";
-import { AudioPlayer } from "./lib/sound";
-
-
-const audio = new AudioPlayer();
+import EditMenu from "./pages/edit-menu/edit-menu";
+import Editor from "./pages/editor/editor";
+import Game from "./pages/game/game";
+import MainMenu from "./pages/main-menu/main-menu";
+import ChartSelect from "./pages/chart-select/chart-select";
+import PageProvider, { usePage, Page } from "./contexts/page";
+import "./styles.css"
+import Settings from "./pages/settings/settings";
+import SettingsProvider from "./contexts/settings";
+import { useEffect } from "react";
+import bgm from "./lib/sound";
+import BgmStateProvider from "./contexts/bgm-state";
 
 export default function App() {
-    
-    async function handleClickA() {
-        await audio.load(USERDATA_DIR + "\\testing.mp3");
-    }
-    async function handleClickB() {
-        audio.play();
-    }
-    async function handleClickC() {
-        audio.setSpeed(audio.speed + 0.2);
-        console.log(audio.speed);
-    }
-    async function handleClickD() {
-        audio.setSpeed(audio.speed - 0.2);
-        console.log(audio.speed);
-    }
-   
     return (
-        <>
-            <button onClick={handleClickA}> a </button>
-            <button onClick={handleClickB}> b </button>
-            <button onClick={handleClickC}> c </button>
-            <button onClick={handleClickD}> d </button>
-        </>
+        <SettingsProvider>
+            <PageProvider>
+                <BgmStateProvider>
+                    <ActivePage />
+                </BgmStateProvider>
+            </PageProvider>
+        </SettingsProvider>
     );
 }
+
+function ActivePage() {
+    const [[page]] = usePage();
+    
+    // spacebar to toggle music
+    useEffect(() => {
+        function toggleMusic(e: KeyboardEvent) {
+            if (e.key != " ") return;
+            if (page == Page.GAME) return;
+            if (!bgm.src) return;
+            
+            (bgm.paused)? bgm.play() : bgm.pause();
+        }
+        window.addEventListener("keydown", toggleMusic);
+        
+        return () => window.removeEventListener("keydown", toggleMusic);
+    }, [page]);
+    
+    return (
+        <>
+            {page == Page.MAIN_MENU && <MainMenu />}
+            {page == Page.SETTINGS && <Settings />}
+            {page == Page.EDIT_MENU && <EditMenu />}
+            {page == Page.CHART_SELECT && <ChartSelect />}
+            {page == Page.GAME && <Game />}
+            {page == Page.EDITOR && <Editor />}
+        </>
+    )
+}
+
+

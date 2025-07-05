@@ -1,5 +1,5 @@
 import { exit } from '@tauri-apps/plugin-process';
-import { Page, usePage } from "../../providers/page";
+import { Page, usePage } from "../../contexts/page";
 
 
 export default function MainMenu() {

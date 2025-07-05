@@ -20,6 +20,7 @@ export type Bind<T> = [T, (value: T) => void];
 export const USERDATA_DIR = await appLocalDataDir() + "\\userdata";
 export const SERVER_URL = "http://localhost:5000";
 
+
 type Flags = {
     keyUnitsEnabled: boolean,
     lastActiveChartId: string | null

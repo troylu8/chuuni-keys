@@ -1,9 +1,11 @@
 import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
-import { usePlayback } from "./playback";
+import { useBgmState } from "./bgm-state";
 import { ChartMetadata, Page, usePage } from "./page";
 import { getChartFolder as getChartFolder, flags } from '../lib/globals';
+import bgm from '../lib/sound';
+import { useSettings } from './settings';
 
 export const ACTIVATION_DURATION = 800;
 export const HITRING_DURATION = 400;
@@ -48,7 +50,8 @@ type Props = Readonly<{
 export default function GameManager({ children }: Props) {
     const [[,params], setPage] = usePage();
     
-    const aud = usePlayback();
+    const { paused } = useBgmState();
+    const [{ offset }] = useSettings();
     const [gameStage, setGameStage] = useState(GameStage.LOADING);
     
     const museEmitter = useRef(new EventEmitter()).current;
@@ -69,7 +72,7 @@ export default function GameManager({ children }: Props) {
         
         (async () => {
             const chartFolder = getChartFolder(metadata);
-            await aud.loadAudio(`${chartFolder}\\audio.${metadata.audio_ext}`);
+            bgm.src = `${chartFolder}\\audio.${metadata.audio_ext}`;
             const events = await readChartFile(chartFolder + "\\chart.txt");
             
             resetEvents();
@@ -87,24 +90,25 @@ export default function GameManager({ children }: Props) {
             
             eventsRef.current = joinEvents(otherEvents, noteEvents);
             
-            console.log("starting");
-            await aud.setPlaying(true);
+            await bgm.play();
             setGameStage(GameStage.STARTED);
         })();
     }, []);
     
     // disable key presses when paused
-    useEffect(() => { flags.keyUnitsEnabled = aud.playing }, [aud.playing]);
+    useEffect(() => { flags.keyUnitsEnabled = !paused }, [paused]);
     
     // game loop
     useEffect(() => {
-        if (gameStage != GameStage.STARTED || !aud.playing) return;
+        if (gameStage != GameStage.STARTED || paused) return;
         
         if (i.current == 0) museEmitter.emit("start");
         
         const lastEventTime = eventsRef.current[eventsRef.current.length-1][0];
         
-        const unlisten = aud.addPosUpdateListener(offsetPos => {
+        const unlisten = bgm.addPosListener(pos => {
+            const offsetPos = pos + offset;
+            
             // send all ready muse events
             while (i.current < eventsRef.current.length) {
                 const nextEvent = eventsRef.current[i.current];
@@ -123,16 +127,16 @@ export default function GameManager({ children }: Props) {
         });
         
         return unlisten;
-    }, [gameStage, aud.playing]);
+    }, [gameStage, paused]);
     
     function restartGame() {
         i.current = 0;
-        aud.seek(0);
-        aud.setPlaying(true);
+        bgm.pos = 0;
+        bgm.play();
     }
     function stopGame() {
         setPage([Page.CHART_SELECT, { isEditing: false }]);
-        aud.setPlaying(false);
+        bgm.pause();
     }
     
     function addMuseListener(event: string, listener: (...params: any[]) => any) {

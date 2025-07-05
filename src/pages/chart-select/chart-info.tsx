@@ -1,6 +1,6 @@
 import Background from "../../components/background";
 import { getChartFolder } from "../../lib/globals";
-import { ChartMetadata } from "../../providers/page";
+import { ChartMetadata } from "../../contexts/page";
 
 type Props = Readonly<{
     metadata: ChartMetadata | null

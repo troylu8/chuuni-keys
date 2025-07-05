@@ -1,7 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
-import { ChartMetadata } from "../../providers/page";
+import { ChartMetadata } from "../../contexts/page";
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { copyFile, remove, writeFile } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';

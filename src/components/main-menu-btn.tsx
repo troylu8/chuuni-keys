@@ -1,4 +1,4 @@
-import { Page, usePage } from "../providers/page";
+import { Page, usePage } from "../contexts/page";
 import MuseButton from "./muse-button";
 
 export default function MainMenuButton() {

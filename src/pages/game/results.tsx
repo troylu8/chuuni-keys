@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { ChartMetadata, Page, usePage } from "../../providers/page";
-import { PRAISE_COLORS, useStats } from "../../providers/score";
+import { ChartMetadata, Page, usePage } from "../../contexts/page";
+import { PRAISE_COLORS, useStats } from "../../contexts/score";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { getChartFolder } from "../../lib/globals";
 import MuseButton from "../../components/muse-button";

@@ -1,10 +1,9 @@
-import { ChartMetadata, EditorParams, Page, usePage } from "../../providers/page";
-import { usePlayback } from "../../providers/playback";
+import { ChartMetadata, EditorParams, Page, usePage } from "../../contexts/page";
 import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
 import Modal from "../../components/modal";
-import { MuseEvent, readChartFile } from "../../providers/game-manager";
+import { MuseEvent, readChartFile } from "../../contexts/game-manager";
 import createTree, { Tree } from "functional-red-black-tree";
 import EditorKeyboard from "./editor-keyboard";
 import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
@@ -13,6 +12,8 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getChartFolder, flags, stringifyIgnoreNull } from "../../lib/globals";
 import TimingTab from "./timing-tab";
 import DetailsTab from "./details-tab";
+import bgm from "../../lib/sound";
+import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
 
 
 enum ActiveTab { KEYBOARD, TIMING, DETAILS };
@@ -56,36 +57,22 @@ export default function Editor() {
     }
     const chartFolder = getChartFolder(metadata);
     
-    const aud = usePlayback();
     // load audio file on init
-    useEffect(() => { aud.loadAudio(`${savedChartFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
+    useEffect(() => {
+        bgm.src = `${savedChartFolder}\\audio.${savedMetadata.audio_ext}`;
+    }, [savedMetadata]);
     
     const [activeTab, setActiveTabInner] = useState(() => {
         flags.keyUnitsEnabled = true;
         return isNew? ActiveTab.TIMING : ActiveTab.KEYBOARD;
     });
     function setActiveTab(tab: ActiveTab) {
-        aud.setPlaying(false);
+        bgm.pause();
         flags.keyUnitsEnabled = tab == ActiveTab.KEYBOARD;
         setActiveTabInner(tab);
     }
     
     const [activeModal, setActiveModal] = useState(ActiveModal.NONE);
-    
-    
-    const [position, setPositionInner] = useState(0);
-    function setPosition(setter: (prev: number) => number) {
-        setPositionInner(prev => {
-            aud.seek(setter(prev));
-            return aud.getTruePosition();
-        });
-    }
-    useEffect(() => {
-        const unlisten = aud.addPosUpdateListener(offsetPos => {
-            setPositionInner(offsetPos);
-        });
-        return unlisten;
-    }, []);
     
     const MS_PER_BEAT = 60 / metadata.bpm * 1000;
     const MS_PER_SNAP = MS_PER_BEAT / (metadata.snaps + 1);
@@ -155,8 +142,7 @@ export default function Editor() {
     }
     
     function toggleEventHere(key: string) {
-        console.log(activeTab);
-        const pos = aud.getTruePosition();
+        const pos = bgm.pos;
         setSaved(false);
         
         setEvents(events => {
@@ -194,7 +180,10 @@ export default function Editor() {
         setSaved(true);
     }
     function handleQuit() {
-        if (saved) setPageParams([Page.MAIN_MENU]);
+        if (saved) {
+            bgm.speed = 1;
+            setPageParams([Page.MAIN_MENU]);
+        }
         else setActiveModal(ActiveModal.CONFIRM_QUIT_TO_MENU);
     }
     
@@ -215,31 +204,27 @@ export default function Editor() {
         const FIRST_BEAT = metadata.first_beat;
         
         function onScroll(e: WheelEvent) {
-            setPosition(ms => {
-                aud.setPlaying(false);
-                const snapSize = e.ctrlKey ? MS_PER_BEAT : MS_PER_SNAP;
-                if (e.deltaY < 0) {
-                    return snapLeft(ms, FIRST_BEAT, snapSize);
-                }
-                else {
-                    return snapRight(ms, FIRST_BEAT, snapSize);
-                }
-            });
+            bgm.pause();
+            const snapSize = e.ctrlKey ? MS_PER_BEAT : MS_PER_SNAP;
+            if (e.deltaY < 0) {
+                bgm.pos = snapLeft(bgm.pos, FIRST_BEAT, snapSize);
+            }
+            else {
+                bgm.pos = snapRight(bgm.pos, FIRST_BEAT, snapSize);
+            }
         }
         function onKeyDown(e: KeyboardEvent) {
             
-            if (e.key === " ")  
-                aud.setPlaying(!aud.playing);
-            else if (e.code === "ShiftLeft") {
-                setPosition(ms => ms <= FIRST_BEAT ? 0 : snapLeft(ms, FIRST_BEAT, MS_PER_SNAP));
+            if (e.code === "ShiftLeft") {
+                bgm.pos = bgm.pos <= FIRST_BEAT ? 0 : snapLeft(bgm.pos, FIRST_BEAT, MS_PER_SNAP);
             }
             else if (e.code === "ShiftRight") {
-                setPosition(ms => ms < FIRST_BEAT ? FIRST_BEAT : snapRight(ms, FIRST_BEAT, MS_PER_SNAP));
+                bgm.pos = bgm.pos < FIRST_BEAT ? FIRST_BEAT : snapRight(bgm.pos, FIRST_BEAT, MS_PER_SNAP);
             }
             else if (e.key === "ArrowLeft")
-                setPosition(prev => prev - 1);
+                bgm.pos -= 1;
             else if (e.key === "ArrowRight")
-                setPosition(prev => prev + 1);
+                bgm.pos += 1;
             else if (e.ctrlKey && e.key === "s")
                 handleSave()
             else if (e.ctrlKey && e.key === "z")
@@ -257,7 +242,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [aud.playing, metadata.first_beat, activeTab, activeModal]);
+    }, [metadata.first_beat, activeTab, activeModal]);
     
     return (
         <>
@@ -278,15 +263,8 @@ export default function Editor() {
                     </div>
                     
                     <Inspector 
-                        bpm={metadata.bpm} 
-                        measureSize={metadata.measure_size}
-                        snaps={metadata.snaps}
-                        offsetPosition={position} 
-                        firstBeat={metadata.first_beat}
-                        previewTime={metadata.preview_time}
-                        duration={aud.duration} 
+                        metadata={metadata}
                         events={events}
-                        setPosition={pos => setPosition(() => pos)}
                         deleteEvent={event => {
                             appendHistory([false, event]); 
                             deleteEvent(event);
@@ -309,15 +287,15 @@ export default function Editor() {
                     }
                     
                     { activeTab == ActiveTab.KEYBOARD &&
-                        <EditorKeyboard events={events} position={position} onHit={toggleEventHere} />
+                        <EditorKeyboard events={events} onHit={toggleEventHere} />
                     }
                     
                     { activeTab == ActiveTab.TIMING && 
                         <TimingTab
                             metadata={metadata}
                             setMetadata={setMetadata}
-                            setOffsetHere={() => setMetadata({...metadata, first_beat: position})}
-                            setPreviewHere={() => setMetadata({...metadata, preview_time: position})}
+                            setOffsetHere={() => setMetadata({...metadata, first_beat: bgm.pos})}
+                            setPreviewHere={() => setMetadata({...metadata, preview_time: bgm.pos})}
                         />
                     }
                     { activeTab == ActiveTab.DETAILS && 
@@ -331,60 +309,9 @@ export default function Editor() {
                 
                 {/* bottom row */}
                 <nav className="flex gap-2 items-center z-20">
-                    <MuseButton className="min-w-20 max-w-20" onClick={() => aud.setPlaying(!aud.playing)}> 
-                        {aud.playing? "pause" : "play"} 
-                    </MuseButton>
-                    
-                    <p className="text-xs"> {timeDisplay(position)} </p>
-                    
-                    <SeekBar 
-                        duration={aud.duration}  
-                        onClick={pos => setPosition(() => pos)}
-                        ticks={[
-                            [metadata.first_beat, "var(--color1)"],
-                            [metadata.preview_time, "var(--color2)"],
-                            [position, "var(--color-blue-500)"],
-                        ]}
-                    />
-                    
-                    <SpeedEditor />
+                    <MusicControls firstBeat={metadata.first_beat} previewTime={metadata.preview_time}/>
                 </nav>
                 
-            </div>
-        </>
-    );
-}
-
-function SpeedButton({ speed }: { speed: number }) {
-    const { speed: audioSpeed, setAudioSpeed } = usePlayback();
-    
-    return (
-        <button
-            onClick={() => setAudioSpeed(speed)}
-            className={`
-                outline-2 outline-foreground font-mono rounded-md
-                ${audioSpeed == speed ? "bg-foreground text-background" : "text-foreground"}
-            `}
-        >
-            { speed * 100 }%
-        </button>
-    )
-}
-function SpeedEditor() {
-    return (
-        <>
-            <div className="relative min-w-10 h-6">
-                <div 
-                    className="
-                        absolute left-0 right-0 bottom-0
-                        flex flex-col gap-2
-                    "
-                >
-                    <SpeedButton speed={2} />
-                    <SpeedButton speed={1} />
-                    <SpeedButton speed={0.5} />
-                    <SpeedButton speed={0.25} />
-                </div>
             </div>
         </>
     );
@@ -406,36 +333,85 @@ function ConfirmQuitModal({ onClose, saveChanges, quit }: ConfirmQuitModalProps)
     )
 }
 
-export function roundUp(n: number, size: number) {
-    return Math.ceil(n / size) * size;
-}
-export function roundDown(n: number, size: number) {
-    return Math.floor(n / size) * size;
+type Props = Readonly<{
+    firstBeat: number
+    previewTime: number
+}>
+function MusicControls({ firstBeat, previewTime }: Props) {
+    const { paused } = useBgmState();
+    const pos = useBgmPos();
+    
+    return (
+        <>
+            <MuseButton className="min-w-20 max-w-20" onClick={() => paused? bgm.play() : bgm.pause()}> 
+                {paused? "play" : "pause"}  
+            </MuseButton>
+            
+            <p className="text-xs"> {timeDisplay(pos)} </p>
+            
+            <SeekBar 
+                ticks={[
+                    ["first beat",      firstBeat, "var(--color1)"],
+                    ["preview time",    previewTime, "var(--color2)"],
+                    ["pos",             pos, "var(--color-blue-500)"],
+                ]}
+            />
+            
+            <SpeedEditor />
+        </>
+    )
 }
 
-function timeDisplay(ms: number) {
-    ms = Math.round(ms);
-    const secs = Math.floor(ms / 1000);
+
+function SpeedEditor() {
     return (
-        Math.floor(secs / 60) + ":" +
-        (secs % 60).toString().padStart(2, "0") + ":" +
-        (ms % 1000).toString().padStart(3, "0")
+        <>
+            <div className="relative min-w-10 h-6">
+                <div 
+                    className="
+                        absolute left-0 right-0 bottom-0
+                        flex flex-col gap-2
+                    "
+                >
+                    <SpeedButton speed={2} />
+                    <SpeedButton speed={1} />
+                    <SpeedButton speed={0.5} />
+                    <SpeedButton speed={0.25} />
+                </div>
+            </div>
+        </>
     );
 }
+function SpeedButton({ speed }: { speed: number }) {
+    const { speed: currentSpeed } = useBgmState();
+    
+    return (
+        <button
+            onClick={() => bgm.speed = speed}
+            className={`
+                outline-2 outline-foreground font-mono rounded-md
+                ${currentSpeed == speed ? "bg-foreground text-background" : "text-foreground"}
+            `}
+        >
+            { speed * 100 }%
+        </button>
+    )
+}
+
 
 type SeekBarProps = Readonly<{
-    duration: number,
-    onClick: (position: number) => any,
-    ticks: [number, string][]
+    ticks: [string, number, string][]
 }>
-function SeekBar({ duration, onClick, ticks }: SeekBarProps) {
+function SeekBar({ ticks }: SeekBarProps) {
+    const {duration} =  useBgmState();
     
     const [cursorPos, setCursorPos] = useState<number | null>(null);
     const container = useRef<HTMLDivElement | null>(null);
     
     function handleSeek() {
-        if (cursorPos) 
-            onClick(cursorPos / container.current!.clientWidth * duration);
+        if (cursorPos) {
+            bgm.pos = cursorPos / container.current!.clientWidth * duration;
+        }
     }
     
     /** use the resulting value on the "left: ___px" css property */
@@ -454,8 +430,12 @@ function SeekBar({ duration, onClick, ticks }: SeekBarProps) {
             <div className="bg-foreground w-full h-[3px] rounded-full"></div>
             
             {
-                ticks.map(([ms, backgroundColor]) => 
-                    <div style={{left: getPosOnSeekBar(ms), backgroundColor }} className="seek-bar-tick"></div>
+                ticks.map(([key, ms, backgroundColor]) => 
+                    <div 
+                        key={key}
+                        style={{left: getPosOnSeekBar(ms), backgroundColor }} 
+                        className="seek-bar-tick"
+                    ></div>
                 )
             }
             
@@ -467,3 +447,19 @@ function SeekBar({ duration, onClick, ticks }: SeekBarProps) {
 }
 
 
+export function roundUp(n: number, size: number) {
+    return Math.ceil(n / size) * size;
+}
+export function roundDown(n: number, size: number) {
+    return Math.floor(n / size) * size;
+}
+
+function timeDisplay(ms: number) {
+    ms = Math.round(ms);
+    const secs = Math.floor(ms / 1000);
+    return (
+        Math.floor(secs / 60) + ":" +
+        (secs % 60).toString().padStart(2, "0") + ":" +
+        (ms % 1000).toString().padStart(3, "0")
+    );
+}

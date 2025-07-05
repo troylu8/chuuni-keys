@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useDelta, getPraise, GOOD_THRESHOLD, Praise, PRAISE_COLORS } from "../providers/score";
+import { useDelta, getPraise, GOOD_THRESHOLD, Praise, PRAISE_COLORS } from "../contexts/score";
 import { resetAnimation } from "../lib/globals";
 
 type Props = Readonly<{
