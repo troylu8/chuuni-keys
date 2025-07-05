@@ -16,20 +16,15 @@
         "@tauri-apps/plugin-fs": "^2.2.1",
         "@tauri-apps/plugin-opener": "^2",
         "@tauri-apps/plugin-process": "^2.2.1",
-        "events": "^3.3.0",
         "filenamify": "^6.0.0",
         "functional-red-black-tree": "^1.0.1",
-        "howler": "^2.2.4",
         "react": "^18.3.1",
-        "react-dom": "^18.3.1",
-        "soundtouchjs": "^0.2.1"
+        "react-dom": "^18.3.1"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.1.6",
         "@tauri-apps/cli": "^2",
-        "@types/events": "^3.0.3",
         "@types/functional-red-black-tree": "^1.0.6",
-        "@types/howler": "^2.2.12",
         "@types/react": "^18.3.1",
         "@types/react-dom": "^18.3.1",
         "@vitejs/plugin-react": "^4.3.4",

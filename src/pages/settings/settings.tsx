@@ -10,8 +10,9 @@ type SettingsKey = keyof SettingsType;
 type SettingsVal = SettingsType[SettingsKey];
 
 export default function Settings() {
-    const [settings, setSettings] = useSettings();  // TODO
+    const [settings, setSettings] = useSettings(); 
     const [timingEditorVisible, setTimingEditorVisible] = useState(false);
+    console.log(settings);
     
     if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;
     

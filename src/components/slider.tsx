@@ -13,23 +13,36 @@ export default function Slider({ min, max, bind: [val, setter], children, thumbC
     const [cursorPos, setCursorPos] = useState<number | null>(null);
     const [dragging, setDragging] = useState(false);
     const container = useRef<HTMLDivElement | null>(null);
-    const sliderBounds = container.current?.getBoundingClientRect();
+    
+    function handleSubmit(e: {clientX: number}) {
+        const sliderBounds = container.current?.getBoundingClientRect();
+        const clampedCursorPos = Math.min(Math.max(0, e.clientX - sliderBounds!.left), sliderBounds!.width);
+        setCursorPos(clampedCursorPos);
+        setter((clampedCursorPos / sliderBounds!.width) * (max - min) + min);
+    }
     
     useEffect(() => {
-        function handleDrag(e: MouseEvent) {
-            const clampedCursorPos = Math.min(Math.max(0, e.clientX - sliderBounds!.left), sliderBounds!.width);
-            setCursorPos(clampedCursorPos);
-            setter((clampedCursorPos / sliderBounds!.width) * (max - min) + min);
+        function handleMouseUp() {
+            if (dragging) setCursorPos(null);
+            setDragging(false);
         }
         
-        if (dragging)
-            window.addEventListener("mousemove", handleDrag);
-        return () => { window.removeEventListener("mousemove", handleDrag); }
+        window.addEventListener("mouseup", handleMouseUp);
+        if (dragging) window.addEventListener("mousemove", handleSubmit);
+        return () => { 
+            window.removeEventListener("mouseup", handleMouseUp);
+            window.removeEventListener("mousemove", handleSubmit);
+        }
     }, [dragging]);
     
+    function handleMouseDown(e: React.MouseEvent) {
+        handleSubmit(e);
+        setDragging(true);
+    }
     function handleHover(e: React.MouseEvent) {
-        if (dragging) return;
-        setCursorPos(e.clientX - sliderBounds!.left);
+        const sliderBounds = container.current?.getBoundingClientRect();
+        if (!sliderBounds || dragging) return;
+        setCursorPos(e.clientX - sliderBounds.left);
     }
     function handleMouseLeave() {
         setCursorPos(null);
@@ -38,8 +51,7 @@ export default function Slider({ min, max, bind: [val, setter], children, thumbC
     return (
         <div 
             ref={container}
-            onMouseDown={() => setDragging(true)}
-            onMouseUp={() => setDragging(false)}
+            onMouseDown={handleMouseDown}
             onMouseMove={handleHover}
             onMouseLeave={handleMouseLeave}
             className="w-full h-full flex items-center"
@@ -50,7 +62,7 @@ export default function Slider({ min, max, bind: [val, setter], children, thumbC
                 { cursorPos != null && !dragging &&
                     <Thumb
                         left={`${cursorPos}px`}
-                        className={thumbClassName ?? "" + "bg-red-400"}
+                        className={(thumbClassName ?? "") + " bg-red-400"}
                     />
                 }
                 

@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useBgmPos } from "../../contexts/bgm-state";
 import { useSettings } from "../../contexts/settings";
 import { KeyUnit } from "../../components/key-unit";
 import { HITRING_DURATION } from "../../contexts/game-manager";
 import MuseButton from "../../components/muse-button";
 import AccuracyBar from "../../components/accuracy-bar";
-import DeltaProvider, { useDelta } from "../../contexts/score";
+import DeltaProvider, { Delta, getPraise, PRAISE_COLORS, useDelta } from "../../contexts/score";
 import bgm, { playSfx } from "../../lib/sound";
 import { USERDATA_DIR } from "../../lib/globals";
 
@@ -18,11 +18,11 @@ type Props = Readonly<{
     onClose: () => any
 }>
 export default function TimingEditor({ onClose }: Props) {
-    const [settings, setSettings] = useSettings();
+    const [{ offset }, setSettings] = useSettings();
     
     const pos = useBgmPos();
-    const offsetPos = pos + settings.offset;
-    const sinceLastBeat = (offsetPos < MS_FIRST_BEAT)? offsetPos + MS_PER_LOOP - MS_LAST_BEAT : offsetPos % MS_PER_BEAT;
+    const offsetPos = pos + offset;
+    const msSinceLastBeat = (offsetPos < MS_FIRST_BEAT)? offsetPos + MS_PER_LOOP - MS_LAST_BEAT : offsetPos % MS_PER_BEAT;
     
     
     useEffect(() => {
@@ -35,15 +35,15 @@ export default function TimingEditor({ onClose }: Props) {
             if (pos > MS_PER_LOOP) 
                 bgm.pos = pos - MS_PER_LOOP;
             
-            const i = Math.floor((offsetPos - MS_FIRST_BEAT) / MS_PER_BEAT);
+            const i = Math.floor((pos + offset - MS_FIRST_BEAT) / MS_PER_BEAT);
             if (i != prevI && i != -1) {
-                playSfx("hitsound");
+                // playSfx("hitsound");
                 prevI = i;
             }
         });
         
         return unlisten;
-    }, []);
+    }, [offset]);
     
     function handleClose() {
         bgm.pause();
@@ -53,16 +53,20 @@ export default function TimingEditor({ onClose }: Props) {
     return (
         <div className="absolute cover flex flex-col items-center justify-center bg-gray-500 gap-10">
             <MuseButton className="absolute left-1 top-1" onClick={handleClose}> exit </MuseButton>
-            <input 
-                type="number" 
-                value={settings.offset}
-                onChange={e => setSettings("offset", Number(e.target.value))} 
-            />
-            <DeltaProvider>
-                <Metronome msSinceLastBeat={sinceLastBeat} />
-            </DeltaProvider>
             
-            <div className="absolute left-0 bottom-0 h-3 bg-red-500" style={{width: (sinceLastBeat / MS_PER_BEAT * 100) + "%" }}></div>
+            <div className="flex gap-8 items-center">
+                <input 
+                    type="number" 
+                    value={offset}
+                    onChange={e => setSettings("offset", Number(e.target.value))} 
+                />
+                <DeltaProvider>
+                    <Metronome msSinceLastBeat={msSinceLastBeat} />
+                    <DeltaHistory />
+                </DeltaProvider>
+            </div>
+            
+            <div className="absolute left-0 bottom-0 h-3 bg-red-500" style={{width: (msSinceLastBeat / MS_PER_BEAT * 100) + "%" }}></div>
         </div>
     );
 }
@@ -85,7 +89,6 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
     
     return (
         <div className="flex flex-col gap-20 items-center">
-            
             <KeyUnit 
                 keyCode="z"
                 label="z"
@@ -95,4 +98,38 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
             <AccuracyBar showRawDeltas />
         </div>
     );
+}
+
+const MAX_DELTA_HISTORY = 10;
+
+function DeltaHistory() {
+    const [, addDeltaListener] = useDelta();
+    
+    const [history, setHistory] = useState<Delta[]>([]);
+    
+    useEffect(() => {
+        const unlisten = addDeltaListener(delta => {
+            setHistory(prev => {
+                const next = [...prev, delta];
+                if (next.length > MAX_DELTA_HISTORY) next.shift();
+                return next;
+            });
+        });
+        return unlisten;
+    }, []);
+    
+    return (
+        <div className="flex flex-col-reverse items-center w-20">
+            {
+                history.map(delta => 
+                    <p style={{
+                        color: PRAISE_COLORS[getPraise(delta)],
+                        height: 1 / MAX_DELTA_HISTORY * 100 * 0.7 + "vh",
+                    }}> 
+                        { typeof delta == "number" ? Math.round(delta) : delta } 
+                    </p>
+                )
+            }
+        </div>
+    )
 }

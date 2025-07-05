@@ -2,11 +2,9 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { USERDATA_DIR } from "./globals";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-type SFX = "hitsound"
-
-
 const audioContext = new AudioContext();
-await audioContext.audioWorklet.addModule(convertFileSrc(USERDATA_DIR + "\\soundtouch-worklet.js"));
+
+type SFX = "hitsound"
 
 
 const sfxBuffers: Map<SFX, AudioBuffer> = new Map([
@@ -61,6 +59,9 @@ class BgmPlayer {
         
         this.audio.onloadedmetadata = () => {
             this.onDurationChange?.call(null, this.duration);
+        }
+        this.audio.onended = () => {
+            this.onPlayOrPause?.call(null, true);
         }
     }
     

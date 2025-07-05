@@ -14,6 +14,7 @@ import TimingTab from "./timing-tab";
 import DetailsTab from "./details-tab";
 import bgm from "../../lib/sound";
 import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
+import Slider from "../../components/slider";
 
 
 enum ActiveTab { KEYBOARD, TIMING, DETAILS };
@@ -339,7 +340,6 @@ type Props = Readonly<{
 }>
 function MusicControls({ firstBeat, previewTime }: Props) {
     const { paused } = useBgmState();
-    const pos = useBgmPos();
     
     return (
         <>
@@ -347,13 +347,10 @@ function MusicControls({ firstBeat, previewTime }: Props) {
                 {paused? "play" : "pause"}  
             </MuseButton>
             
-            <p className="text-xs"> {timeDisplay(pos)} </p>
-            
             <SeekBar 
                 ticks={[
                     ["first beat",      firstBeat, "var(--color1)"],
                     ["preview time",    previewTime, "var(--color2)"],
-                    ["pos",             pos, "var(--color-blue-500)"],
                 ]}
             />
             
@@ -403,46 +400,30 @@ type SeekBarProps = Readonly<{
     ticks: [string, number, string][]
 }>
 function SeekBar({ ticks }: SeekBarProps) {
-    const {duration} =  useBgmState();
-    
-    const [cursorPos, setCursorPos] = useState<number | null>(null);
-    const container = useRef<HTMLDivElement | null>(null);
-    
-    function handleSeek() {
-        if (cursorPos) {
-            bgm.pos = cursorPos / container.current!.clientWidth * duration;
-        }
-    }
-    
-    /** use the resulting value on the "left: ___px" css property */
-    function getPosOnSeekBar(ms: number) {
-        return ms / duration * 100 + "%";
-    }
+    const { duration } =  useBgmState();
+    const pos = useBgmPos();
     
     return (
-        <div 
-            ref={container}
-            onClick={handleSeek}
-            onMouseMove={e => setCursorPos(e.nativeEvent.offsetX)}
-            onMouseLeave={() => setCursorPos(null)}
-            className="relative w-full flex items-center grow self-stretch bg-red [&>*]:pointer-events-none"
-        >
-            <div className="bg-foreground w-full h-[3px] rounded-full"></div>
+        <>
+            <p className="text-xs"> {timeDisplay(pos)} </p>
             
-            {
-                ticks.map(([key, ms, backgroundColor]) => 
-                    <div 
-                        key={key}
-                        style={{left: getPosOnSeekBar(ms), backgroundColor }} 
-                        className="seek-bar-tick"
-                    ></div>
-                )
-            }
-            
-            { cursorPos != null &&
-                <div style={{left: cursorPos}} className="seek-bar-tick bg-blue-500"></div>
-            }
-        </div>
+            <Slider
+                min={0}
+                max={duration}
+                bind={[pos, pos => bgm.pos = pos]}
+                thumbClassName="seek-bar-tick bg-blue-500!"
+            >
+                {
+                    ticks.map(([key, ms, backgroundColor]) => 
+                        <div 
+                            key={key}
+                            style={{left: ms / duration * 100 + "%", backgroundColor}} 
+                            className="seek-bar-tick"
+                        ></div>
+                    )
+                }
+            </Slider>
+        </>
     )
 }
 

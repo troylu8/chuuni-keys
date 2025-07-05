@@ -1,6 +1,6 @@
 import { useState, createContext, useContext, useEffect } from "react";
-import { BaseDirectory, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { stringifyIgnoreNull } from "../lib/globals";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { stringifyIgnoreNull, USERDATA_DIR } from "../lib/globals";
 
 export type Settings = {
     offset: number
@@ -33,15 +33,15 @@ export default function SettingsProvider({ children }: Props) {
     
     // load saved settings
     useEffect(() => {
-        readTextFile("userdata\\settings.json", {baseDir: BaseDirectory.AppLocalData})
+        readTextFile(USERDATA_DIR + "\\settings.json")
         .then(contents => {
             const parsed = JSON.parse(contents);
             for (const key in settings) {
-                if (typeof parsed[key] === typeof settings[key as keyof Settings]) {
+                if (typeof parsed[key] !== typeof settings[key as keyof Settings]) {
                     throw new Error("value of settings.json is invalid"); 
                 }
             }
-            setSettingsInner(settings);
+            setSettingsInner(parsed);
         })
         .catch(console.error); // do nothing on error, leaving the default settings
     }, []);
@@ -49,11 +49,7 @@ export default function SettingsProvider({ children }: Props) {
     function setSettings(setting: keyof Settings, value: Settings[keyof Settings]) {
         const nextSettings = ({...settings, [setting]: value});
         setSettingsInner(nextSettings);
-        writeTextFile(
-            "userdata\\settings.json", 
-            stringifyIgnoreNull(nextSettings),
-            { baseDir: BaseDirectory.AppLocalData }
-        );
+        writeTextFile(USERDATA_DIR + "\\settings.json", stringifyIgnoreNull(nextSettings));
     }
     
     return (

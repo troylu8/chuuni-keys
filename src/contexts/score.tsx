@@ -1,10 +1,10 @@
 import { useState, createContext, useContext, useRef } from "react";
 
-export const PERFECT_THRESHOLD = 30;
-export const GOOD_THRESHOLD = 60;
+export const PERFECT_THRESHOLD = 40;
+export const GOOD_THRESHOLD = 100;
 
 /** hits outside this threshold are ignored, they don't even count as a miss */
-export const HIT_THRESHOLD = 80;
+export const HIT_THRESHOLD = 150;
 
 export type Stats = {
     perfect: number,
@@ -16,7 +16,7 @@ export type Stats = {
 }
 const StatsContext = createContext<Stats | null>(null);
 
-type Delta = number | "miss";
+export type Delta = number | "miss";
 
 export type Praise = "miss" | "" | "perfect" | "good";
 export const PRAISE_COLORS: Record<Praise, string> = {
