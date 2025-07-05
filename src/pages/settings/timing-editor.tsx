@@ -7,7 +7,7 @@ import { HITRING_DURATION } from "../../providers/game-manager";
 import MuseButton from "../../components/muse-button";
 import AccuracyBar from "../../components/accuracy-bar";
 import DeltaProvider, { useDelta } from "../../providers/score";
-import playSfx, { SFX } from "../../lib/sfx";
+import playSfx, { SFX } from "../../lib/sound";
 
 const MS_PER_BEAT = 500;
 const MS_FIRST_BEAT = 475;

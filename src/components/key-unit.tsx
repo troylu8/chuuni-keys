@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
-import playSfx, { SFX } from "../lib/sfx";
+import playSfx, { SFX } from "../lib/sound";
 import { KEY_SIZE } from "./keyboard-layout";
-import { FLAGS } from "../lib/globals";
+import { flags } from "../lib/globals";
 
 
 
@@ -35,7 +35,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     useEffect(() => {
         
         function handleKeyDown(e: KeyboardEvent) {
-            if (FLAGS.keyUnitsEnabled && e.key === keyCode && noModifiersPressed(e) ) {
+            if (flags.keyUnitsEnabled && e.key === keyCode && noModifiersPressed(e) ) {
                 setPressed(true);
                 hit();
             }
@@ -57,7 +57,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);
     return (
         <div
-            onClick={() => {if (FLAGS.keyUnitsEnabled) hit()}}
+            onClick={() => {if (flags.keyUnitsEnabled) hit()}}
             style={{
                 width: KEY_SIZE, 
                 height: KEY_SIZE,

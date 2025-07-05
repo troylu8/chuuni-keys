@@ -15,11 +15,18 @@ export function resetAnimation(element: HTMLElement) {
     element.style.animation = "";
 }
 
+export type Bind<T> = [T, (value: T) => void];
+
 export const USERDATA_DIR = await appLocalDataDir() + "\\userdata";
 export const SERVER_URL = "http://localhost:5000";
 
-export const FLAGS = {
-    keyUnitsEnabled: true
+type Flags = {
+    keyUnitsEnabled: boolean,
+    lastActiveChartId: string | null
+}
+export const flags: Flags = {
+    keyUnitsEnabled: true,
+    lastActiveChartId: null,
 };
 export function getChartFolder({id, title}: {id: string, title: string}) {
     return `${USERDATA_DIR}\\charts\\${id} ${filenamify(title, {replacement: '_'})}`

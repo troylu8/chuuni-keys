@@ -2,10 +2,13 @@ import { useState, createContext, useContext, useEffect } from "react";
 import { BaseDirectory, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { stringifyIgnoreNull } from "../lib/globals";
 
-type Settings = {
+export type Settings = {
     offset: number
-    activation_duration: number
-    hitring_duration: number
+    activationDuration: number
+    hitringDuration: number
+    musicVolume: number
+    sfxVolume: number
+    hitsoundVolume: number
 }
 
 type SetSettings = (setting: keyof Settings, value: Settings[keyof Settings]) => void;
@@ -21,35 +24,42 @@ type Props = Readonly<{
 export default function SettingsProvider({ children }: Props) {
     const [settings, setSettingsInner] = useState<Settings>({
         offset: 0,
-        activation_duration: 800,
-        hitring_duration: 300
+        activationDuration: 800,
+        hitringDuration: 300,
+        musicVolume: 1,
+        sfxVolume: 1,
+        hitsoundVolume: 1
     });
     
+    // load saved settings
     useEffect(() => {
-        
         readTextFile("userdata\\settings.json", {baseDir: BaseDirectory.AppLocalData})
         .then(contents => {
-            const settings = JSON.parse(contents) satisfies Settings;
+            const parsed = JSON.parse(contents);
+            for (const key in settings) {
+                if (typeof parsed[key] === typeof settings[key as keyof Settings]) {
+                    throw new Error("value of settings.json is invalid"); 
+                }
+            }
+            console.log(settings);
             setSettingsInner(settings);
         })
         .catch(console.error); // do nothing on error, leaving the default settings
     }, []);
     
     function setSettings(setting: keyof Settings, value: Settings[keyof Settings]) {
-        setSettingsInner(prev => {
-            const next = ({...prev, [setting]: value});
-            writeTextFile(
-                "userdata\\settings.json", 
-                stringifyIgnoreNull(next),
-                { baseDir: BaseDirectory.AppLocalData }
-            );
-            return next;
-        });
+        const nextSettings = ({...settings, [setting]: value});
+        setSettingsInner(nextSettings);
+        writeTextFile(
+            "userdata\\settings.json", 
+            stringifyIgnoreNull(nextSettings),
+            { baseDir: BaseDirectory.AppLocalData }
+        );
     }
     
     return (
         <SettingsContext.Provider value={[settings, setSettings]}>
-                { children }
+            { children }
         </SettingsContext.Provider>
     );
 }

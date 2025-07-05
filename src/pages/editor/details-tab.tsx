@@ -5,7 +5,7 @@ import { ChartMetadata } from "../../providers/page";
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { copyFile, remove, writeFile } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';
-import { getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/globals';
+import { Bind, getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/globals';
 import MuseButton from '../../components/muse-button';
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
@@ -19,7 +19,7 @@ type Props = Readonly<{
 export default function DetailsTab({ metadata, handleSave, setMetadata }: Props) {
     const chartFolder = getChartFolder(metadata);
     
-    function bindMetadataText(field: keyof ChartMetadata): [string, (txt: string) => any] {
+    function bindMetadataText(field: keyof ChartMetadata): Bind<string> {
         return [
             metadata[field] as string | undefined ?? "", 
             (input: string) => {

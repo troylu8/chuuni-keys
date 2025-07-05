@@ -3,7 +3,7 @@ import { KeyUnit } from "../../components/key-unit";
 import KeyboardLayout from "../../components/keyboard-layout";
 import { ACTIVATION_DURATION, HITRING_DURATION, MuseEvent } from "../../providers/game-manager";
 import { useRef } from "react";
-import playSfx, { SFX } from "../../lib/sfx";
+import playSfx, { SFX } from "../../lib/sound";
 import { usePlayback } from "../../providers/playback";
 
 const PAST_VISIBILITY_DISTANCE = 500;

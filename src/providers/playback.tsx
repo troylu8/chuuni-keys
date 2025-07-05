@@ -29,41 +29,52 @@ type Props = Readonly<{
     children: React.ReactNode;
 }>
 export default function PlaybackProvider({ children }: Props) {
-    const [{ offset }] = useSettings();
     
-    const audio = useRef<HTMLAudioElement>(new Audio()).current;
+    const howlRef = useRef<Howl>(new Howl({src: []}));
+    const howl = howlRef.current;
+    
+    const currentSrcRef = useRef<string | null>(null);
+    const currentSrc = currentSrcRef.current;
+    
     const [playing, setPlayingInner] = useState(false);
     const [duration, setDuration] = useState(0);
     const [speed, setSpeed] = useState(1);
     
+    const [{ offset, musicVolume }] = useSettings();
+    
+    // update audio when music volume changed
+    useEffect(() => { howl.volume(musicVolume) }, [musicVolume]);
+    
     const posEmitter = useRef(new EventEmitter()).current;
     useEffect(() => {posEmitter.setMaxListeners(100)}, []);
     
+    // emit pos-update while audio is playing
     useEffect(() => {
-        
-        // update duration state when audio metadata loaded
-        const updateDuration = () => setDuration(audio.duration * 1000);
-        audio.addEventListener("loadedmetadata", updateDuration);
-        
-        // emit pos-update while audio is playing
         const posUpdateInterval = setInterval(() => {
-            if (!audio.paused)
+            if (howl.playing())
                 posEmitter.emit("pos-update", getOffsetPosition(), getTruePosition());
         }, 0);
         
         return () => {
-            audio.removeEventListener("loadedmetadata", updateDuration);
             clearInterval(posUpdateInterval);
         }
     }, [offset]);
     
     async function loadAudio(src: string, options?: { startPlaying?: boolean, restart?: boolean }) {
         const newSrc = convertFileSrc(src);
-        if (options?.restart === false && audio.src == newSrc) 
+        if (options?.restart === false && currentSrc == newSrc) 
             return false;
         
+        const newHowl = new Howl({
+            src: [newSrc],
+            volume: 
+        })
+        
+        
+        currentSrcRef.current = newSrc;
         audio.src = newSrc;
         audio.load();
+        howlRef.current = new Howl()
         setDuration(audio.duration);
         setAudioSpeed(1);
         await setPlaying(options?.startPlaying ?? false);
@@ -104,6 +115,7 @@ export default function PlaybackProvider({ children }: Props) {
         setSpeed(speed);
         audio.playbackRate = speed;
     }
+    
     
     return (
         <PlaybackContext.Provider value={{ playing, loadAudio, setPlaying, getTruePosition, getOffsetPosition, seek, duration, addPosUpdateListener, speed, setAudioSpeed }}>

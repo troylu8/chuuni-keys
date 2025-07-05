@@ -10,7 +10,7 @@ import EditorKeyboard from "./editor-keyboard";
 import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { getChartFolder, FLAGS, stringifyIgnoreNull } from "../../lib/globals";
+import { getChartFolder, flags, stringifyIgnoreNull } from "../../lib/globals";
 import TimingTab from "./timing-tab";
 import DetailsTab from "./details-tab";
 
@@ -61,12 +61,12 @@ export default function Editor() {
     useEffect(() => { aud.loadAudio(`${savedChartFolder}\\audio.${savedMetadata.audio_ext}`); }, [savedMetadata]);
     
     const [activeTab, setActiveTabInner] = useState(() => {
-        FLAGS.keyUnitsEnabled = true;
+        flags.keyUnitsEnabled = true;
         return isNew? ActiveTab.TIMING : ActiveTab.KEYBOARD;
     });
     function setActiveTab(tab: ActiveTab) {
         aud.setPlaying(false);
-        FLAGS.keyUnitsEnabled = tab == ActiveTab.KEYBOARD;
+        flags.keyUnitsEnabled = tab == ActiveTab.KEYBOARD;
         setActiveTabInner(tab);
     }
     

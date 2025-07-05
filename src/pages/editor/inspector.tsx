@@ -132,7 +132,7 @@ export default function Inspector({ bpm, firstBeat, measureSize, snaps, offsetPo
             
             {/* horizontal inspector bar */}
             <div 
-                style={{left: startPx, width: endPx - startPx}} 
+                style={{left: startPx, right: -startPx}} 
                 className="absolute bottom-0 h-[3px] bg-foreground rounded-full"
             ></div>
             

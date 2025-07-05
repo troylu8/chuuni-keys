@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";
-import { getChartFolder, SERVER_URL } from "../../lib/globals";
+import { flags, getChartFolder, SERVER_URL } from "../../lib/globals";
 import { usePlayback } from "../../providers/playback";
 
 
@@ -20,7 +20,8 @@ export default function ChartSelect() {
     
     const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
     const [[,params], setPageParams] = usePage();
-    const { isEditing, activeChartId } = params as ChartSelectParams;
+    let { isEditing, activeChartId } = params as ChartSelectParams;
+    activeChartId = activeChartId ?? flags.lastActiveChartId ?? undefined;
     
     
     // smooth scrolling
@@ -68,6 +69,7 @@ export default function ChartSelect() {
     const [activeChart, setActiveChartInner] = useState<ChartMetadata | null>(null);
     async function setActiveChart(metadata: ChartMetadata) {
         setActiveChartInner(metadata);
+        flags.lastActiveChartId = metadata.id;
         const loadedNewSong = await aud.loadAudio(`${getChartFolder(metadata)}\\audio.${metadata.audio_ext}`, {restart: false});
         if (loadedNewSong) {
             aud.seek(metadata.preview_time);

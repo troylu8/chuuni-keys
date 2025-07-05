@@ -1,7 +1,8 @@
 import { KeyboardEvent } from "react";
+import { Bind } from "../lib/globals";
 
 type Props = {
-    bind: [string, (nextText: string) => any]
+    bind: Bind<string>
     valid?: boolean,
     className?: string
     placeholder?: string
