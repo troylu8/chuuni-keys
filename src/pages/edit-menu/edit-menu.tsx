@@ -7,6 +7,7 @@ import { getChartFolder, stringifyIgnoreNull } from '../../lib/globals';
 import { extname } from '@tauri-apps/api/path';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useState } from 'react';
+import { Upload } from 'lucide-react';
 
 export default function EditMenu() {
     const [,setPageParams] = usePage();
@@ -68,13 +69,16 @@ export default function EditMenu() {
             <MuseButton onClick={() => setPageParams([Page.CHART_SELECT, { isEditing: true }])}> edit existing chart </MuseButton>
                 
             <h2 className='mt-6'> create new chart: </h2>
-            <MuseButton onClick={handleUploadAudio}> upload audio file </MuseButton>
-            
-            <div className="
-                outline-dashed outline-2 w-48 h-32 rounded-lg
-                flex justify-center items-center
-            ">
-                <span className="text-center"> or drag audio file here </span>
+            <div 
+                onClick={handleUploadAudio}
+                className="
+                    outline-dashed outline-2 w-64 h-42 rounded-lg
+                    flex flex-col gap-3 justify-center items-center
+                "
+            >
+                <Upload size="20%" />
+                <p> click to upload </p>
+                <p> or drop audio file here </p>
             </div>
             
         </div>

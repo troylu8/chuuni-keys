@@ -5,9 +5,7 @@ import MuseButton from "../../components/muse-button";
 import MainMenuButton from "../../components/main-menu-btn";
 import { Bind } from "../../lib/globals";
 import Slider from "../../components/slider";
-
-type SettingsKey = keyof SettingsType;
-type SettingsVal = SettingsType[SettingsKey];
+import MuseCheckmark from "../../components/muse-checkmark";
 
 export default function Settings() {
     const [settings, setSettings] = useSettings(); 
@@ -15,19 +13,22 @@ export default function Settings() {
     
     if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;
     
-    function bindSetting(field: SettingsKey): Bind<SettingsVal> {
+    function bindSetting<K extends keyof SettingsType>(field: K): Bind<SettingsType[K]> {
         return [settings[field], val => setSettings(field, val)];
     }
     
     return (
-        <div className="absolute cover flex flex-col gap-3 p-3">
+        <div className="absolute cover flex flex-col gap-3 p-3 overflow-auto">
             <MainMenuButton />
             
-            <h1 className="mt-10"> settings </h1>
-            <MuseButton onClick={() => setTimingEditorVisible(true)} > edit note timing </MuseButton>
-            <MuseButton onClick={() => setTimingEditorVisible(true)} > edit hitring speed </MuseButton>
+            <h1 className="my-5 text-center "> Settings </h1>
             
-            <h2> volume </h2>
+            <div className="flex gap-6 justify-center">
+                <MuseButton onClick={() => setTimingEditorVisible(true)} > edit note timing </MuseButton>
+                <MuseButton onClick={() => setTimingEditorVisible(true)} > edit hitring speed </MuseButton>
+            </div>
+            
+            <h2> Volume </h2>
             <div 
                 style={{
                     display: "grid",
@@ -43,7 +44,11 @@ export default function Settings() {
                 <AudioSlider bind={bindSetting("hitsoundVolume")} />
             </div>
             
-            
+            <h2> Game </h2>
+            <div className="flex flex-col gap-3">
+                <MuseCheckmark label="show combo" bind={bindSetting("showCombo")} />
+                <MuseCheckmark label="show accuracy bar" bind={bindSetting("showAccuracyBar")} />
+            </div>
         </div>
     );
 }

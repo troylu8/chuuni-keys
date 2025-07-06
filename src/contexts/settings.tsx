@@ -12,6 +12,8 @@ export type Settings = {
     musicVolume: number
     sfxVolume: number
     hitsoundVolume: number
+    showCombo: boolean,
+    showAccuracyBar: boolean
 }
 
 type SetSettings = (setting: keyof Settings, value: Settings[keyof Settings]) => void;
@@ -21,11 +23,16 @@ export function useSettings() {
     return useContext(SettingsContext)!;
 }
 
+type SettingsHooks = {
+    [K in keyof Settings]?: (val: Settings[K]) => any
+};
+
 /** code to run when a setting is initialized/changed */
-const SETTINGS_HOOKS: Record<string, (val: Settings[keyof Settings]) => any> = {
+const SETTINGS_HOOKS: SettingsHooks = {
     "musicVolume": vol => bgm.volume = vol,
     "sfxVolume": vol => flags.sfxVolume = vol,
     "hitsoundVolume": vol => flags.hitsoundVolume = vol,
+    
 }
 
 type Props = Readonly<{
@@ -37,7 +44,9 @@ export default function SettingsProvider({ children }: Props) {
         hitringDuration: 300,
         musicVolume: 1,
         sfxVolume: 1,
-        hitsoundVolume: 1
+        hitsoundVolume: 1,
+        showCombo: true,
+        showAccuracyBar: true
     });
     
     // load saved settings
@@ -55,7 +64,7 @@ export default function SettingsProvider({ children }: Props) {
             
             // call setting hooks
             for (const key in parsedSettings) {
-                SETTINGS_HOOKS[key]?.call(null, parsedSettings[key]);
+                SETTINGS_HOOKS[key as keyof Settings]?.call(null, parsedSettings[key]);
             }
             
             setSettingsInner(parsedSettings);
@@ -63,7 +72,7 @@ export default function SettingsProvider({ children }: Props) {
         .catch(console.error); // do nothing on error, leaving the default settings
     }, []);
     
-    function setSettings(setting: keyof Settings, value: Settings[keyof Settings]) {
+    function setSettings<K extends keyof Settings>(setting: K, value: Settings[K]) {
         SETTINGS_HOOKS[setting]?.call(null, value);
         
         const nextSettings = ({...settings, [setting]: value});

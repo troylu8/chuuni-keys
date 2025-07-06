@@ -9,6 +9,8 @@ import Results from "./results";
 import KeyUnitGame from "./key-unit-game";
 import { ChartMetadata, usePage } from "../../contexts/page";
 import { getChartFolder } from "../../lib/globals";
+import { useSettings } from "../../contexts/settings";
+import Praise from "../../components/praise";
 
 export default function Game() {
     return (
@@ -22,6 +24,7 @@ function GameInner() {
     const [gameStage] = useGameStage();
     const [[, params]] = usePage();
     const metadata = params as ChartMetadata;
+    const [{showCombo, showAccuracyBar}] = useSettings();
 
     return (
         <div className="fixed cover">
@@ -42,9 +45,12 @@ function GameInner() {
                         } />
                         
                         <PauseModal />
-                        <Combo />
+                        { showCombo && <Combo /> }
                         <div className="absolute left-1/2 -translate-x-1/2 bottom-[5vh]">
-                            <AccuracyBar />
+                            { showAccuracyBar && <AccuracyBar /> }
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-[7vh]">
+                                <Praise />
+                            </div>
                         </div>
                     </>
                 }
