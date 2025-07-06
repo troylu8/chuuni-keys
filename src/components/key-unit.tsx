@@ -26,7 +26,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     const [ pressed, setPressed ] = useState(false);
     
     function hit() {
-        playSfx("hitsound", 0.1);
+        playSfx("hitsound");
         if (onHit) onHit();
     }
     

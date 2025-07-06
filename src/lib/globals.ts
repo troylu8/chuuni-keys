@@ -22,12 +22,16 @@ export const SERVER_URL = "http://localhost:5000";
 
 
 type Flags = {
-    keyUnitsEnabled: boolean,
+    keyUnitsEnabled: boolean
     lastActiveChartId: string | null
+    sfxVolume: number
+    hitsoundVolume: number
 }
 export const flags: Flags = {
     keyUnitsEnabled: true,
     lastActiveChartId: null,
+    sfxVolume: 1,
+    hitsoundVolume: 1,
 };
 export function getChartFolder({id, title}: {id: string, title: string}) {
     return `${USERDATA_DIR}\\charts\\${id} ${filenamify(title, {replacement: '_'})}`

@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { useBgmPos } from "../../contexts/bgm-state";
 import { useSettings } from "../../contexts/settings";
 import { KeyUnit } from "../../components/key-unit";
-import { HITRING_DURATION } from "../../contexts/game-manager";
 import MuseButton from "../../components/muse-button";
 import AccuracyBar from "../../components/accuracy-bar";
 import DeltaProvider, { Delta, getPraise, PRAISE_COLORS, useDelta } from "../../contexts/score";
-import bgm, { playSfx } from "../../lib/sound";
+import bgm from "../../lib/sound";
 import { USERDATA_DIR } from "../../lib/globals";
 
 const MS_PER_BEAT = 500;
@@ -18,7 +17,7 @@ type Props = Readonly<{
     onClose: () => any
 }>
 export default function TimingEditor({ onClose }: Props) {
-    const [{ offset }, setSettings] = useSettings();
+    const [{ offset, hitringDuration }, setSettings] = useSettings();
     
     const pos = useBgmPos();
     const offsetPos = pos + offset;
@@ -55,11 +54,18 @@ export default function TimingEditor({ onClose }: Props) {
             <MuseButton className="absolute left-1 top-1" onClick={handleClose}> exit </MuseButton>
             
             <div className="flex gap-8 items-center">
-                <input 
-                    type="number" 
-                    value={offset}
-                    onChange={e => setSettings("offset", Number(e.target.value))} 
-                />
+                <div className="flex flex-col gap-20">
+                    <input 
+                        type="number" 
+                        value={offset}
+                        onChange={e => setSettings("offset", Number(e.target.value))} 
+                    />
+                    <input 
+                        type="number" 
+                        value={hitringDuration}
+                        onChange={e => setSettings("hitringDuration", Number(e.target.value))} 
+                    />
+                </div>
                 <DeltaProvider>
                     <Metronome msSinceLastBeat={msSinceLastBeat} />
                     <DeltaHistory />
@@ -76,13 +82,14 @@ type MetronomeProps = Readonly<{
 }>
 function Metronome({ msSinceLastBeat }: MetronomeProps) {
     const [broadcastDelta] = useDelta();
+    const [{hitringDuration}] = useSettings();
     
     const msTilNextBeat = MS_PER_BEAT - msSinceLastBeat;
     const hitProgresses = [];
     
     // add hitProgresses until they are > 1
     for (let i = 0; true; i++) {
-        const progress = (msTilNextBeat + MS_PER_BEAT * i) / HITRING_DURATION;
+        const progress = (msTilNextBeat + MS_PER_BEAT * i) / hitringDuration;
         if (progress > 1) break;
         hitProgresses.push(progress);
     }
@@ -105,12 +112,12 @@ const MAX_DELTA_HISTORY = 10;
 function DeltaHistory() {
     const [, addDeltaListener] = useDelta();
     
-    const [history, setHistory] = useState<Delta[]>([]);
+    const [history, setHistory] = useState<[number, Delta][]>([]);
     
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {
             setHistory(prev => {
-                const next = [...prev, delta];
+                const next: [number, Delta][] = [...prev, [Math.random(), delta]];
                 if (next.length > MAX_DELTA_HISTORY) next.shift();
                 return next;
             });
@@ -121,11 +128,14 @@ function DeltaHistory() {
     return (
         <div className="flex flex-col-reverse items-center w-20">
             {
-                history.map(delta => 
-                    <p style={{
-                        color: PRAISE_COLORS[getPraise(delta)],
-                        height: 1 / MAX_DELTA_HISTORY * 100 * 0.7 + "vh",
-                    }}> 
+                history.map(([key, delta]) => 
+                    <p 
+                        key={key}    
+                        style={{
+                            color: PRAISE_COLORS[getPraise(delta)],
+                            height: 1 / MAX_DELTA_HISTORY * 100 * 0.7 + "vh",
+                        }}
+                    > 
                         { typeof delta == "number" ? Math.round(delta) : delta } 
                     </p>
                 )

@@ -7,9 +7,6 @@ import { getChartFolder as getChartFolder, flags } from '../lib/globals';
 import bgm from '../lib/sound';
 import { useSettings } from './settings';
 
-export const ACTIVATION_DURATION = 800;
-export const HITRING_DURATION = 400;
-
 export enum GameStage { LOADING, STARTED, ENDED };
 const GameStageContext = createContext<[GameStage, (next: GameStage) => any] | null>(null);
 
@@ -51,7 +48,7 @@ export default function GameManager({ children }: Props) {
     const [[,params], setPage] = usePage();
     
     const { paused } = useBgmState();
-    const [{ offset }] = useSettings();
+    const [{ offset },, activationDuration] = useSettings();
     const [gameStage, setGameStage] = useState(GameStage.LOADING);
     
     const museEmitter = useRef(new EventEmitter()).current;
@@ -81,7 +78,7 @@ export default function GameManager({ children }: Props) {
             const noteEvents: MuseEvent[] = [];          // arr of [activation time, :key, hit time]
             for (const event of events) {
                 if (event[1].startsWith(":") || event[1].startsWith(".")) {
-                    noteEvents.push([Math.max(event[0] - ACTIVATION_DURATION, 0), event[1], event[0]]);
+                    noteEvents.push([Math.max(event[0] - activationDuration, 0), event[1], event[0]]);
                 }
                 else {
                     otherEvents.push(event);

@@ -1,5 +1,5 @@
 import { useEffect, useState, ReactNode } from "react"
-import { HITRING_DURATION, useMuseEvents } from "../../contexts/game-manager";
+import { useMuseEvents } from "../../contexts/game-manager";
 import { GOOD_THRESHOLD, HIT_THRESHOLD, useDelta } from "../../contexts/score";
 import { KeyUnit } from "../../components/key-unit";
 import { useSettings } from "../../contexts/settings";
@@ -14,7 +14,7 @@ type Props = Readonly<{
     labelCentered?: boolean
 }>
 export default function KeyUnitGame( { keyCode, museEvent, children, labelCentered }: Props ) {
-    const [{offset}] = useSettings();
+    const [{offset, hitringDuration}] = useSettings();
     const pos = useBgmPos();
     
     const [ broadcastDelta ] = useDelta();
@@ -64,7 +64,7 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
             onHit={popHitTime}
             label={children} 
             labelCentered={labelCentered} 
-            hitProgresses={hitTimes.map(hitTime => (hitTime - pos + offset) / HITRING_DURATION)}
+            hitProgresses={hitTimes.map(hitTime => (hitTime - pos + offset) / hitringDuration)}
         />
     );
 }

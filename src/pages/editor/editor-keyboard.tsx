@@ -1,10 +1,11 @@
 import { Tree } from "functional-red-black-tree";
 import { KeyUnit } from "../../components/key-unit";
 import KeyboardLayout from "../../components/keyboard-layout";
-import { ACTIVATION_DURATION, HITRING_DURATION, MuseEvent } from "../../contexts/game-manager";
+import { MuseEvent } from "../../contexts/game-manager";
 import { useRef } from "react";
 import bgm, { playSfx } from "../../lib/sound";
 import { useBgmPos } from "../../contexts/bgm-state";
+import { useSettings } from "../../contexts/settings";
 
 const PAST_VISIBILITY_DISTANCE = 500;
 
@@ -13,6 +14,7 @@ type Props = Readonly<{
     onHit: (key: string) => any
 }>
 export default function EditorKeyboard({ events, onHit }: Props) {
+    const [{ hitringDuration },, activationDuration] = useSettings();
     const pos = useBgmPos();
     
     const nextNoteTimeRef = useRef<number | undefined>(events.begin.value?.[0]);
@@ -20,7 +22,7 @@ export default function EditorKeyboard({ events, onHit }: Props) {
     const nextNoteTime = events.ge(pos).value?.[0];
     
     if (nextNoteTimeRef.current != nextNoteTime) {
-        if (!bgm.paused) playSfx("hitsound", 0.2);
+        if (!bgm.paused) playSfx("hitsound");
         nextNoteTimeRef.current = nextNoteTime;
     }
     
@@ -32,7 +34,7 @@ export default function EditorKeyboard({ events, onHit }: Props) {
         (hitTime, event) => {
             if (event[1].startsWith(":")) {
                 const key = event[1].substring(1);
-                const progress = (hitTime - pos) / HITRING_DURATION;
+                const progress = (hitTime - pos) / hitringDuration;
                 if (visibleProgresses[key]) {
                     visibleProgresses[key].push(progress);
                 }
@@ -41,7 +43,7 @@ export default function EditorKeyboard({ events, onHit }: Props) {
                 }
             }
         },
-        pos - PAST_VISIBILITY_DISTANCE, pos + ACTIVATION_DURATION
+        pos - PAST_VISIBILITY_DISTANCE, pos + activationDuration
     );
     
     return (

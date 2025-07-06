@@ -12,7 +12,6 @@ type SettingsVal = SettingsType[SettingsKey];
 export default function Settings() {
     const [settings, setSettings] = useSettings(); 
     const [timingEditorVisible, setTimingEditorVisible] = useState(false);
-    console.log(settings);
     
     if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;
     
@@ -26,6 +25,7 @@ export default function Settings() {
             
             <h1 className="mt-10"> settings </h1>
             <MuseButton onClick={() => setTimingEditorVisible(true)} > edit note timing </MuseButton>
+            <MuseButton onClick={() => setTimingEditorVisible(true)} > edit hitring speed </MuseButton>
             
             <h2> volume </h2>
             <div 
@@ -42,6 +42,8 @@ export default function Settings() {
                 <label> hitsounds </label>
                 <AudioSlider bind={bindSetting("hitsoundVolume")} />
             </div>
+            
+            
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { readFile } from "@tauri-apps/plugin-fs";
-import { USERDATA_DIR } from "./globals";
+import { flags, USERDATA_DIR } from "./globals";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 const audioContext = new AudioContext();
@@ -9,19 +9,19 @@ type SFX = "hitsound"
 
 const sfxBuffers: Map<SFX, AudioBuffer> = new Map([
     ["hitsound", await getAudioBuffer(USERDATA_DIR + "\\sfx\\hitsound.ogg")]
-]);;
+]);
 
 async function getAudioBuffer(filepath: string) {
     const bytes = await readFile(filepath);
     return await audioContext.decodeAudioData(bytes.buffer);
 }
 
-export function playSfx(sfx: SFX, volume: number = 1) {
+export function playSfx(sfx: SFX) {
     const source = audioContext.createBufferSource();
     source.buffer = sfxBuffers.get(sfx)!;
 
     const gainNode = audioContext.createGain();
-    gainNode.gain.value = volume;
+    gainNode.gain.value = sfx == "hitsound" ? flags.hitsoundVolume : flags.sfxVolume;
     
     // source -> gainNode -> dest
     source.connect(gainNode);
