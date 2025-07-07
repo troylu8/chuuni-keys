@@ -190,10 +190,7 @@ export default function ChartSelect() {
         <div className="fixed cover">
             <MainMenuButton />
             
-            <ChartInfo
-                metadata={activeChart} 
-                deleteActiveChart={() => console.log("delete")}
-            />
+            <ChartInfo metadata={activeChart} />
             
             {/* chart list */}
             <nav
@@ -245,12 +242,12 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
     useEffect(() => setActionsState(ActionsState.DEFAULT), [activeSongId]);
     
     const EditButton = (
-        <MuseButton onClick={edit} className="bg-color1"> 
+        <MuseButton onClick={edit} className="bg-color1!"> 
             [ edit ] 
         </MuseButton>
     );
     const PlayButton = (
-        <MuseButton onClick={play} className="bg-color1"> 
+        <MuseButton onClick={play} className="bg-color1!"> 
             [ play ] 
         </MuseButton>
     );
@@ -273,7 +270,7 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
             
             { actionsState == ActionsState.OPTIONS &&
                 <>
-                    <MuseButton onClick={() => setActionsState(ActionsState.DELETING)} className="bg-error"> 
+                    <MuseButton onClick={() => setActionsState(ActionsState.DELETING)} className="bg-error!"> 
                         [ delete ] 
                     </MuseButton>
                     { isEditing ? PlayButton : EditButton }
@@ -283,8 +280,16 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
             { actionsState == ActionsState.DELETING &&
                 <>
                     <p> delete this chart? </p>
-                    <MuseButton onClick={() => setActionsState(ActionsState.DEFAULT)}> [ no ] </MuseButton>
-                    <MuseButton onClick={deleteActiveChart} > [ yes ] </MuseButton>
+                    
+                    <MuseButton 
+                        onClick={() => setActionsState(ActionsState.DEFAULT)}
+                        className="bg-color1!" 
+                    > [ no ] </MuseButton>
+                    
+                    <MuseButton 
+                        onClick={deleteActiveChart} 
+                        className="bg-error!"
+                    > [ yes ] </MuseButton>
                 </>
             }
         </div>

@@ -5,14 +5,14 @@
     "windows": ["main"],
     "permissions": [
         "core:default",
-        "opener:default",
         "fs:allow-applocaldata-read-recursive",
         "fs:allow-applocaldata-write-recursive",
+        "fs:allow-rename",
         "process:default",
         "dialog:default",
         "core:window:allow-destroy",
         {
-            "identifier": "opener:allow-reveal-item-in-dir",
+            "identifier": "opener:allow-open-path",
             "allow": [
                 {
                     "path": "$APPLOCALDATA/**/*"

@@ -30,10 +30,10 @@ function ActivePage() {
     useEffect(() => {
         function toggleMusic(e: KeyboardEvent) {
             if (e.key != " ") return;
-            if (page == Page.GAME) return;
+            if (page == Page.GAME || page == Page.EDITOR) return;
             if (!bgm.src) return;
             
-            (bgm.paused)? bgm.play() : bgm.pause();
+            bgm.paused ? bgm.play() : bgm.pause();
         }
         window.addEventListener("keydown", toggleMusic);
         

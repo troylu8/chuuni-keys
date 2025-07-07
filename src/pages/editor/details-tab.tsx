@@ -2,7 +2,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
 import { ChartMetadata } from "../../contexts/page";
-import { revealItemInDir } from '@tauri-apps/plugin-opener';
+import { openPath } from '@tauri-apps/plugin-opener';
 import { copyFile, remove, writeFile } from '@tauri-apps/plugin-fs';
 import { extname } from '@tauri-apps/api/path';
 import { Bind, getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/globals';
@@ -13,23 +13,29 @@ import { invoke } from '@tauri-apps/api/core';
 
 type Props = Readonly<{
     metadata: ChartMetadata
+    
+    // if metadata changed but havent handleSave()'d, then the 
+    // working chart folder will be different than getChartFolder(metadata)
+    workingChartFolderRef: {current: string} 
+    
     setMetadata: (metadata: ChartMetadata, save?: boolean, imgCacheBust?: string) => void
     handleSave: () => Promise<void>
 }>
-export default function DetailsTab({ metadata, handleSave, setMetadata }: Props) {
-    const chartFolder = getChartFolder(metadata);
+export default function DetailsTab({ metadata, workingChartFolderRef, handleSave, setMetadata }: Props) {
     
-    function bindMetadataText(field: keyof ChartMetadata): Bind<string> {
+    function bindMetadataText(field: keyof ChartMetadata, undefinedIfEmptyStr: boolean = true): Bind<string> {
         return [
             metadata[field] as string | undefined ?? "", 
             (input: string) => {
                 // set field as undefined if input is empty
-                setMetadata({...metadata, [field]: input.length == 0 ? undefined : input});
+                setMetadata({...metadata, [field]: undefinedIfEmptyStr && input.length == 0 ? undefined : input});
             }
         ];
     }
     
     async function handleUploadImg() {
+        await handleSave();
+        
         const imgFilepath = await open({
             multiple: false,
             directory: false,
@@ -45,11 +51,11 @@ export default function DetailsTab({ metadata, handleSave, setMetadata }: Props)
         const newImgExt = await extname(imgFilepath)
         const oldImgExt = metadata.img_ext;
         
-        await copyFile(imgFilepath, `${chartFolder}\\img.${newImgExt}`);
+        await copyFile(imgFilepath, `${workingChartFolderRef.current}\\img.${newImgExt}`);
         
         // delete old img if necessary (if same exts, then file will be overwritten so no need to delete)
-        if (oldImgExt != newImgExt) {
-            await remove(`${chartFolder}\\img.${oldImgExt}`);
+        if (oldImgExt != null && oldImgExt != newImgExt) {
+            await remove(`${workingChartFolderRef.current}\\img.${oldImgExt}`);
         }
         
         setMetadata(
@@ -60,7 +66,6 @@ export default function DetailsTab({ metadata, handleSave, setMetadata }: Props)
     }
     
     const [publishModalVisible, setPublishModalVisible] = useState(false);
-
     return (
         <div className="absolute cover flex justify-center items-center">
             <div className="w-fit bg-background p-3 rounded-md max-h-[70vh] overflow-auto">
@@ -73,8 +78,8 @@ export default function DetailsTab({ metadata, handleSave, setMetadata }: Props)
                 >
                     <label> title </label>
                     <TextInput 
-                        bind={bindMetadataText("title")} 
-                        valid={metadata.title != undefined} 
+                        bind={bindMetadataText("title", false)} 
+                        valid={metadata.title.length != 0} 
                         placeholder="title is required!"
                     />
                     
@@ -91,7 +96,9 @@ export default function DetailsTab({ metadata, handleSave, setMetadata }: Props)
                     
                     <MuseButton 
                         className='self-center col-start-1 -col-end-1 mx-auto'
-                        onClick={() => revealItemInDir(chartFolder)}> open chart folder 
+                        onClick={() => openPath(workingChartFolderRef.current)}
+                    > 
+                        open chart folder 
                     </MuseButton>
                     
                     <MuseButton 
@@ -118,6 +125,8 @@ type PublishPopupProps = Readonly<{
     onClose: () => any
 }>
 function PublishModal({ metadata, save, onClose }: PublishPopupProps) {
+    
+    // no need for workingChartFolder bc we always save() before publish()
     const chartFolder = getChartFolder(metadata);
     
     async function publish() {

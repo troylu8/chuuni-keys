@@ -56,7 +56,9 @@ export default function Slider({ min, max, bind: [val, setter], children, thumbC
             onMouseLeave={handleMouseLeave}
             className="w-full h-full flex items-center"
         >
-            <div className="h-[2px] w-full rounded-full relative bg-foreground">
+            <div className="h-[2px] w-full rounded-full relative bg-background">
+                { children }
+                
                 <Thumb left={`${(val - min) / (max - min) * 100}%`} className={thumbClassName} />
                 
                 { cursorPos != null && !dragging &&
@@ -65,8 +67,6 @@ export default function Slider({ min, max, bind: [val, setter], children, thumbC
                         className={(thumbClassName ?? "") + " bg-red-400"}
                     />
                 }
-                
-                { children }
             </div>
         </div>
     );
@@ -82,7 +82,7 @@ function Thumb({ left, className }: ThumbProps) {
             style={{left}}
             className={`
                 absolute top-1/2 -translate-y-1/2 -translate-x-1/2 
-                w-[2px] h-3 rounded-full bg-foreground ${className}
+                w-[2px] h-3 rounded-full bg-background ${className}
             `}
         ></div>
     )

@@ -66,7 +66,7 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
             <div 
                 key={px} 
                 style={{left: px, height: beat % measure_size == 0? 18 : 12}} 
-                className="inspector-tick bg-foreground">
+                className="inspector-tick bg-background">
             </div>
         );
         
@@ -133,7 +133,7 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
             {/* horizontal inspector bar */}
             <div 
                 style={{left: startPx, right: -startPx}} 
-                className="absolute bottom-0 h-[3px] bg-foreground rounded-full"
+                className="absolute bottom-0 h-[3px] bg-background rounded-full"
             ></div>
             
             { inspectorElements }
@@ -170,6 +170,9 @@ function MuseEventColumn({ px, events, deleteEvent }: KeyColumnProps) {
     // if too many events, show 1 less than (MAX_EVENTS_PER_COLUMN) events 
     // to make room for the ticker with a number label for the # of hidden events
     const visibleEvents = events.length <= MAX_EVENTS_PER_COLUMN ? events : events.slice(0, MAX_EVENTS_PER_COLUMN-1);
+    
+    // display events in alphabetical order
+    visibleEvents.sort(); 
     
     function setPos(pos: number) {
         bgm.pause();

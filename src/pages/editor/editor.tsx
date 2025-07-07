@@ -48,7 +48,6 @@ function deleteEventFrom(tree: Tree<number, MuseEvent>, [pos, eventStr]: MuseEve
 export default function Editor() {
     const [[,params], setPageParams] = usePage();
     const { metadata: savedMetadata, isNew } = params as EditorParams;
-    const savedChartFolder = getChartFolder(savedMetadata);
     
     const [metadata, setMetadataInner] = useState<ChartMetadata & {imgCacheBust?: string}>(savedMetadata);
     async function setMetadata(metadata: ChartMetadata, save: boolean = false, imgCacheBust?: string) {
@@ -58,11 +57,9 @@ export default function Editor() {
     }
     const chartFolder = getChartFolder(metadata);
     
-    // load audio file on init
-    useEffect(() => {
-        bgm.src = `${savedChartFolder}\\audio.${savedMetadata.audio_ext}`;
-    }, [savedMetadata]);
+    const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     
+    const [activeModal, setActiveModal] = useState(ActiveModal.NONE);
     const [activeTab, setActiveTabInner] = useState(() => {
         flags.keyUnitsEnabled = true;
         return isNew? ActiveTab.TIMING : ActiveTab.KEYBOARD;
@@ -73,14 +70,11 @@ export default function Editor() {
         setActiveTabInner(tab);
     }
     
-    const [activeModal, setActiveModal] = useState(ActiveModal.NONE);
-    
-    const MS_PER_BEAT = 60 / metadata.bpm * 1000;
-    const MS_PER_SNAP = MS_PER_BEAT / (metadata.snaps + 1);
-    
-    const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
-    useEffect(() => {
-        readChartFile(savedChartFolder + "\\chart.txt").then(events => {
+    function loadResources(audioPos: number) {
+        bgm.src = `${chartFolder}\\audio.${metadata.audio_ext}`;
+        bgm.pos = audioPos;
+        
+        readChartFile(chartFolder + "\\chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             for (const event of events) {
@@ -89,7 +83,8 @@ export default function Editor() {
             
             setEvents(tree);
         });
-    }, [savedChartFolder]);
+    }
+    useEffect(() => loadResources(0), []); // load resources on init
     
     /** [`true/false` = added/removed event, event] */
     const historyRef = useRef<[boolean, MuseEvent][]>([]);
@@ -161,23 +156,26 @@ export default function Editor() {
         });
     }
     
-    const prevChartFolderRef = useRef(savedChartFolder);
+    const workingChartFolderRef = useRef(chartFolder);
     
     const [saved, setSaved] = useState(true);
     async function handleSave(newMetadata: ChartMetadata = metadata) {
         const newChartFolder = getChartFolder(newMetadata);
         
         // rename chart folder to match new title
-        const prevChartFolder = prevChartFolderRef.current;
-        if (chartFolder != prevChartFolder) {
-            await rename(prevChartFolder, chartFolder);
-            prevChartFolderRef.current = chartFolder;
+        const workingChartFolder = workingChartFolderRef.current;
+        if (newChartFolder != workingChartFolder) {
+            await rename(workingChartFolder, newChartFolder);
+            workingChartFolderRef.current = chartFolder;
         }
         
         await Promise.all([
             writeTextFile(newChartFolder + "\\chart.txt", events.values.map(e => e.join(" ")).join("\n")),
             writeTextFile(newChartFolder + "\\metadata.json", stringifyIgnoreNull(newMetadata)),
         ]);
+        
+        if (newChartFolder != workingChartFolder) loadResources(bgm.pos);
+        
         setSaved(true);
     }
     function handleQuit() {
@@ -201,7 +199,8 @@ export default function Editor() {
     
     // keybinds and scroll
     useEffect(() => {
-        
+        const MS_PER_BEAT = 60 / metadata.bpm * 1000;
+        const MS_PER_SNAP = MS_PER_BEAT / (metadata.snaps + 1);
         const FIRST_BEAT = metadata.first_beat;
         
         function onScroll(e: WheelEvent) {
@@ -215,13 +214,12 @@ export default function Editor() {
             }
         }
         function onKeyDown(e: KeyboardEvent) {
-            
-            if (e.code === "ShiftLeft") {
+            if (e.code === "Space")
+                bgm.paused ? bgm.play() : bgm.pause();
+            else if (e.code === "ShiftLeft") 
                 bgm.pos = bgm.pos <= FIRST_BEAT ? 0 : snapLeft(bgm.pos, FIRST_BEAT, MS_PER_SNAP);
-            }
-            else if (e.code === "ShiftRight") {
+            else if (e.code === "ShiftRight") 
                 bgm.pos = bgm.pos < FIRST_BEAT ? FIRST_BEAT : snapRight(bgm.pos, FIRST_BEAT, MS_PER_SNAP);
-            }
             else if (e.key === "ArrowLeft")
                 bgm.pos -= 1;
             else if (e.key === "ArrowRight")
@@ -247,7 +245,7 @@ export default function Editor() {
     
     return (
         <>
-            <Background imgPath={metadata.img_ext && `${savedChartFolder}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
+            <Background imgPath={metadata.img_ext && `${workingChartFolderRef.current}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
@@ -302,6 +300,7 @@ export default function Editor() {
                     { activeTab == ActiveTab.DETAILS && 
                         <DetailsTab
                             metadata={metadata}
+                            workingChartFolderRef={workingChartFolderRef}
                             setMetadata={setMetadata}
                             handleSave={handleSave}
                         />
@@ -386,8 +385,8 @@ function SpeedButton({ speed }: { speed: number }) {
         <button
             onClick={() => bgm.speed = speed}
             className={`
-                outline-2 outline-foreground font-mono rounded-md
-                ${currentSpeed == speed ? "bg-foreground text-background" : "text-foreground"}
+                outline-2 outline-background font-mono rounded-md
+                ${currentSpeed == speed ? "bg-background text-foreground" : "text-background"}
             `}
         >
             { speed * 100 }%
@@ -405,7 +404,7 @@ function SeekBar({ ticks }: SeekBarProps) {
     
     return (
         <>
-            <p className="text-xs"> {timeDisplay(pos)} </p>
+            <p className="text-xs text-background"> {timeDisplay(pos)} </p>
             
             <Slider
                 min={0}
