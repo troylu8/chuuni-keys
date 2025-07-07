@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { playSfx } from "../lib/sound";
-import { flags } from "../lib/globals";
+import { flags } from "../lib/lib";
 import { KEY_SIZE } from "./keyboard-layout";
 
 

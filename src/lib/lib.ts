@@ -1,6 +1,33 @@
 import { appLocalDataDir } from "@tauri-apps/api/path";
 import filenamify from "filenamify";
 
+export enum Difficulty {
+    EASY = 0,
+    MEDIUM = 1,
+    HARD = 2,
+    FATED = 2,
+}
+
+export type ChartMetadata = {
+    id: string,
+    title: string,
+    difficulty: Difficulty
+    
+    bpm: number,
+    first_beat: number,
+    preview_time: number,
+    measure_size: number,
+    snaps: number,
+    
+    audio_ext: string,
+    img_ext?: string,
+    
+    credit_audio?: string,
+    credit_img?: string,
+    credit_chart?: string,
+}
+
+
 export function stringifyIgnoreNull(obj: any) {
     return JSON.stringify(obj, (_, val) => val == null? undefined : val, 4);
 }
@@ -34,5 +61,5 @@ export const flags: Flags = {
     hitsoundVolume: 1,
 };
 export function getChartFolder({id, title}: {id: string, title: string}) {
-    return `${USERDATA_DIR}\\charts\\${id} ${filenamify(title, {replacement: '_'})}`
+    return `${USERDATA_DIR}\\charts\\${id} ${filenamify(title, {replacement: '_'})}`.trim();
 }

@@ -1,23 +1,7 @@
 import { useState, createContext, useContext, useEffect } from "react";
 import { getCurrent, onOpenUrl } from '@tauri-apps/plugin-deep-link';
+import { ChartMetadata } from "../lib/lib";
 
-export type ChartMetadata = {
-    id: string,
-    title: string,
-    
-    bpm: number,
-    first_beat: number,
-    preview_time: number,
-    measure_size: number,
-    snaps: number,
-    
-    audio_ext: string,
-    img_ext?: string,
-    
-    credit_audio?: string,
-    credit_img?: string,
-    credit_chart?: string,
-}
 
 export enum Page {
     MAIN_MENU,

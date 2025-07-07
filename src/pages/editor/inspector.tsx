@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { MuseEvent } from "../../contexts/game-manager";
 import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
 import { useSettings } from "../../contexts/settings";
-import { ChartMetadata } from "../../contexts/page";
 import bgm from "../../lib/sound";
+import { ChartMetadata } from "../../lib/lib";
 
 const PX_PER_MS = 0.1;
 

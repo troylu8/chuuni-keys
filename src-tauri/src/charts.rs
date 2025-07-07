@@ -13,6 +13,7 @@ use filenamify::filenamify;
 pub struct ChartMetadata {
     id: String,
     title: String,
+    difficulty: usize,
 
     bpm: f32,
     first_beat: f32,

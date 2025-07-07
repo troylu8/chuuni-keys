@@ -6,7 +6,7 @@ import MuseButton from "../../components/muse-button";
 import AccuracyBar from "../../components/accuracy-bar";
 import DeltaProvider, { Delta, getPraise, PRAISE_COLORS, useDelta } from "../../contexts/score";
 import bgm from "../../lib/sound";
-import { USERDATA_DIR } from "../../lib/globals";
+import { USERDATA_DIR } from "../../lib/lib";
 import Praise from "../../components/praise";
 
 const MS_PER_BEAT = 500;

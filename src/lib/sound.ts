@@ -1,5 +1,5 @@
 import { readFile } from "@tauri-apps/plugin-fs";
-import { flags, USERDATA_DIR } from "./globals";
+import { flags, USERDATA_DIR } from "./lib";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 const audioContext = new AudioContext();

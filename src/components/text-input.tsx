@@ -1,5 +1,5 @@
 import { KeyboardEvent } from "react";
-import { Bind } from "../lib/globals";
+import { Bind } from "../lib/lib";
 
 type Props = {
     bind: Bind<string>

@@ -1,4 +1,4 @@
-import { ChartMetadata, EditorParams, Page, usePage } from "../../contexts/page";
+import { EditorParams, Page, usePage } from "../../contexts/page";
 import Background from "../../components/background";
 import { useEffect, useRef, useState } from "react";
 import Inspector from "./inspector";
@@ -9,7 +9,7 @@ import EditorKeyboard from "./editor-keyboard";
 import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { getChartFolder, flags, stringifyIgnoreNull } from "../../lib/globals";
+import { getChartFolder, flags, stringifyIgnoreNull, ChartMetadata } from "../../lib/lib";
 import TimingTab from "./timing-tab";
 import DetailsTab from "./details-tab";
 import bgm from "../../lib/sound";

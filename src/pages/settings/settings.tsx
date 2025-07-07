@@ -3,7 +3,7 @@ import { Settings as SettingsType, useSettings } from "../../contexts/settings";
 import TimingEditor from "./timing-editor";
 import MuseButton from "../../components/muse-button";
 import MainMenuButton from "../../components/main-menu-btn";
-import { Bind } from "../../lib/globals";
+import { Bind } from "../../lib/lib";
 import Slider from "../../components/slider";
 import MuseCheckmark from "../../components/muse-checkmark";
 
@@ -36,11 +36,11 @@ export default function Settings() {
                 }}
                 className="gap-3 [&>label]:text-end"
             >
-                <label> music </label>
+                <span> music </span>
                 <AudioSlider bind={bindSetting("musicVolume")} />
-                <label> sfx </label>
+                <span> sfx </span>
                 <AudioSlider bind={bindSetting("sfxVolume")} />
-                <label> hitsounds </label>
+                <span> hitsounds </span>
                 <AudioSlider bind={bindSetting("hitsoundVolume")} />
             </div>
             

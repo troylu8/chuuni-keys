@@ -1,5 +1,5 @@
 import MuseButton from "../../components/muse-button";
-import { ChartMetadata } from "../../contexts/page";
+import { ChartMetadata } from "../../lib/lib";
 
 
 type Props = Readonly<{

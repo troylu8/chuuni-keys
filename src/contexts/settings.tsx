@@ -1,6 +1,6 @@
 import { useState, createContext, useContext, useEffect } from "react";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { flags, stringifyIgnoreNull, USERDATA_DIR } from "../lib/globals";
+import { flags, stringifyIgnoreNull, USERDATA_DIR } from "../lib/lib";
 import bgm from "../lib/sound";
 
 /** activation duration = hitring duration + this value */

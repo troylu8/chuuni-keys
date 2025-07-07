@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useDelta, getPraise, Praise as PraiseType, PRAISE_COLORS } from "../contexts/score";
-import { resetAnimation } from "../lib/globals";
+import { resetAnimation } from "../lib/lib";
 
 type Props = Readonly<{
     showRawDeltas?: boolean

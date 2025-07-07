@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GOOD_THRESHOLD, useDelta } from "../../contexts/score";
 import { useMuseEvents } from "../../contexts/game-manager";
-import { resetAnimation } from "../../lib/globals";
+import { resetAnimation } from "../../lib/lib";
 
 export default function Combo() {
     const [combo, setCombo] = useState(0);

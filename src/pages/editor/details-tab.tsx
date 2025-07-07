@@ -1,11 +1,10 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
-import { ChartMetadata } from "../../contexts/page";
 import { openPath } from '@tauri-apps/plugin-opener';
 import { copyFile, remove, writeFile } from '@tauri-apps/plugin-fs';
-import { extname } from '@tauri-apps/api/path';
-import { Bind, getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/globals';
+import { extname, pictureDir } from '@tauri-apps/api/path';
+import { Bind, ChartMetadata, Difficulty, getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/lib';
 import MuseButton from '../../components/muse-button';
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
@@ -43,7 +42,8 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
             filters: [{
                 name: "Image",
                 extensions: ["png", "jpg", "bmp", "webp", "avif"]
-            }]
+            }],
+            defaultPath: await pictureDir()
         });
         if (imgFilepath == null) return;
         
@@ -74,24 +74,25 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
                         display: "grid",
                         gridTemplateColumns: "fit-content(100%) 1fr",
                     }} 
-                    className="gap-3 px-3 pb-3 [&>label]:self-center"
+                    className="gap-3 px-3 pb-3 [&>span]:self-center"
                 >
-                    <label> title </label>
-                    <TextInput 
-                        bind={bindMetadataText("title", false)} 
-                        valid={metadata.title.length != 0} 
-                        placeholder="title is required!"
-                    />
+                    <span> title </span>
+                    <TextInput bind={bindMetadataText("title", false)} placeholder="enter a title.."/>
                     
-                    <label> image </label>
+                    <span> difficulty </span>
+                    <select>
+                        
+                    </select>
+                    
+                    <span> image </span>
                     <button onClick={handleUploadImg}> [select] </button>
                     
                     <h2 style={{gridColumn: "1 / -1"}}> credits </h2>
-                    <label> music </label>
+                    <span> music </span>
                     <TextInput bind={bindMetadataText("credit_audio")} placeholder="who wrote the song?" />
-                    <label> image </label>
+                    <span> image </span>
                     <TextInput bind={bindMetadataText("credit_img")} placeholder="who made the background?" />
-                    <label> chart </label>
+                    <span> chart </span>
                     <TextInput bind={bindMetadataText("credit_chart")}  placeholder="who mapped this chart?"/>
                     
                     <MuseButton 
@@ -117,6 +118,17 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
             </div>
         </div>
     );
+}
+
+function DifficultyDropdown({ bind: [value, setter] }: { bind: Bind<Difficulty> }) {
+    return (
+        <select>
+            <option value="volvo">Volvo</option>
+            <option value="saab">Saab</option>
+            <option value="mercedes">Mercedes</option>
+            <option value="audi">Audi</option>
+        </select>
+    )
 }
 
 type PublishPopupProps = Readonly<{

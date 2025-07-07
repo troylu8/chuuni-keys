@@ -1,10 +1,10 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import MainMenuButton from "../../components/main-menu-btn";
 import MuseButton from "../../components/muse-button";
-import { ChartMetadata, Page, usePage } from "../../contexts/page";
+import { Page, usePage } from "../../contexts/page";
 import { copyFile, create, mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
-import { getChartFolder, stringifyIgnoreNull } from '../../lib/globals';
-import { extname } from '@tauri-apps/api/path';
+import { ChartMetadata, Difficulty, getChartFolder, stringifyIgnoreNull } from '../../lib/lib';
+import { downloadDir, extname } from '@tauri-apps/api/path';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useState } from 'react';
 import { Upload } from 'lucide-react';
@@ -17,6 +17,7 @@ export default function EditMenu() {
             id: genID(),
             title: 'no title yet',
             bpm: 120,
+            difficulty: Difficulty.EASY,
             first_beat: 0,
             preview_time: 0,
             measure_size: 4,
@@ -42,8 +43,9 @@ export default function EditMenu() {
             title: "Select audio file",
             filters: [{
                 name: "Audio",
-                extensions: ["mp3", "aac", "ogg", "wav", "webm"]
-            }]
+                extensions: ["mp3", "wav", "aac", "ogg", "webm"]
+            }],
+            defaultPath: await downloadDir()
         });
         if (audioFilepath == null) return;
         
@@ -73,11 +75,11 @@ export default function EditMenu() {
                 onClick={handleUploadAudio}
                 className="
                     outline-dashed outline-2 w-64 h-42 rounded-lg
-                    flex flex-col gap-3 justify-center items-center
+                    flex flex-col gap-3 justify-center items-center cursor-pointer
                 "
             >
                 <Upload size="20%" />
-                <p> click to upload </p>
+                <p> click to upload audio </p>
                 <p> or drop audio file here </p>
             </div>
             

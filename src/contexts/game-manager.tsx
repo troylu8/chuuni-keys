@@ -2,8 +2,8 @@ import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { useBgmState } from "./bgm-state";
-import { ChartMetadata, Page, usePage } from "./page";
-import { getChartFolder as getChartFolder, flags } from '../lib/globals';
+import { Page, usePage } from "./page";
+import { getChartFolder as getChartFolder, flags, ChartMetadata } from '../lib/lib';
 import bgm from '../lib/sound';
 import { useSettings } from './settings';
 

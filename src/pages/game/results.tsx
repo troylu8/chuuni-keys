@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { ChartMetadata, Page, usePage } from "../../contexts/page";
+import { Page, usePage } from "../../contexts/page";
 import { PRAISE_COLORS, useStats } from "../../contexts/score";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
-import { getChartFolder } from "../../lib/globals";
+import { ChartMetadata, getChartFolder } from "../../lib/lib";
 import MuseButton from "../../components/muse-button";
 
 const SCORE_WEIGHTS = {

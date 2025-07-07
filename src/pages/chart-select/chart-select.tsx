@@ -1,10 +1,10 @@
-import { ChartMetadata, Page, ChartSelectParams, usePage } from "../../contexts/page";
+import { Page, ChartSelectParams, usePage } from "../../contexts/page";
 import { useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";
-import { flags, getChartFolder, SERVER_URL } from "../../lib/globals";
+import { ChartMetadata, flags, getChartFolder, SERVER_URL } from "../../lib/lib";
 import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
 import { EllipsisVertical, XIcon } from "lucide-react";

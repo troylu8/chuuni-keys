@@ -7,8 +7,8 @@ import Background from "../../components/background";
 import Combo from "./combo";
 import Results from "./results";
 import KeyUnitGame from "./key-unit-game";
-import { ChartMetadata, usePage } from "../../contexts/page";
-import { getChartFolder } from "../../lib/globals";
+import { usePage } from "../../contexts/page";
+import { ChartMetadata, getChartFolder } from "../../lib/lib";
 import { useSettings } from "../../contexts/settings";
 import Praise from "../../components/praise";
 
