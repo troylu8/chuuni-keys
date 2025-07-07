@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { playSfx } from "../lib/sound";
-import { KEY_SIZE } from "./keyboard-layout";
 import { flags } from "../lib/globals";
+import { KEY_SIZE } from "./keyboard-layout";
 
 
 function noModifiersPressed(e: KeyboardEvent) {
@@ -64,7 +64,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
                 opacity: fadeOut && allHitsPassed ? Math.max(0.25, 1 + latestHitProgress) : undefined 
             }}
             className={`
-                flex flex-col-reverse rounded-xl relative
+                flex flex-col-reverse rounded-[25%] relative
                 ${pressed? "bg-color1 text-background" : "bg-background opacity-25" }
                 ${labelCentered? "items-center justify-center" : "[&>span]:ml-3"}
                 ${activated && "opacity-100 transition-opacity"}
@@ -89,13 +89,13 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-color1 outline-5 pointer-events-none"
+                className="absolute outline-color1 outline-7 pointer-events-none"
                 style={{
                     top: -gap,
                     bottom: -gap,
                     left: -gap,
                     right: -gap,
-                    borderRadius: (2 * gap + KEY_SIZE) * 0.25,  // total size * 0.25
+                    borderRadius: `calc((2 * ${gap}px + ${KEY_SIZE}) * 0.25)`, // total size * 0.25
                     opacity: (1 - progress) / 0.9
                 }}
             ></div>

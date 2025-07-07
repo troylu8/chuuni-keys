@@ -1,24 +1,38 @@
 import Background from "../../components/background";
 import { getChartFolder } from "../../lib/globals";
 import { ChartMetadata } from "../../contexts/page";
+import { useState } from "react";
+import MuseButton from "../../components/muse-button";
+
+const CLICKS_TO_DELETE = 3;
 
 type Props = Readonly<{
     metadata: ChartMetadata | null
-    onClick: () => any
+    deleteActiveChart: () => any
 }>
-export default function ChartInfo({ metadata, onClick }: Props) {
+export default function ChartInfo({ metadata, deleteActiveChart }: Props) {
+    
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [deleteClicks, setDeleteClicks] = useState(0);
+    
+    function handleDeleteClicked() {
+        if (deleteClicks + 1 === CLICKS_TO_DELETE) 
+            deleteActiveChart();
+        else 
+            setDeleteClicks(deleteClicks + 1);
+    }
 
     return (
         <div 
-            onClick={onClick}
+            onContextMenu={() => setMenuOpen(!menuOpen)}
             className="
-                absolute left-1/5 -translate-x-1/2 top-1/2 -translate-y-1/2
+                absolute left-1/5 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10
                 w-[60vh] h-[60vh] max-w-full
                 flex flex-col justify-between p-3
                 bg-color1 rounded-[15%] overflow-hidden text-background
             "
         >
-            { metadata && 
+            { metadata && !menuOpen &&
                 <>
                     <Background imgPath={`${getChartFolder(metadata)}\\img.${metadata.img_ext}`} />
                     <p className="text-[6vh] wrap-anywhere overflow-y-hidden"> {metadata.title} </p>
@@ -60,6 +74,15 @@ export default function ChartInfo({ metadata, onClick }: Props) {
                             <p>diff</p>
                         </div>
                     </div>
+                </>
+            }
+            
+            { metadata && menuOpen &&
+                <>
+                    <MuseButton> edit </MuseButton>
+                    <MuseButton onClick={handleDeleteClicked}> 
+                        { deleteClicks == 0? "delete map" : `click again to delete: ${deleteClicks} / ${CLICKS_TO_DELETE}` } 
+                    </MuseButton>
                 </>
             }
         </div>

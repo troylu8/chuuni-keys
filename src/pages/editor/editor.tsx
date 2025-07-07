@@ -18,7 +18,7 @@ import Slider from "../../components/slider";
 
 
 enum ActiveTab { KEYBOARD, TIMING, DETAILS };
-enum ActiveModal { NONE, CONFIRM_QUIT_TO_MENU, CONFIRM_QUIT_APP }
+enum ActiveModal { NONE, CONFIRM_QUIT_TO_SELECT, CONFIRM_QUIT_APP }
 
 function snapLeft(ms: number, startingFrom: number, size: number) {
     const beat = (ms - startingFrom) / size;
@@ -183,9 +183,9 @@ export default function Editor() {
     function handleQuit() {
         if (saved) {
             bgm.speed = 1;
-            setPageParams([Page.MAIN_MENU]);
+            setPageParams([Page.CHART_SELECT, {activeChartId: metadata.id, isEditing: true}]);
         }
-        else setActiveModal(ActiveModal.CONFIRM_QUIT_TO_MENU);
+        else setActiveModal(ActiveModal.CONFIRM_QUIT_TO_SELECT);
     }
     
     // confirm if want to quit app with unsaved changes
@@ -280,7 +280,7 @@ export default function Editor() {
                             onClose={() => setActiveModal(ActiveModal.NONE)}
                             saveChanges={handleSave}
                             quit={() => {
-                                activeModal == ActiveModal.CONFIRM_QUIT_TO_MENU ? 
+                                activeModal == ActiveModal.CONFIRM_QUIT_TO_SELECT ? 
                                     setPageParams([Page.MAIN_MENU]) :
                                     getCurrentWindow().destroy()
                             }}

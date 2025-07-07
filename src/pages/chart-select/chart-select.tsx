@@ -6,6 +6,9 @@ import ChartInfo from './chart-info';
 import MainMenuButton from "../../components/main-menu-btn";
 import { flags, getChartFolder, SERVER_URL } from "../../lib/globals";
 import bgm from "../../lib/sound";
+import MuseButton from "../../components/muse-button";
+import { EllipsisVertical, XIcon } from "lucide-react";
+import { remove } from "@tauri-apps/plugin-fs";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -151,10 +154,13 @@ export default function ChartSelect() {
     }, []);
     useEffect(updateEntryPositions, [charts]);
     
-    async function startGame() {
-        if (!activeChart)   return;
-        if (isEditing)      setPageParams([Page.EDITOR, { metadata: activeChart }]);
-        else                setPageParams([Page.GAME, activeChart]);
+    function play() {
+        if (activeChart) 
+            setPageParams([Page.GAME, activeChart]);
+    }
+    function edit() {
+        if (activeChart) 
+            setPageParams([Page.EDITOR, { metadata: activeChart }]);
     }
     
     function handleEntryClick(metadata: ChartMetadata) {
@@ -162,8 +168,22 @@ export default function ChartSelect() {
             setActiveChart(metadata);
         }
         else {
-            startGame();
+            isEditing ? edit() : play();
         }
+    }
+    
+    async function deleteActiveChart() {
+        if (!activeChart || !charts) return;
+        
+        // delete chart folder
+        await remove(getChartFolder(activeChart), {recursive: true});
+        
+        // remove this active chart from charts[]
+        setCharts(charts.filter(chart => chart.id != activeChart.id));
+        
+        // the next active chart is the chart before this one
+        const i = charts.findIndex(chart => chart.id == activeChart.id);
+        setActiveChart(charts[i == 0 ? 1 : i - 1]);
     }
     
     return (
@@ -172,7 +192,7 @@ export default function ChartSelect() {
             
             <ChartInfo
                 metadata={activeChart} 
-                onClick={startGame} 
+                deleteActiveChart={() => console.log("delete")}
             />
             
             {/* chart list */}
@@ -196,7 +216,77 @@ export default function ChartSelect() {
                 {/* buffer bottom */}
                 <div className="h-[20vh] shrink-0"></div>
             </nav>
+            
+            <ActionsBar 
+                activeSongId={activeChart?.id}
+                play={play}
+                edit={edit}
+                deleteActiveChart={deleteActiveChart}
+            />
         </div>
     )
 }
 
+
+enum ActionsState { DEFAULT, OPTIONS, DELETING }
+type Props = Readonly<{
+    activeSongId?: string
+    play: () => any
+    edit: () => any
+    deleteActiveChart: () => any
+}>
+function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
+    const [[,params]] = usePage();
+    const { isEditing } = params as ChartSelectParams;
+    
+    const [actionsState, setActionsState] = useState(ActionsState.DEFAULT);
+    
+    // close menu when active song changes
+    useEffect(() => setActionsState(ActionsState.DEFAULT), [activeSongId]);
+    
+    const EditButton = (
+        <MuseButton onClick={edit} className="bg-color1"> 
+            [ edit ] 
+        </MuseButton>
+    );
+    const PlayButton = (
+        <MuseButton onClick={play} className="bg-color1"> 
+            [ play ] 
+        </MuseButton>
+    );
+    
+    return (
+        <div className="
+            absolute left-0 bottom-1/10 flex gap-1 ml-1 w-[35vw] z-10
+            [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3
+        ">
+            <MuseButton 
+                onClick={() => setActionsState(actionsState == ActionsState.DEFAULT ? ActionsState.OPTIONS : ActionsState.DEFAULT)}
+                className="bg-color2 grow-0! px-0.5!"
+            > 
+                { actionsState == ActionsState.DEFAULT ? <EllipsisVertical /> : <XIcon /> }
+            </MuseButton>
+            
+            { actionsState == ActionsState.DEFAULT &&
+                <> { isEditing ? EditButton : PlayButton } </>
+            }
+            
+            { actionsState == ActionsState.OPTIONS &&
+                <>
+                    <MuseButton onClick={() => setActionsState(ActionsState.DELETING)} className="bg-error"> 
+                        [ delete ] 
+                    </MuseButton>
+                    { isEditing ? PlayButton : EditButton }
+                </>
+            }
+            
+            { actionsState == ActionsState.DELETING &&
+                <>
+                    <p> delete this chart? </p>
+                    <MuseButton onClick={() => setActionsState(ActionsState.DEFAULT)}> [ no ] </MuseButton>
+                    <MuseButton onClick={deleteActiveChart} > [ yes ] </MuseButton>
+                </>
+            }
+        </div>
+    )
+}
