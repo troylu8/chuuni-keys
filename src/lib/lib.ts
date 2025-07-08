@@ -5,6 +5,7 @@ export type Difficulty = "easy" | "medium" | "hard" | "fated";
 
 export type ChartMetadata = {
     id: string,
+    online_id?: string,
     title: string,
     difficulty: Difficulty
     

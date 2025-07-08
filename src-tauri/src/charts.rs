@@ -12,6 +12,7 @@ use filenamify::filenamify;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChartMetadata {
     id: String,
+    online_id: Option<String>,
     title: String,
     difficulty: String,
 
