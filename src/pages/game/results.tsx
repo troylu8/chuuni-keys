@@ -51,7 +51,7 @@ export default function Results() {
     
     
     function handleToChartSelect() {
-        setPage([Page.CHART_SELECT, {isEditing: false}]); 
+        setPage([Page.CHART_SELECT]); 
         
         if (!params) return;
         writeTextFile(

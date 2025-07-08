@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import ChartEntry from './chart-entry';
 import ChartInfo from './chart-info';
-import MainMenuButton from "../../components/main-menu-btn";
 import { ChartMetadata, flags, getChartFolder, SERVER_URL } from "../../lib/lib";
 import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
-import { EllipsisVertical, XIcon } from "lucide-react";
+import { ArrowLeft, EllipsisVertical, Plus, XIcon } from "lucide-react";
 import { remove } from "@tauri-apps/plugin-fs";
+import { useBgmState } from "../../contexts/bgm-state";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -21,8 +21,7 @@ export default function ChartSelect() {
     
     const [charts, setCharts] = useState<ChartMetadata[] | null>(null);
     const [[,params], setPageParams] = usePage();
-    let { isEditing, activeChartId } = params as ChartSelectParams;
-    activeChartId = activeChartId ?? flags.lastActiveChartId ?? undefined;
+    const activeChartId = (params as ChartSelectParams)?.activeChartId ?? flags.lastActiveChartId;
     
     
     // smooth scrolling
@@ -164,12 +163,12 @@ export default function ChartSelect() {
     }
     
     function handleEntryClick(metadata: ChartMetadata) {
-        if (activeChart?.id != metadata.id) {
-            setActiveChart(metadata);
-        }
-        else {
-            isEditing ? edit() : play();
-        }
+        if (activeChart?.id != metadata.id) setActiveChart(metadata);
+        else                                play();
+    }
+    function handleEntryContextMenu(metadata: ChartMetadata) {
+        if (activeChart?.id != metadata.id) setActiveChart(metadata);
+        else                                edit();
     }
     
     async function deleteActiveChart() {
@@ -188,7 +187,7 @@ export default function ChartSelect() {
     
     return (
         <div className="fixed cover">
-            <MainMenuButton />
+            <NavigationBar />
             
             <ChartInfo metadata={activeChart} />
             
@@ -206,6 +205,7 @@ export default function ChartSelect() {
                         key={metadata.id}
                         metadata={metadata}
                         onClick={() => handleEntryClick(metadata)}
+                        onContextMenu={() => handleEntryContextMenu(metadata)}
                         active={activeChart?.id == metadata.id}
                     />
                 )}
@@ -225,6 +225,25 @@ export default function ChartSelect() {
 }
 
 
+function NavigationBar() {
+    const [, setPageParams] = usePage();
+    const { paused } =  useBgmState();
+    
+    return (
+        <nav className="absolute top-1 left-1 z-10 flex gap-3">
+            <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}>
+                <ArrowLeft /> home
+            </MuseButton>
+            <MuseButton onClick={() => setPageParams([Page.NEW_CHART])}>
+                <Plus /> new
+            </MuseButton>
+            <p onClick={() => bgm.paused? bgm.play() : bgm.pause()}>
+                { paused? "[ music paused ]" :  "now playing.."}
+            </p>
+        </nav>
+    )
+}
+
 enum ActionsState { DEFAULT, OPTIONS, DELETING }
 type Props = Readonly<{
     activeSongId?: string
@@ -233,24 +252,12 @@ type Props = Readonly<{
     deleteActiveChart: () => any
 }>
 function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
-    const [[,params]] = usePage();
-    const { isEditing } = params as ChartSelectParams;
     
     const [actionsState, setActionsState] = useState(ActionsState.DEFAULT);
     
     // close menu when active song changes
     useEffect(() => setActionsState(ActionsState.DEFAULT), [activeSongId]);
     
-    const EditButton = (
-        <MuseButton onClick={edit} className="bg-color1!"> 
-            [ edit ] 
-        </MuseButton>
-    );
-    const PlayButton = (
-        <MuseButton onClick={play} className="bg-color1!"> 
-            [ play ] 
-        </MuseButton>
-    );
     
     return (
         <div className="
@@ -265,15 +272,22 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
             </MuseButton>
             
             { actionsState == ActionsState.DEFAULT &&
-                <> { isEditing ? EditButton : PlayButton } </>
+                <MuseButton onClick={play} className="bg-color1!"> 
+                    [ play ] 
+                </MuseButton>
             }
             
             { actionsState == ActionsState.OPTIONS &&
                 <>
-                    <MuseButton onClick={() => setActionsState(ActionsState.DELETING)} className="bg-error!"> 
+                    <MuseButton 
+                        onClick={() => setActionsState(ActionsState.DELETING)}
+                        className="bg-error! grow-0!"
+                    > 
                         [ delete ] 
                     </MuseButton>
-                    { isEditing ? PlayButton : EditButton }
+                    <MuseButton onClick={edit} className="bg-color1!"> 
+                        [ edit ] 
+                    </MuseButton>
                 </>
             }
             

@@ -66,11 +66,11 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             className={`
                 flex flex-col-reverse rounded-[25%] relative
                 ${pressed? "bg-color1 text-background" : "bg-background opacity-25" }
-                ${labelCentered? "items-center justify-center" : "[&>span]:ml-3"}
+                ${labelCentered && "items-center justify-center"}
                 ${activated && "opacity-100 transition-opacity"}
             `}
         >
-            <span className="text-lg"> { label } </span>
+            <span className="text-lg ml-[25%]"> { label } </span>
             { hitProgresses.map((p, i) => <Hitring key={i} progress={p} />) }
         </div>
     );

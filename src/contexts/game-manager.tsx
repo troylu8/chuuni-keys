@@ -132,7 +132,7 @@ export default function GameManager({ children }: Props) {
         bgm.play();
     }
     function stopGame() {
-        setPage([Page.CHART_SELECT, { isEditing: false }]);
+        setPage([Page.CHART_SELECT]);
         bgm.pause();
     }
     

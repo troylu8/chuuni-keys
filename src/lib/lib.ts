@@ -1,12 +1,7 @@
 import { appLocalDataDir } from "@tauri-apps/api/path";
 import filenamify from "filenamify";
 
-export enum Difficulty {
-    EASY = 0,
-    MEDIUM = 1,
-    HARD = 2,
-    FATED = 2,
-}
+export type Difficulty = "easy" | "medium" | "hard" | "fated";
 
 export type ChartMetadata = {
     id: string,
@@ -49,14 +44,13 @@ export const SERVER_URL = "http://localhost:5000";
 
 
 type Flags = {
+    lastActiveChartId?: string
     keyUnitsEnabled: boolean
-    lastActiveChartId: string | null
     sfxVolume: number
     hitsoundVolume: number
 }
 export const flags: Flags = {
     keyUnitsEnabled: true,
-    lastActiveChartId: null,
     sfxVolume: 1,
     hitsoundVolume: 1,
 };

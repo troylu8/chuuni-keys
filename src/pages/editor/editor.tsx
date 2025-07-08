@@ -15,6 +15,7 @@ import DetailsTab from "./details-tab";
 import bgm from "../../lib/sound";
 import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
 import Slider from "../../components/slider";
+import { ArrowLeft, Pause, Play } from "lucide-react";
 
 
 enum ActiveTab { KEYBOARD, TIMING, DETAILS };
@@ -181,7 +182,7 @@ export default function Editor() {
     function handleQuit() {
         if (saved) {
             bgm.speed = 1;
-            setPageParams([Page.CHART_SELECT, {activeChartId: metadata.id, isEditing: true}]);
+            setPageParams([Page.CHART_SELECT, {activeChartId: metadata.id}]);
         }
         else setActiveModal(ActiveModal.CONFIRM_QUIT_TO_SELECT);
     }
@@ -251,7 +252,7 @@ export default function Editor() {
                 {/* top row */}
                 <nav className="flex flex-col gap-5 mb-8 z-20">
                     <div className="relative flex gap-1">
-                        <MuseButton onClick={handleQuit}> quit </MuseButton>
+                        <MuseButton onClick={handleQuit}> <ArrowLeft /> quit </MuseButton>
                         <MuseButton onClick={() => handleSave()}> save {!saved && "*"} </MuseButton>
                         <div className="grow flex flex-row-reverse gap-1">
                             {/* TODO: visual indicator which is active */}
@@ -342,8 +343,11 @@ function MusicControls({ firstBeat, previewTime }: Props) {
     
     return (
         <>
-            <MuseButton className="min-w-20 max-w-20" onClick={() => paused? bgm.play() : bgm.pause()}> 
-                {paused? "play" : "pause"}  
+            <MuseButton 
+                onClick={() => paused? bgm.play() : bgm.pause()}
+                className="p-1 flex items-center"
+            > 
+                {paused? <Play size={20} /> : <Pause size={20} /> }  
             </MuseButton>
             
             <SeekBar 

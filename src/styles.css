@@ -10,6 +10,11 @@
     --perfect: #99cfef;
     --good: #8eeba2;
     --miss: #e499a5;
+
+    --easy: #8eeba2;
+    --medium: #ebd28e;
+    --hard: #833642;
+    --fated: #9b74c0;
 }
 
 @theme inline {
@@ -20,7 +25,14 @@
     --color-error: var(--error);
     --color-perfect: var(--perfect);
     --color-good: var(--good);
-    --color-miss: var(--miss);
+    --color-easy: var(--easy);
+    --color-medium: var(--medium);
+    --color-hard: var(--hard);
+    --color-fated: var(--fated);
+}
+
+.lucide {
+    display: inline;
 }
 
 body {

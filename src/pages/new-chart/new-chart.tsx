@@ -1,15 +1,14 @@
 import { open } from '@tauri-apps/plugin-dialog';
-import MainMenuButton from "../../components/main-menu-btn";
-import MuseButton from "../../components/muse-button";
 import { Page, usePage } from "../../contexts/page";
 import { copyFile, create, mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
-import { ChartMetadata, Difficulty, getChartFolder, stringifyIgnoreNull } from '../../lib/lib';
+import { ChartMetadata, getChartFolder, stringifyIgnoreNull } from '../../lib/lib';
 import { downloadDir, extname } from '@tauri-apps/api/path';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
+import MuseButton from '../../components/muse-button';
 
-export default function EditMenu() {
+export default function NewChart() {
     const [,setPageParams] = usePage();
     
     async function initNewChart(audioFilepath: string) {
@@ -17,7 +16,7 @@ export default function EditMenu() {
             id: genID(),
             title: 'no title yet',
             bpm: 120,
-            difficulty: Difficulty.EASY,
+            difficulty: "easy",
             first_beat: 0,
             preview_time: 0,
             measure_size: 4,
@@ -66,11 +65,13 @@ export default function EditMenu() {
     
     return (
         <div className="absolute cover flex flex-col justify-center items-center gap-3">
-            <MainMenuButton />
+            <div className="absolute top-1 left-1 z-10 flex gap-3">
+                <MuseButton onClick={() => setPageParams([Page.CHART_SELECT])}>
+                    <ArrowLeft /> back
+                </MuseButton>
+            </div>
             
-            <MuseButton onClick={() => setPageParams([Page.CHART_SELECT, { isEditing: true }])}> edit existing chart </MuseButton>
-                
-            <h2 className='mt-6'> create new chart: </h2>
+            <h1 className='mt-6'> create new chart </h1>
             <div 
                 onClick={handleUploadAudio}
                 className="

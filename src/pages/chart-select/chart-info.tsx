@@ -18,7 +18,10 @@ export default function ChartInfo({ metadata }: Props) {
         >
             { metadata &&
                 <>
-                    <Background imgPath={metadata.img_ext && `${getChartFolder(metadata)}\\img.${metadata.img_ext}`} />
+                    <Background
+                        brightness={50}
+                        imgPath={metadata.img_ext && `${getChartFolder(metadata)}\\img.${metadata.img_ext}`} 
+                    />
                     <p className="text-[6vh] wrap-anywhere overflow-y-hidden"> {metadata.title} </p>
                     
                     <div className='flex justify-between gap-3'>

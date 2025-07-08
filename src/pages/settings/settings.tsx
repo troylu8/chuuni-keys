@@ -2,14 +2,16 @@ import { useState } from "react";
 import { Settings as SettingsType, useSettings } from "../../contexts/settings";
 import TimingEditor from "./timing-editor";
 import MuseButton from "../../components/muse-button";
-import MainMenuButton from "../../components/main-menu-btn";
 import { Bind } from "../../lib/lib";
 import Slider from "../../components/slider";
 import MuseCheckmark from "../../components/muse-checkmark";
+import { ArrowLeft } from "lucide-react";
+import { Page, usePage } from "../../contexts/page";
 
 export default function Settings() {
     const [settings, setSettings] = useSettings(); 
     const [timingEditorVisible, setTimingEditorVisible] = useState(false);
+    const [, setPageParams] = usePage();
     
     if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;
     
@@ -19,7 +21,9 @@ export default function Settings() {
     
     return (
         <div className="absolute cover flex flex-col gap-3 p-3 overflow-auto">
-            <MainMenuButton />
+            <MuseButton className="absolute top-1 left-1 z-10" onClick={() => setPageParams([Page.MAIN_MENU])}>
+                <ArrowLeft /> main menu
+            </MuseButton>
             
             <h1 className="my-5 text-center "> Settings </h1>
             

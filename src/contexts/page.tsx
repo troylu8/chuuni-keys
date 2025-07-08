@@ -6,14 +6,14 @@ import { ChartMetadata } from "../lib/lib";
 export enum Page {
     MAIN_MENU,
     SETTINGS,
-    EDIT_MENU,
+    NEW_CHART,
     CHART_SELECT,
     GAME,
     EDITOR,
 }
 
 export type EditorParams = { metadata: ChartMetadata, isNew?: boolean }
-export type ChartSelectParams = { isEditing: boolean, activeChartId?: string }
+export type ChartSelectParams = { activeChartId?: string }
 
 export type PageParams = [Page] | [ Page, ChartMetadata | ChartSelectParams | EditorParams];
 
@@ -36,7 +36,7 @@ export default function PageProvider({ children }: Props) {
             // urls look like chuuni://play/<chart-id>
             const [key, value] = url.split("://")[1].split("/");
             if (key == "play") {
-                setPageParams([Page.CHART_SELECT, { isEditing: false, activeChartId: value }]);
+                setPageParams([Page.CHART_SELECT, { activeChartId: value }]);
             }
         } 
         

@@ -22,12 +22,18 @@ type Props = Readonly<{
 }>
 export default function DetailsTab({ metadata, workingChartFolderRef, handleSave, setMetadata }: Props) {
     
-    function bindMetadataText(field: keyof ChartMetadata, undefinedIfEmptyStr: boolean = true): Bind<string> {
+    function bindMetadata<K extends keyof ChartMetadata>(field: K): Bind<ChartMetadata[K]> {
         return [
-            metadata[field] as string | undefined ?? "", 
-            (input: string) => {
+            metadata[field], 
+            input => setMetadata({...metadata, [field]: input})
+        ];
+    }
+    function bindMetadataOptional(field: keyof ChartMetadata): Bind<string> {
+        return [
+            metadata[field] as string ?? "", 
+            input => {
                 // set field as undefined if input is empty
-                setMetadata({...metadata, [field]: undefinedIfEmptyStr && input.length == 0 ? undefined : input});
+                setMetadata({...metadata, [field]: input.length == 0 ? undefined : input});
             }
         ];
     }
@@ -77,23 +83,21 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
                     className="gap-3 px-3 pb-3 [&>span]:self-center"
                 >
                     <span> title </span>
-                    <TextInput bind={bindMetadataText("title", false)} placeholder="enter a title.."/>
+                    <TextInput bind={bindMetadata("title")} placeholder="enter a title.."/>
                     
                     <span> difficulty </span>
-                    <select>
-                        
-                    </select>
+                    <DifficultyDropdown bind={bindMetadata("difficulty")} />
                     
                     <span> image </span>
                     <button onClick={handleUploadImg}> [select] </button>
                     
                     <h2 style={{gridColumn: "1 / -1"}}> credits </h2>
                     <span> music </span>
-                    <TextInput bind={bindMetadataText("credit_audio")} placeholder="who wrote the song?" />
+                    <TextInput bind={bindMetadataOptional("credit_audio")} placeholder="who wrote the song?" />
                     <span> image </span>
-                    <TextInput bind={bindMetadataText("credit_img")} placeholder="who made the background?" />
+                    <TextInput bind={bindMetadataOptional("credit_img")} placeholder="who made the background?" />
                     <span> chart </span>
-                    <TextInput bind={bindMetadataText("credit_chart")}  placeholder="who mapped this chart?"/>
+                    <TextInput bind={bindMetadataOptional("credit_chart")}  placeholder="who mapped this chart?"/>
                     
                     <MuseButton 
                         className='self-center col-start-1 -col-end-1 mx-auto'
@@ -122,11 +126,12 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
 
 function DifficultyDropdown({ bind: [value, setter] }: { bind: Bind<Difficulty> }) {
     return (
-        <select>
-            <option value="volvo">Volvo</option>
-            <option value="saab">Saab</option>
-            <option value="mercedes">Mercedes</option>
-            <option value="audi">Audi</option>
+        <select value={value} onChange={e => setter(e.target.value as Difficulty)}>
+            <option value="easy"> easy </option>
+            <option value="medium"> medium </option>
+            <option value="hard"> hard </option>
+            <option value="fated"> fated </option>
+            
         </select>
     )
 }

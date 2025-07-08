@@ -4,14 +4,16 @@ import { ChartMetadata, getChartFolder } from "../../lib/lib";
 type Props = Readonly<{
     metadata: ChartMetadata
     onClick: () => any
+    onContextMenu: () => any
     active: boolean
 }>
-export default function ChartEntry({ metadata, onClick, active }: Props) { //TODO use "active"
+export default function ChartEntry({ metadata, onClick, onContextMenu, active }: Props) { //TODO use "active"
     
     return (
         <section 
             className="relative shrink-0 w-fit"
             onClick={onClick}
+            onContextMenu={onContextMenu}
         >            
             {/* thumbnail */}
             <div className="relative w-[25vh] h-[25vh] overflow-hidden rotate-45 rounded-[25%] z-10">
@@ -22,12 +24,17 @@ export default function ChartEntry({ metadata, onClick, active }: Props) { //TOD
             </div>
             
             {/* difficulty label */}
-            <div className='
-                absolute top-1/2 -translate-y-1/2 left-full -translate-x-1/2 ml-[7vh]
-                w-[10vh] h-[10vh] bg-red-400 rotate-45 rounded-[25%]
-                flex justify-center items-center z-20
-            '>
-                <div className='-rotate-45 text-[5vh]'>4.1</div>
+            <div 
+                style={{backgroundColor: `var(--${metadata.difficulty})`}}
+                className='
+                    absolute top-1/2 -translate-y-1/2 left-full -translate-x-1/2 ml-[7vh]
+                    w-[10vh] h-[10vh] rotate-45 rounded-[25%]
+                    flex justify-center items-center z-20
+                '
+            >
+                <div 
+                    className={`-rotate-45 text-[5vh] ${metadata.difficulty == "hard" && "text-background"}`}
+                > { metadata.difficulty } </div>
             </div>
             
             {/* song title / producer label */}

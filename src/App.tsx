@@ -1,4 +1,4 @@
-import EditMenu from "./pages/edit-menu/edit-menu";
+import NewChart from "./pages/new-chart/new-chart";
 import Editor from "./pages/editor/editor";
 import Game from "./pages/game/game";
 import MainMenu from "./pages/main-menu/main-menu";
@@ -44,7 +44,7 @@ function ActivePage() {
         <>
             {page == Page.MAIN_MENU && <MainMenu />}
             {page == Page.SETTINGS && <Settings />}
-            {page == Page.EDIT_MENU && <EditMenu />}
+            {page == Page.NEW_CHART && <NewChart />}
             {page == Page.CHART_SELECT && <ChartSelect />}
             {page == Page.GAME && <Game />}
             {page == Page.EDITOR && <Editor />}

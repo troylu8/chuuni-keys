@@ -7,12 +7,9 @@ export default function MainMenu() {
     
     return (
         <div className="absolute cover flex flex-col justify-center items-center gap-3">
-            <button onClick={async () => {
-                setPageParams([Page.CHART_SELECT, { isEditing: false, }])
-            }}> play </button>
-            <button onClick={() => setPageParams([Page.EDIT_MENU])}> edit </button>
+            <button onClick={() => setPageParams([Page.CHART_SELECT])}> song select </button>
             <button onClick={() => setPageParams([Page.SETTINGS])}> settings </button>
-            <button onClick={async () => await exit(0)}> quit </button>
+            <button onClick={() => exit(0)}> quit </button>
         </div>
     );
 }
