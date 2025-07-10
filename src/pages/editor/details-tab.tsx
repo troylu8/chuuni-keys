@@ -7,7 +7,7 @@ import { extname, pictureDir } from '@tauri-apps/api/path';
 import { Bind, ChartMetadata, Difficulty,  OWNER_KEY,  SERVER_URL, USERDATA_DIR } from '../../lib/lib';
 import MuseButton from '../../components/muse-button';
 import { useEffect, useState } from 'react';
-import { publish, unpublish } from '../../lib/publish';
+import { publishChart, unpublishChart, updateChart } from '../../lib/publish';
 import bcrypt from 'bcryptjs';
 
 async function getOwnershipKey(onlineId: string) {
@@ -130,10 +130,10 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
                         open chart folder 
                     </MuseButton>
                     
-                    <PublishButton 
-                        metadata={metadata} 
+                    <PublishOptions 
+                        chart={metadata} 
                         save={handleSave}
-                        setOnlineId={id => setMetadata({...metadata, online_id: id ?? undefined}, true)}
+                        updatePublishInfo={publishInfo => setMetadata({...metadata, ...publishInfo}, true)}
                     />
                 </div>
             </div>
@@ -154,99 +154,82 @@ function DifficultyDropdown({ bind: [value, setter] }: { bind: Bind<Difficulty> 
 
 enum PublishState { LOCAL, PUBLISHED, NOT_OWNED, UNSURE };
 
-type PublishPopupProps = Readonly<{
-    metadata: ChartMetadata
+type PublishOptionsProps = Readonly<{
+    chart: ChartMetadata
     save: () => Promise<void>
-    setOnlineId: (key: string | null) => any
+    updatePublishInfo: (publishInfo: { online_id?: string, owner_hash?: string }) => any
 }>
-function PublishButton({ metadata, save, setOnlineId }: PublishPopupProps) {
+function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps) {
     
     const [publishState, setPublishState] = useState(PublishState.UNSURE);
     useEffect(() => {
-        if (!metadata.owner_hash) setPublishState(PublishState.LOCAL);
+        if (!chart.owner_hash) setPublishState(PublishState.LOCAL);
         else {
-            bcrypt.compare(OWNER_KEY, metadata.owner_hash)
+            bcrypt.compare(OWNER_KEY, chart.owner_hash)
             .then(matches => 
                 setPublishState(matches ? PublishState.PUBLISHED : PublishState.NOT_OWNED)
             );
         }
-    }, [metadata.owner_hash]);
+    }, [chart.owner_hash]);
     
-    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-    
-    async function publishChart() {
-        await save();
-        const [status, onlineId] = await publish(metadata);
-        if (status == 200) setOnlineId(onlineId!);
-    }
-    
-    async function updateChart() {
-        await save();
-    }
-    
-    async function unpublishChart() {
-        const status = await unpublish(metadata.online_id!);
-        if (status == 200) setOnlineId(null);
-        else {
-            // TODO on err
-        }
-    }
-    
-    
-    if (publishState == PublishState.UNSURE) {
-        return <p> ... </p>
-    }
-    
-    if (publishState == PublishState.NOT_OWNED) {
-        return <p> you don't have permission to publish this map </p>
-    }
     
     return (
         <>
-            <MuseButton
-                className='self-center col-start-1 -col-end-1 mx-auto'
-                onClick={() => setConfirmModalVisible(true)}
-            > 
-                { publishState == PublishState.LOCAL ? "publish to internet!" : "unpublish" }
-            </MuseButton>
+            { publishState == PublishState.UNSURE && 
+                <p> ... </p>
+            }
+            
+            { publishState == PublishState.NOT_OWNED && 
+                <p> you don't have permission to publish this map </p>
+            }
             
             { publishState == PublishState.LOCAL &&
-                <ConfirmModal 
-                    action={publishChart}
-                    onClose={() => setConfirmModalVisible(false)}
-                    prompt='publish chart?'
-                    loadingLabel='uploading your chart to the net..'
-                    successLabel='chart published successfully!'
+                <ActionButtonAndModal
+                    buttonLabel='publish'
+                    prompt={<p> upload chart to <a href="https://chuuni-keys.troylu.com/charts.html" target='_blank'> chuuni-keys.troylu.com </a>? </p>}
+                    loadingLabel='uploading your chart...'
+                    successLabel='chart published!'
+                    action={() => save().then(() => publishChart(chart)).then(updatePublishInfo)}
                 />
             }
             
             { publishState == PublishState.PUBLISHED &&
-                <ConfirmModal 
-                    action={publishChart}
-                    onClose={() => setConfirmModalVisible(false)}
-                    prompt='publish chart?'
-                    loadingLabel='uploading your chart to the net..'
-                    successLabel='chart published successfully!'
-                />
+                <div className="flex gap-3">
+                    <ActionButtonAndModal
+                        buttonLabel='update this chart'
+                        prompt="update this chart?"
+                        loadingLabel='syncing...'
+                        successLabel='chart updated!'
+                        action={() => save().then(() => updateChart(chart))}
+                    />
+                    <ActionButtonAndModal
+                        buttonLabel='take down'
+                        prompt="take down this chart?"
+                        loadingLabel='deleting your chart from server...'
+                        successLabel='chart taken down!'
+                        action={() => save().then(() => unpublishChart(chart))}
+                    />
+                </div>
             }
+            
         </>
     )
 }
 
 
 
-enum ActionState { NOT_STARTED, LOADING, SUCCESS }
+enum ActionState { MODAL_CLOSED, CONFIRMING, LOADING, SUCCESS }
 
-type ConfirmModalProps = Readonly<{
-    prompt: string
+type ActionButtonAndModalProps = Readonly<{
+    buttonLabel: string,
+    prompt: React.ReactNode
     loadingLabel: string
     successLabel: string,
-    onClose: () => any
     action: () => Promise<void>
 }>
-function ConfirmModal({ prompt, loadingLabel, successLabel, onClose, action }: ConfirmModalProps) {
+function ActionButtonAndModal({ buttonLabel, prompt, loadingLabel, successLabel, action }: ActionButtonAndModalProps) {
     
-    const [actionState, setActionState] = useState<ActionState | string>(ActionState.NOT_STARTED);
+    const [actionState, setActionState] = useState<ActionState | string>(ActionState.MODAL_CLOSED);
     
     function handleStartAction() {
         setActionState(ActionState.LOADING);
@@ -256,38 +239,54 @@ function ConfirmModal({ prompt, loadingLabel, successLabel, onClose, action }: C
             .catch(reason => setActionState(reason))
     }
     
+    function handleClickOutside() {
+        if (actionState != ActionState.LOADING)
+            setActionState(ActionState.MODAL_CLOSED)
+    }
+    
     return (
-        <Modal onClose={onClose}>
-            <div className='flex flex-col gap-2 p-2 max-w-[300px]'>
-                { 
-                    actionState == ActionState.NOT_STARTED ?
-                    <>
-                        { prompt }
-                        <div className="flex gap-2">
-                            <MuseButton onClick={onClose}> cancel </MuseButton>
-                            <MuseButton onClick={handleStartAction}> yes </MuseButton>
-                        </div>
-                    </>
-                    :
-                    actionState == ActionState.LOADING ?
-                    <>
-                        { loadingLabel } 
-                        {/* TODO */}
-                        <p> loading spinner here </p> 
-                    </>
-                    :
-                    actionState == ActionState.SUCCESS ?
-                    <>
-                        { successLabel }
-                        <MuseButton onClick={onClose}> ok </MuseButton>
-                    </>
-                    :
-                    <>
-                        <p className='text-error'> {actionState} </p>
-                        <MuseButton onClick={onClose}> ok </MuseButton>
-                    </>
-                }  
-            </div>
-        </Modal>
+        <>
+            <MuseButton
+                className='self-center col-start-1 -col-end-1 mx-auto'
+                onClick={() => setActionState(ActionState.CONFIRMING)}
+            > 
+                { buttonLabel }
+            </MuseButton>
+            
+            { actionState != ActionState.MODAL_CLOSED &&
+                <Modal onClose={handleClickOutside}>
+                    <div className='flex flex-col gap-2 p-2 max-w-[300px]'>
+                        { 
+                            actionState == ActionState.CONFIRMING ?
+                            <>
+                                { prompt }
+                                <div className="flex gap-2">
+                                    <MuseButton onClick={() => setActionState(ActionState.MODAL_CLOSED)}> cancel </MuseButton>
+                                    <MuseButton onClick={handleStartAction}> yes </MuseButton>
+                                </div>
+                            </>
+                            :
+                            actionState == ActionState.LOADING ?
+                            <>
+                                { loadingLabel } 
+                                {/* TODO */}
+                                <p> loading spinner here </p> 
+                            </>
+                            :
+                            actionState == ActionState.SUCCESS ?
+                            <>
+                                { successLabel }
+                                <MuseButton onClick={() => setActionState(ActionState.MODAL_CLOSED)}> ok </MuseButton>
+                            </>
+                            :
+                            <>
+                                <p className='text-error'> {actionState} </p>
+                                <MuseButton onClick={() => setActionState(ActionState.MODAL_CLOSED)}> ok </MuseButton>
+                            </>
+                        }  
+                    </div>
+                </Modal>
+            }
+        </>
     )
 }

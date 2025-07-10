@@ -18,27 +18,49 @@ function stringifyForPublish(metadata: ChartMetadata) {
 }
 
 
-/** returns `[ http status, online_id ]` */
-export async function publish(metadata: ChartMetadata): Promise<string> {
+async function throwIfNotOk(resp: Response) {
+    if (!resp.ok) 
+        throw new Error(`[${resp.status}] ${resp.statusText}`);
+    return resp;
+}
+
+
+export async function publishChart(metadata: ChartMetadata) {
     const chartFolder = getChartFolder(metadata);
+    const owner_hash = bcrypt.hashSync(OWNER_KEY);
     
     const body = new FormData();
-    body.append("owner_hash", bcrypt.hashSync(OWNER_KEY));
+    body.append("owner_hash", owner_hash);
     body.append("metadata", stringifyForPublish(metadata));
     body.append("chart", await getBlob(chartFolder + "\\chart.txt"));
     body.append("audio", await getBlob(`${chartFolder}\\audio.${metadata.audio_ext}`));
     if (metadata.img_ext)
         body.append("img", await getBlob(`${chartFolder}\\img.${metadata.img_ext}`));
     
-    const resp = await fetch(SERVER_URL + "/charts", { method: "POST", body });
-    if (resp.ok) 
-        return await resp.text();
-    else 
-        throw new Error(`[${resp.status}] ${resp.statusText}`)
+    const resp = await fetch(SERVER_URL + "/charts", { method: "POST", body }).then(throwIfNotOk);
+    return { online_id: await resp.text(), owner_hash };
 }
 
 
-export async function unpublish(onlineId: string): Promise<number> {
-    const resp = await fetch(SERVER_URL + "/charts/" + onlineId, { method: "DELETE", body: OWNER_KEY });
-    return resp.status;
+export async function updateChart(metadata: ChartMetadata): Promise<void> {
+    if (!metadata.online_id) throw new Error("tried to update a chart without an online id");
+    
+    const chartFolder = getChartFolder(metadata);
+    
+    const body = new FormData();
+    body.append("owner_key", OWNER_KEY);
+    body.append("metadata", stringifyForPublish(metadata));
+    body.append("chart", await getBlob(chartFolder + "\\chart.txt"));
+    if (metadata.img_ext)
+        body.append("img", await getBlob(`${chartFolder}\\img.${metadata.img_ext}`));
+    
+    await fetch(SERVER_URL + "/charts/" + metadata.online_id, { method: "PATCH", body }).then(throwIfNotOk);
 }
+
+
+export async function unpublishChart(chart: {online_id?: string}): Promise<void> {
+    if (!chart.online_id) throw new Error("tried to update a chart without an online id");
+    
+    await fetch(SERVER_URL + "/charts/" + chart.online_id, { method: "DELETE", body: OWNER_KEY }).then(throwIfNotOk);
+}
+
