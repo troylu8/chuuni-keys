@@ -16,6 +16,7 @@
         "@tauri-apps/plugin-fs": "^2.2.1",
         "@tauri-apps/plugin-opener": "^2",
         "@tauri-apps/plugin-process": "^2.2.1",
+        "bcryptjs": "^3.0.2",
         "events": "^3.3.0",
         "filenamify": "^6.0.0",
         "functional-red-black-tree": "^1.0.1",

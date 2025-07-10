@@ -6,6 +6,38 @@
     "permissions": [
         "core:default",
         "fs:allow-applocaldata-read-recursive",
+        {
+            "identifier": "fs:allow-read-text-file",
+            "allow": [
+                {
+                    "path": "$HOME/.chuuni_identity"
+                }
+            ]
+        },
+        {
+            "identifier": "fs:allow-write-text-file",
+            "allow": [
+                {
+                    "path": "$HOME/.chuuni_identity"
+                }
+            ]
+        },
+        {
+            "identifier": "fs:allow-create",
+            "allow": [
+                {
+                    "path": "$HOME/.chuuni_identity"
+                }
+            ]
+        },
+        {
+            "identifier": "fs:allow-exists",
+            "allow": [
+                {
+                    "path": "$HOME/.chuuni_identity"
+                }
+            ]
+        },
         "fs:allow-applocaldata-write-recursive",
         "fs:allow-rename",
         "process:default",

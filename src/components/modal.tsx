@@ -2,7 +2,7 @@ import MuseButton from "./muse-button";
 
 type Props = Readonly<{
     onClose?: () => any
-    title: string,
+    title?: string,
     children: React.ReactNode
 }>
 export default function Modal({ onClose, title, children }: Props) {
@@ -21,13 +21,15 @@ export default function Modal({ onClose, title, children }: Props) {
             onMouseUp={(e) => { if (e.target === e.currentTarget && mousePressed) handleClose() }}
         >
             <div className="max-h-[80%] bg-background rounded-md flex flex-col outline-3 outline-foreground">
-                <div className="flex justify-between p-2">
-                    <h1 className={`text-nowrap ${onClose == undefined && "w-full text-center"}`}>
-                        {title}
-                    </h1>
-                    
-                    { onClose && <MuseButton onClick={handleClose}> x </MuseButton> }
-                </div>
+                { title != undefined && 
+                    <div className="flex justify-between p-2">
+                        <h1 className={`text-nowrap ${onClose == undefined && "w-full text-center"}`}>
+                            {title}
+                        </h1>
+                        
+                        { onClose && <MuseButton onClick={handleClose}> x </MuseButton> }
+                    </div>
+                }
                 
                 <div className="overflow-auto">
                     { children }

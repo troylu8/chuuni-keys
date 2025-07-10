@@ -4,10 +4,11 @@ import TextInput from "../../components/text-input";
 import { openPath } from '@tauri-apps/plugin-opener';
 import { copyFile, readTextFile, readTextFileLines, remove, writeTextFile } from '@tauri-apps/plugin-fs';
 import { extname, pictureDir } from '@tauri-apps/api/path';
-import { Bind, ChartMetadata, Difficulty, getChartFolder, SERVER_URL, USERDATA_DIR } from '../../lib/lib';
+import { Bind, ChartMetadata, Difficulty,  OWNER_KEY,  SERVER_URL, USERDATA_DIR } from '../../lib/lib';
 import MuseButton from '../../components/muse-button';
-import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useState } from 'react';
+import { publish, unpublish } from '../../lib/publish';
+import bcrypt from 'bcryptjs';
 
 async function getOwnershipKey(onlineId: string) {
     if (onlineId) {
@@ -144,13 +145,14 @@ function DifficultyDropdown({ bind: [value, setter] }: { bind: Bind<Difficulty> 
     return (
         <select value={value} onChange={e => setter(e.target.value as Difficulty)}>
             <option value="easy"> easy </option>
-            <option value="medium"> medium </option>
+            <option value="normal"> normal </option>
             <option value="hard"> hard </option>
             <option value="fated"> fated </option>
         </select>
     )
 }
 
+enum PublishState { LOCAL, PUBLISHED, NOT_OWNED, UNSURE };
 
 type PublishPopupProps = Readonly<{
     metadata: ChartMetadata
@@ -159,50 +161,43 @@ type PublishPopupProps = Readonly<{
 }>
 function PublishButton({ metadata, save, setOnlineId }: PublishPopupProps) {
     
-    const [ownershipKey, setOwnershipKey] = useState<string | null>(null);
+    const [publishState, setPublishState] = useState(PublishState.UNSURE);
     useEffect(() => {
-        if (metadata.online_id) getOwnershipKey(metadata.online_id).then(setOwnershipKey);
-        else                    setOwnershipKey(null);
-    }, [metadata.online_id]);
+        if (!metadata.owner_hash) setPublishState(PublishState.LOCAL);
+        else {
+            bcrypt.compare(OWNER_KEY, metadata.owner_hash)
+            .then(matches => 
+                setPublishState(matches ? PublishState.PUBLISHED : PublishState.NOT_OWNED)
+            );
+        }
+    }, [metadata.owner_hash]);
     
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-    function closeModal() { setConfirmModalVisible(false); }
     
-    // no need for workingChartFolder bc we always save() before publish()
-    const chartFolder = getChartFolder(metadata);
-    
-    async function publish() {
-        console.log("zipping..");
-        const zipBytes = await invoke<number[]>("zip_chart", { 
-            chartFolder, 
-            audioExt: metadata.audio_ext,
-            imgExt: metadata.img_ext
-        });
-        const zipBuffer = new Uint8Array(zipBytes);
-        
-        console.log("making post req..");
-        const resp = await fetch(`${SERVER_URL}/charts`, {method: "POST", body: zipBuffer});
-        if (resp.ok) {
-            const [onlineId, ownershipKey]: [string, string] = await resp.json();
-            await addOwnershipKey(onlineId, ownershipKey);
-            setOnlineId(onlineId);
-            setOwnershipKey(ownershipKey);
-        }
+    async function publishChart() {
+        await save();
+        const [status, onlineId] = await publish(metadata);
+        if (status == 200) setOnlineId(onlineId!);
     }
     
-    async function unpublish() {
-        if (!metadata.online_id) return console.error("tried to unpublish without an online_id");
-        
-        const resp = await fetch(`${SERVER_URL}/charts/${metadata.online_id}`, {method: "DELETE", body: ownershipKey});
-        if (resp.ok) {
-            await deleteOwnershipKey(metadata.online_id);
-            setOnlineId(null);
-            setOwnershipKey(null);
+    async function updateChart() {
+        await save();
+    }
+    
+    async function unpublishChart() {
+        const status = await unpublish(metadata.online_id!);
+        if (status == 200) setOnlineId(null);
+        else {
+            // TODO on err
         }
     }
     
     
-    if (metadata.online_id != null && ownershipKey == null) {
+    if (publishState == PublishState.UNSURE) {
+        return <p> ... </p>
+    }
+    
+    if (publishState == PublishState.NOT_OWNED) {
         return <p> you don't have permission to publish this map </p>
     }
     
@@ -212,43 +207,87 @@ function PublishButton({ metadata, save, setOnlineId }: PublishPopupProps) {
                 className='self-center col-start-1 -col-end-1 mx-auto'
                 onClick={() => setConfirmModalVisible(true)}
             > 
-                { ownershipKey == null ? "publish to internet!" : "unpublish" }
+                { publishState == PublishState.LOCAL ? "publish to internet!" : "unpublish" }
             </MuseButton>
             
-            { confirmModalVisible &&
-                <Modal title='publish your chart?' onClose={closeModal}>
-                    <div className='flex flex-col gap-2 p-2 max-w-[300px]'>
-                        <p> 
-                            { ownershipKey == null ? 
-                                "it will be available for anyone to play at&nbsp;"
-                                :
-                                <span className='text-error'>it will be taken down from&nbsp;</span>
-                            }
-                            <a className='text-color2' href='https://chuuni-keys.troylu.com/charts' target='_blank'>
-                                chuuni-keys.troylu.com/charts
-                            </a>
-                        </p>
-                        <div className="flex gap-2">
-                            <MuseButton onClick={closeModal}> cancel </MuseButton>
-                            { ownershipKey == null ?
-                                <MuseButton 
-                                    className='bg-color1!'
-                                    onClick={() => save().then(publish).then(closeModal)}
-                                > 
-                                    publish! 
-                                </MuseButton>
-                                :
-                                <MuseButton 
-                                    className='bg-error!'
-                                    onClick={() => save().then(unpublish).then(closeModal)}
-                                > 
-                                    unpublish 
-                                </MuseButton>
-                            }
-                        </div>
-                    </div>
-                </Modal>
+            { publishState == PublishState.LOCAL &&
+                <ConfirmModal 
+                    action={publishChart}
+                    onClose={() => setConfirmModalVisible(false)}
+                    prompt='publish chart?'
+                    loadingLabel='uploading your chart to the net..'
+                    successLabel='chart published successfully!'
+                />
+            }
+            
+            { publishState == PublishState.PUBLISHED &&
+                <ConfirmModal 
+                    action={publishChart}
+                    onClose={() => setConfirmModalVisible(false)}
+                    prompt='publish chart?'
+                    loadingLabel='uploading your chart to the net..'
+                    successLabel='chart published successfully!'
+                />
             }
         </>
+    )
+}
+
+
+
+enum ActionState { NOT_STARTED, LOADING, SUCCESS }
+
+type ConfirmModalProps = Readonly<{
+    prompt: string
+    loadingLabel: string
+    successLabel: string,
+    onClose: () => any
+    action: () => Promise<void>
+}>
+function ConfirmModal({ prompt, loadingLabel, successLabel, onClose, action }: ConfirmModalProps) {
+    
+    const [actionState, setActionState] = useState<ActionState | string>(ActionState.NOT_STARTED);
+    
+    function handleStartAction() {
+        setActionState(ActionState.LOADING);
+        
+        action()
+            .then(() => setActionState(ActionState.SUCCESS))
+            .catch(reason => setActionState(reason))
+    }
+    
+    return (
+        <Modal onClose={onClose}>
+            <div className='flex flex-col gap-2 p-2 max-w-[300px]'>
+                { 
+                    actionState == ActionState.NOT_STARTED ?
+                    <>
+                        { prompt }
+                        <div className="flex gap-2">
+                            <MuseButton onClick={onClose}> cancel </MuseButton>
+                            <MuseButton onClick={handleStartAction}> yes </MuseButton>
+                        </div>
+                    </>
+                    :
+                    actionState == ActionState.LOADING ?
+                    <>
+                        { loadingLabel } 
+                        {/* TODO */}
+                        <p> loading spinner here </p> 
+                    </>
+                    :
+                    actionState == ActionState.SUCCESS ?
+                    <>
+                        { successLabel }
+                        <MuseButton onClick={onClose}> ok </MuseButton>
+                    </>
+                    :
+                    <>
+                        <p className='text-error'> {actionState} </p>
+                        <MuseButton onClick={onClose}> ok </MuseButton>
+                    </>
+                }  
+            </div>
+        </Modal>
     )
 }

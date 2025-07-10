@@ -12,7 +12,7 @@
     --miss: #e499a5;
 
     --easy: #8eeba2;
-    --medium: #ebd28e;
+    --normal: #ebd28e;
     --hard: #833642;
     --fated: #9b74c0;
 }
@@ -26,7 +26,7 @@
     --color-perfect: var(--perfect);
     --color-good: var(--good);
     --color-easy: var(--easy);
-    --color-medium: var(--medium);
+    --color-normal: var(--normal);
     --color-hard: var(--hard);
     --color-fated: var(--fated);
 }

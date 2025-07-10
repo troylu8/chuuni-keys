@@ -1,11 +1,14 @@
-import { appLocalDataDir } from "@tauri-apps/api/path";
+import { appLocalDataDir, homeDir } from "@tauri-apps/api/path";
+import { readTextFile, exists, writeTextFile } from "@tauri-apps/plugin-fs";
 import filenamify from "filenamify";
 
-export type Difficulty = "easy" | "medium" | "hard" | "fated";
+export type Difficulty = "easy" | "normal" | "hard" | "fated";
 
 export type ChartMetadata = {
     id: string,
     online_id?: string,
+    owner_hash?: string,
+    
     title: string,
     difficulty: Difficulty
     
@@ -24,8 +27,17 @@ export type ChartMetadata = {
 }
 
 
-export function stringifyIgnoreNull(obj: any) {
-    return JSON.stringify(obj, (_, val) => val == null? undefined : val, 4);
+export function stringifyIgnoreNull(obj: any, spaces: number = 4) {
+    return JSON.stringify(obj, (_, val) => val == null? undefined : val, spaces);
+}
+
+export function genRandStr(n: number = 10) {
+    const symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
+    const res = [];
+    for (let i = 0; i < n; i++) {
+        res.push(symbols[Math.floor(Math.random() * 64)]);
+    }
+    return res.join("");
 }
 
 /**
@@ -42,6 +54,20 @@ export type Bind<T> = [T, (value: T) => void];
 
 export const USERDATA_DIR = await appLocalDataDir() + "\\userdata";
 export const SERVER_URL = "http://localhost:5000";
+export const OWNER_KEY = await getOwnerKey();
+
+async function getOwnerKey() {
+    const ownerKeyFilePath = await homeDir() + "\\.chuuni_identity";
+    
+    if (await exists(ownerKeyFilePath))
+        return await readTextFile(ownerKeyFilePath);
+    
+    else {
+        const ownerKey = genRandStr(32);
+        await writeTextFile(ownerKeyFilePath, ownerKey);
+        return ownerKey;
+    }
+}
 
 
 type Flags = {

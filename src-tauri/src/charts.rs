@@ -13,6 +13,8 @@ use filenamify::filenamify;
 pub struct ChartMetadata {
     id: String,
     online_id: Option<String>,
+    owner_hash: Option<String>,
+    
     title: String,
     difficulty: String,
 

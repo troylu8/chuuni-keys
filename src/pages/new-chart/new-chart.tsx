@@ -1,7 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { Page, usePage } from "../../contexts/page";
 import { copyFile, create, mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
-import { ChartMetadata, getChartFolder, stringifyIgnoreNull } from '../../lib/lib';
+import { ChartMetadata, genRandStr, getChartFolder, stringifyIgnoreNull } from '../../lib/lib';
 import { downloadDir, extname } from '@tauri-apps/api/path';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ export default function NewChart() {
     
     async function initNewChart(audioFilepath: string) {
         const metadata: ChartMetadata = {
-            id: genID(),
+            id: genRandStr(),
             title: 'no title yet',
             bpm: 120,
             difficulty: "easy",
@@ -88,11 +88,3 @@ export default function NewChart() {
     );
 }
 
-function genID() {
-    const symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
-    const res = [];
-    for (let i = 0; i < 10; i++) {
-        res.push(symbols[Math.floor(Math.random() * 64)]);
-    }
-    return res.join("");
-}

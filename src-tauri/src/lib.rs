@@ -2,6 +2,7 @@ use tauri::Manager;
 use tauri_plugin_prevent_default::PlatformOptions;
 mod charts;
 
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -35,7 +36,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             charts::get_all_charts,
             charts::zip_chart,
-            charts::unzip_chart
+            charts::unzip_chart,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
