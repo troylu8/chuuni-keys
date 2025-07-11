@@ -2,37 +2,14 @@ import { open } from '@tauri-apps/plugin-dialog';
 import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
 import { openPath } from '@tauri-apps/plugin-opener';
-import { copyFile, readTextFile, readTextFileLines, remove, writeTextFile } from '@tauri-apps/plugin-fs';
+import { copyFile, remove } from '@tauri-apps/plugin-fs';
 import { extname, pictureDir } from '@tauri-apps/api/path';
-import { Bind, ChartMetadata, Difficulty,  OWNER_KEY,  SERVER_URL, USERDATA_DIR } from '../../lib/lib';
+import { Bind, ChartMetadata, Difficulty,  OWNER_KEY } from '../../lib/lib';
 import MuseButton from '../../components/muse-button';
 import { useEffect, useState } from 'react';
 import { publishChart, unpublishChart, updateChart } from '../../lib/publish';
 import bcrypt from 'bcryptjs';
 
-async function getOwnershipKey(onlineId: string) {
-    if (onlineId) {
-        const lines = await readTextFileLines(USERDATA_DIR + "\\ownership_keys.csv");
-        for await (const line of lines) {
-            if (line.startsWith(onlineId)) 
-                return line.substring(line.indexOf(",") + 1);
-        }
-    }
-    
-    return null;
-}
-
-async function addOwnershipKey(onlineId: string, key: string) {
-    await writeTextFile(USERDATA_DIR + "\\ownership_keys.csv", onlineId + "," + key, { append: true });
-}
-
-async function deleteOwnershipKey(onlineId: string) {
-    const data = await readTextFile(USERDATA_DIR + "\\ownership_keys.csv");
-    await writeTextFile(
-        USERDATA_DIR + "\\ownership_keys.csv",
-        data.split("\n").filter(line => !line.startsWith(onlineId)).join("\n")
-    );
-}
 
 type Props = Readonly<{
     metadata: ChartMetadata
@@ -207,7 +184,7 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
                         prompt="take down this chart?"
                         loadingLabel='deleting your chart from server...'
                         successLabel='chart taken down!'
-                        action={() => save().then(() => unpublishChart(chart))}
+                        action={() => save().then(() => unpublishChart(chart)).then(() => updatePublishInfo({}))} // remove publish info afterwards
                     />
                 </div>
             }
@@ -229,7 +206,7 @@ type ActionButtonAndModalProps = Readonly<{
 }>
 function ActionButtonAndModal({ buttonLabel, prompt, loadingLabel, successLabel, action }: ActionButtonAndModalProps) {
     
-    const [actionState, setActionState] = useState<ActionState | string>(ActionState.MODAL_CLOSED);
+    const [actionState, setActionState] = useState<ActionState | Error>(ActionState.MODAL_CLOSED);
     
     function handleStartAction() {
         setActionState(ActionState.LOADING);
@@ -280,7 +257,7 @@ function ActionButtonAndModal({ buttonLabel, prompt, loadingLabel, successLabel,
                             </>
                             :
                             <>
-                                <p className='text-error'> {actionState} </p>
+                                <p className='text-error'> {actionState.message} </p>
                                 <MuseButton onClick={() => setActionState(ActionState.MODAL_CLOSED)}> ok </MuseButton>
                             </>
                         }  
