@@ -32,7 +32,7 @@ const SETTINGS_HOOKS: SettingsHooks = {
     "musicVolume": vol => bgm.volume = vol,
     "sfxVolume": vol => flags.sfxVolume = vol,
     "hitsoundVolume": vol => flags.hitsoundVolume = vol,
-    
+    "showCombo": bo => {}
 }
 
 type Props = Readonly<{
@@ -51,25 +51,28 @@ export default function SettingsProvider({ children }: Props) {
     
     // load saved settings
     useEffect(() => {
-        readTextFile(USERDATA_DIR + "\\settings.json")
-        .then(contents => {
-            const parsedSettings = JSON.parse(contents);
             
-            // verify validity of parsed settings
-            for (const key in settings) {
-                if (typeof parsedSettings[key] !== typeof settings[key as keyof Settings]) {
-                    throw new Error("value of settings.json is invalid"); 
+        const loadedSettings: any = {...settings};
+        
+        for (const _key in settings) {
+            const key = _key as keyof Settings;
+            
+            const savedVal = localStorage.getItem("settings." + key);
+            if (savedVal != null) {
+                switch (typeof settings[key]) {
+                    case "number":
+                        loadedSettings[key] = Number(savedVal);
+                        break;
+                    case "boolean":
+                        loadedSettings[key] = Boolean(savedVal);
+                        break;
                 }
             }
             
-            // call setting hooks
-            for (const key in parsedSettings) {
-                SETTINGS_HOOKS[key as keyof Settings]?.call(null, parsedSettings[key]);
-            }
-            
-            setSettingsInner(parsedSettings);
-        })
-        .catch(console.error); // do nothing on error, leaving the default settings
+            SETTINGS_HOOKS[key]?.call(null, loadedSettings[key]);
+        }
+        console.log(loadedSettings);
+        setSettingsInner(loadedSettings);
     }, []);
     
     function setSettings<K extends keyof Settings>(setting: K, value: Settings[K]) {
@@ -77,7 +80,7 @@ export default function SettingsProvider({ children }: Props) {
         
         const nextSettings = ({...settings, [setting]: value});
         setSettingsInner(nextSettings);
-        writeTextFile(USERDATA_DIR + "\\settings.json", stringifyIgnoreNull(nextSettings));
+        localStorage.setItem("settings." + setting, value.toString());
     }
     
     return (

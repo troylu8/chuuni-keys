@@ -161,6 +161,8 @@ export default function Editor() {
     
     const [saved, setSaved] = useState(true);
     async function handleSave(newMetadata: ChartMetadata = metadata) {
+        if (saved) return;
+        
         const newChartFolder = getChartFolder(newMetadata);
         
         // rename chart folder to match new title
@@ -178,6 +180,10 @@ export default function Editor() {
         if (newChartFolder != workingChartFolder) loadResources(bgm.pos);
         
         setSaved(true);
+        
+        // mark that this song is unsynced with network
+        if (newMetadata.online_id)
+            localStorage.setItem("unsynced." + newMetadata.id, "");
     }
     function handleQuit() {
         if (saved) {

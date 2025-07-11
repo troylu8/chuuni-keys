@@ -149,6 +149,7 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
         }
     }, [chart.owner_hash]);
     
+    const unsynced = localStorage.getItem("unsynced." + chart.id) != null;
     
     return (
         <>
@@ -172,13 +173,18 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
             
             { publishState == PublishState.PUBLISHED &&
                 <div className="flex gap-3">
-                    <ActionButtonAndModal
-                        buttonLabel='update this chart'
-                        prompt="update this chart?"
-                        loadingLabel='syncing...'
-                        successLabel='chart updated!'
-                        action={() => save().then(() => updateChart(chart))}
-                    />
+                    { unsynced &&
+                        <ActionButtonAndModal
+                            buttonLabel='update this chart'
+                            prompt="update this chart?"
+                            loadingLabel='syncing...'
+                            successLabel='chart updated!'
+                            action={
+                                () => save().then(() => updateChart(chart))
+                                .then(() => localStorage.removeItem("unsynced." + chart.id)) // mark as synced
+                            }
+                        />
+                    }
                     <ActionButtonAndModal
                         buttonLabel='take down'
                         prompt="take down this chart?"
