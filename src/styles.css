@@ -23,9 +23,20 @@ body {
     user-select: none;
     color: var(--color-ctp-text);
     font-family: Signika, sans-serif;
+    caret-color: var(--color-ctp-mauve);
 }
+body::selection {
+    color: var(--color-ctp-base);
+    background: var(--color-ctp-mauve);
+}
+
 input {
     user-select: auto;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 h1 {
@@ -39,28 +50,17 @@ button {
     cursor: pointer;
 }
 
-.red-outline-btn {
-    outline: solid 2px var(--color-ctp-red);
-    border-radius: 4px;
-    color: var(--color-ctp-red);
+.outline-btn {
+    outline: solid 2px var(--btn-color);
+    color: var(--btn-color);
 }
-.red-outline-btn:hover {
-    outline-color: var(--color-ctp-pink);
-    color: var(--color-ctp-pink);
+.outline-btn:hover {
+    filter: brightness(135%);
 }
 
-.mauve-btn {
-    outline: solid 2px var(--color-ctp-mauve);
-    color: var(--color-ctp-mauve);
-}
-.mauve-btn:hover {
-    outline: solid 2px var(--color-ctp-lavender);
-    color: var(--color-ctp-lavender);
-}
-
-.mauve-btn-selected {
-    outline: solid 2px var(--color-ctp-mauve);
-    background-color: var(--color-ctp-mauve);
+.outline-btn-selected {
+    outline: solid 2px var(--btn-color);
+    background-color: var(--btn-color);
     color: var(--color-ctp-base);
 }
 

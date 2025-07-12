@@ -73,7 +73,7 @@ export default function TimingEditor({ onClose }: Props) {
                 </DeltaProvider>
             </div>
             
-            <div className="absolute left-0 bottom-0 h-3 bg-red-500" style={{width: (msSinceLastBeat / MS_PER_BEAT * 100) + "%" }}></div>
+            <div className="absolute left-0 bottom-0 h-3 bg-ctp-red" style={{width: (msSinceLastBeat / MS_PER_BEAT * 100) + "%" }}></div>
         </div>
     );
 }

@@ -20,7 +20,7 @@ export default function Modal({ onClose, title, children }: Props) {
             onMouseDown={e => { if (e.target === e.currentTarget) mousePressed = true }}
             onMouseUp={(e) => { if (e.target === e.currentTarget && mousePressed) handleClose() }}
         >
-            <div className="max-h-[80%] bg-background rounded-md flex flex-col outline-3 outline-foreground">
+            <div className="max-h-[80%] bg-ctp-overlay0 rounded-md flex flex-col outline-2 outline-mauve">
                 { title != undefined && 
                     <div className="flex justify-between p-2">
                         <h1 className={`text-nowrap ${onClose == undefined && "w-full text-center"}`}>

@@ -1,5 +1,5 @@
 import { Bind } from "../lib/lib";
-import { CenteredCheckIcon } from "./icons";
+import { CenteredCheck } from "./icons";
 
 type Props = Readonly<{
     label: string
@@ -18,7 +18,7 @@ export default function MuseCheckbox({ label, bind: [checked, setter] }: Props) 
                 ${checked && "outline-ctp-red text-ctp-red"}
                 
             `}>
-                { checked && <CenteredCheckIcon size="85%" /> }
+                { checked && <CenteredCheck size="85%" /> }
             </div>
             
             <span> {label} </span>

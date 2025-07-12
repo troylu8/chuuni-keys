@@ -80,7 +80,7 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
                 <div 
                     key={px} 
                     style={{left: px}} 
-                    className="inspector-tick h-1.5 bg-red-500">
+                    className="inspector-tick h-1.5 bg-ctp-red">
                 </div>
             );
         }
@@ -144,9 +144,9 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
             {/* first beat marker */}
             <div 
                 style={{left: getPosOnInspector(first_beat)}} 
-                className="inspector-tick bg-red-600 h-5">
+                className="inspector-tick bg-ctp-teal h-5">
             </div>
-            
+             
             {/* preview time marker */}
             <div 
                 style={{left: getPosOnInspector(preview_time)}} 

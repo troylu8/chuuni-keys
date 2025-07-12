@@ -253,18 +253,27 @@ export default function Editor() {
     return (
         <>
             <Background imgPath={metadata.img_ext && `${workingChartFolderRef.current}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
-            <div className="absolute cover m-1 flex flex-col">
+            <div className="absolute cover flex flex-col">
                 
                 {/* top row */}
-                <nav className="flex flex-col gap-7 mb-8 z-20">
-                    <div className="relative flex gap-1">
-                        <MuseButton className="red-outline-btn" onClick={handleQuit}> <ArrowLeft /> quit </MuseButton>
-                        <MuseButton onClick={() => handleSave()}> save {!saved && "*"} </MuseButton>
+                <nav className="flex flex-col gap-5 mb-8 z-20">
+                    <div className="relative flex gap-3 m-2">
+                        <MuseButton 
+                            className="[--btn-color:var(--color-ctp-red)] outline-btn" 
+                            onClick={handleQuit}
+                        > <ArrowLeft /> quit </MuseButton>
+                        <MuseButton 
+                            className={"outline-btn " + (saved? "[--btn-color:var(--color-ctp-blue)]" : "[--btn-color:var(--color-ctp-yellow)]")}
+                            onClick={() => handleSave()}
+                        > {saved ? "saved" : "save *"} </MuseButton>
                         <div className="grow flex flex-reverse justify-end gap-3">
                             {   
                                 ["keyboard", "timing", "details"].map(tab => 
                                     <MuseButton
-                                        className={tab == activeTab ? "mauve-btn-selected" : "mauve-btn"}
+                                        className={
+                                            "[--btn-color:var(--color-ctp-mauve)] " +
+                                            (tab == activeTab ? "outline-btn-selected" : "outline-btn")
+                                        }
                                         onClick={() => setActiveTab(tab as ActiveTab)}
                                     > 
                                         {tab} 
@@ -321,7 +330,7 @@ export default function Editor() {
                 </div>
                 
                 {/* bottom row */}
-                <nav className="flex gap-2 items-center z-20">
+                <nav className="flex gap-2 items-center m-2  z-20">
                     <MusicControls firstBeat={metadata.first_beat} previewTime={metadata.preview_time}/>
                 </nav>
                 
@@ -357,14 +366,14 @@ function MusicControls({ firstBeat, previewTime }: Props) {
         <>
             <MuseButton 
                 onClick={() => paused? bgm.play() : bgm.pause()}
-                className="p-1 flex items-center"
+                className="p-1 flex items-center text-ctp-mauve"
             > 
                 {paused? <Play size={20} /> : <Pause size={20} /> }  
             </MuseButton>
             
             <SeekBar 
                 ticks={[
-                    ["first beat",      firstBeat, "var(--color-red-600)"],
+                    ["first beat",      firstBeat, "var(--color-ctp-teal)"],
                     ["preview time",    previewTime, "var(--color-green-600)"],
                 ]}
             />
@@ -400,10 +409,10 @@ function SpeedButton({ speed }: { speed: number }) {
     return (
         <button
             onClick={() => bgm.speed = speed}
-            className={`
-                font-mono rounded-md
-                ${currentSpeed == speed ? "mauve-btn-selected" : "mauve-btn"}
-            `} 
+            className={
+                "font-mono rounded-md target-color [--btn-color:var(--color-ctp-mauve)] " +
+                (currentSpeed == speed ? "outline-btn-selected" : "outline-btn")
+            } 
         >
             { speed * 100 }%
         </button>
@@ -420,7 +429,7 @@ function SeekBar({ ticks }: SeekBarProps) {
     
     return (
         <>
-            <p className="text-xs text-background"> {timeDisplay(pos)} </p>
+            <p> {timeDisplay(pos)} </p>
             
             <Slider
                 min={0}
