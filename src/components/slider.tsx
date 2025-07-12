@@ -8,7 +8,7 @@ type Props = Readonly<{
     children?: ReactNode
     thumbClassName?: string
 }>
-export default function Slider({ min, max, bind: [val, setter], children, thumbClassName }: Props) {
+export default function Slider({ min, max, bind: [val, setter], children, thumbClassName = "bg-ctp-red" }: Props) {
     
     const [cursorPos, setCursorPos] = useState<number | null>(null);
     const [dragging, setDragging] = useState(false);
@@ -56,7 +56,7 @@ export default function Slider({ min, max, bind: [val, setter], children, thumbC
             onMouseLeave={handleMouseLeave}
             className="w-full h-full flex items-center"
         >
-            <div className="h-[2px] w-full rounded-full relative bg-background">
+            <div className="h-[2px] w-full rounded-full relative bg-ctp-blue">
                 { children }
                 
                 <Thumb left={`${(val - min) / (max - min) * 100}%`} className={thumbClassName} />
@@ -64,7 +64,7 @@ export default function Slider({ min, max, bind: [val, setter], children, thumbC
                 { cursorPos != null && !dragging &&
                     <Thumb
                         left={`${cursorPos}px`}
-                        className={(thumbClassName ?? "") + " bg-red-400"}
+                        className={thumbClassName}
                     />
                 }
             </div>
@@ -82,7 +82,7 @@ function Thumb({ left, className }: ThumbProps) {
             style={{left}}
             className={`
                 absolute top-1/2 -translate-y-1/2 -translate-x-1/2 
-                w-[2px] h-3 rounded-full bg-background ${className}
+                w-[2px] h-3 rounded-full ${className}
             `}
         ></div>
     )

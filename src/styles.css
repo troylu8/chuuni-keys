@@ -1,51 +1,47 @@
 @import "tailwindcss";
+@import "@catppuccin/tailwindcss/config.css";
 
-:root {
-    --foreground: #282a3a;
-    --background: #f3f4f8;
-    --color1: #ceb2dc;
-    --color2: #c96b79;
-    --error: #833642;
-
-    --perfect: #99cfef;
-    --good: #8eeba2;
-    --miss: #e499a5;
-
-    --easy: #8eeba2;
-    --normal: #ebd28e;
-    --hard: #833642;
-    --fated: #9b74c0;
-}
-
-@theme inline {
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --color-color1: var(--color1);
-    --color-color2: var(--color2);
-    --color-error: var(--error);
-    --color-perfect: var(--perfect);
-    --color-good: var(--good);
-    --color-easy: var(--easy);
-    --color-normal: var(--normal);
-    --color-hard: var(--hard);
-    --color-fated: var(--fated);
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 .lucide {
     display: inline;
 }
 
+@font-face {
+    font-display: block;
+    font-family: "Signika";
+    src: url("assets/fonts/Signika-Light.woff2");
+}
+
 body {
-    background-color: var(--background);
     overflow: hidden;
     user-select: none;
+    color: var(--color-ctp-text);
+    font-family: Signika, sans-serif;
 }
 input {
     user-select: auto;
 }
 
+h1 {
+    color: var(--color-ctp-mauve);
+}
+h2 {
+    color: var(--color-ctp-mauve);
+}
+
 button {
     cursor: pointer;
+}
+
+.red-outline-btn {
+    outline: solid 2px var(--color-ctp-red);
+    border-radius: 4px;
+    color: var(--color-ctp-red);
+}
+.red-outline-btn:hover {
+    outline-color: var(--color-ctp-pink);
+    color: var(--color-ctp-pink);
 }
 
 .anim-accuracy-tick {
@@ -123,15 +119,15 @@ button {
 }
 
 ::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
     border-radius: 99999px;
-    background: var(--color-foreground);
+    background: var(--color-ctp-red);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-color1);
+    background: var(--color-ctp-pink);
 }
 
 .light-text-outline {

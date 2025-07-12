@@ -4,8 +4,8 @@ import TimingEditor from "./timing-editor";
 import MuseButton from "../../components/muse-button";
 import { Bind } from "../../lib/lib";
 import Slider from "../../components/slider";
-import MuseCheckmark from "../../components/muse-checkmark";
-import { ArrowLeft } from "lucide-react";
+import MuseCheckbox from "../../components/muse-checkbox";
+import { AppWindow, ArrowLeft, Volume2, Gamepad2 } from "lucide-react";
 import { Page, usePage } from "../../contexts/page";
 
 export default function Settings() {
@@ -20,39 +20,55 @@ export default function Settings() {
     }
     
     return (
-        <div className="absolute cover flex flex-col gap-3 p-3 overflow-auto">
-            <MuseButton className="absolute top-1 left-1 z-10" onClick={() => setPageParams([Page.MAIN_MENU])}>
+        <div className="absolute cover flex justify-center overflow-auto bg-ctp-base">
+            <MuseButton className="fixed top-1 left-1 z-10 text-ctp-mauve" onClick={() => setPageParams([Page.MAIN_MENU])}>
                 <ArrowLeft /> main menu
             </MuseButton>
             
-            <h1 className="my-5 text-center "> Settings </h1>
-            
-            <div className="flex gap-6 justify-center">
-                <MuseButton onClick={() => setTimingEditorVisible(true)} > edit note timing </MuseButton>
-                <MuseButton onClick={() => setTimingEditorVisible(true)} > edit hitring speed </MuseButton>
-            </div>
-            
-            <h2> Volume </h2>
-            <div 
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "fit-content(100%) 1fr",
-                }}
-                className="gap-3 [&>label]:text-end"
-            >
-                <span> music </span>
-                <AudioSlider bind={bindSetting("musicVolume")} />
-                <span> sfx </span>
-                <AudioSlider bind={bindSetting("sfxVolume")} />
-                <span> hitsounds </span>
-                <AudioSlider bind={bindSetting("hitsoundVolume")} />
-            </div>
-            
-            <h2> Game </h2>
-            <div className="flex flex-col gap-3">
-                <MuseCheckmark label="show combo" bind={bindSetting("showCombo")} />
-                <MuseCheckmark label="show accuracy bar" bind={bindSetting("showAccuracyBar")} />
-            </div>
+            <main className="
+                flex flex-col gap-3 p-3 max-w-lg
+                [&>h2]:mt-4 [&>h2]:text-lg
+            ">
+                <h1 className="my-5 text-center text-xl"> Settings </h1>
+                
+                
+                <div className="flex gap-6 justify-center">
+                    <MuseButton 
+                        className="red-outline-btn" 
+                        onClick={() => setTimingEditorVisible(true)}
+                    > edit note timing </MuseButton>
+                    <MuseButton 
+                        className="red-outline-btn" 
+                        onClick={() => setTimingEditorVisible(true)} 
+                    > edit hitring speed </MuseButton>
+                </div>
+                
+                    
+                <h2> <Volume2 /> &nbsp; [ volume ] </h2>
+                <div 
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "fit-content(100%) 1fr",
+                    }}
+                    className="gap-3 [&>label]:text-end w-full"
+                >
+                    <span> music </span>
+                    <AudioSlider bind={bindSetting("musicVolume")} />
+                    <span> sfx </span>
+                    <AudioSlider bind={bindSetting("sfxVolume")} />
+                    <span> hitsounds </span>
+                    <AudioSlider bind={bindSetting("hitsoundVolume")} />
+                </div>
+                
+                <h2> <AppWindow /> &nbsp; [ user interface ] </h2>
+                <div className="flex flex-col gap-3">
+                    <MuseCheckbox label="show combo" bind={bindSetting("showCombo")} />
+                    <MuseCheckbox label="show accuracy bar" bind={bindSetting("showAccuracyBar")} />
+                </div>
+                
+                {/* buffer */}
+                <div className="h-5"> &nbsp; </div>
+            </main>
         </div>
     );
 }
@@ -62,8 +78,8 @@ type AudioSliderProps = Readonly<{
 }>
 function AudioSlider({ bind }: AudioSliderProps) {
     return (
-        <div className="flex gap-3">
-            <p className="w-5 shrink-0 text-center">
+        <div className="flex gap-3 w-full">
+            <p className="w-5 shrink-0 text-center text-ctp-yellow">
                 { Math.round(bind[0] * 100) }
             </p>
             <Slider min={0} max={2} bind={bind}  />
