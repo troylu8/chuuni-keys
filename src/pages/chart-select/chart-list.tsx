@@ -190,23 +190,27 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
                     flex justify-center items-center z-20
                 '
             >
-                <div 
-                    className={`-rotate-45 text-[5vh] ${metadata.difficulty == "hard" && "text-background"}`}
-                > { metadata.difficulty } </div>
+                <div className="-rotate-45 text-ctp-base text-[4vh] font-mono"> 
+                    { 
+                        metadata.difficulty.length > 5 ?
+                            metadata.difficulty.substring(0, 4) + "." : 
+                            metadata.difficulty 
+                    } 
+                </div>
             </div>
             
             {/* song title / producer label */}
             <header 
                 style={{
-                    border: "solid 5px",
-                    borderImage: "linear-gradient(to right, var(--color1), rgba(0, 0, 0, 0) 80%) 100% 1"
+                    border: "solid 2px",
+                    borderImage: "linear-gradient(to right, var(--color-ctp-mauve) 80%, rgba(0, 0, 0, 0) 90%) 100% 1"
                 }}
                 className='
-                    absolute left-1/2 top-1/10 bottom-1/10 text-foreground text-nowrap 
+                    absolute left-1/2 top-1/10 bottom-1/10 text-nowrap 
                     flex flex-col justify-center pl-[27vh] w-[50vw]
                 '
             >
-                <p className='text-[6vh]'> {metadata.title} </p>
+                <p className='text-[6vh] text-ctp-red'> {metadata.title} </p>
                 <p className='text-[3vh]'> {metadata.credit_audio} </p>
             </header>
         </section>

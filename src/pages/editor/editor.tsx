@@ -18,7 +18,7 @@ import Slider from "../../components/slider";
 import { ArrowLeft, Pause, Play } from "lucide-react";
 
 
-enum ActiveTab { KEYBOARD, TIMING, DETAILS };
+type ActiveTab = "keyboard" | "timing" | "details";
 enum ActiveModal { NONE, CONFIRM_QUIT_TO_SELECT, CONFIRM_QUIT_APP }
 
 function snapLeft(ms: number, startingFrom: number, size: number) {
@@ -61,13 +61,13 @@ export default function Editor() {
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     
     const [activeModal, setActiveModal] = useState(ActiveModal.NONE);
-    const [activeTab, setActiveTabInner] = useState(() => {
+    const [activeTab, setActiveTabInner] = useState<ActiveTab>(() => {
         flags.keyUnitsEnabled = true;
-        return isNew? ActiveTab.TIMING : ActiveTab.KEYBOARD;
+        return isNew? "timing" : "keyboard";
     });
     function setActiveTab(tab: ActiveTab) {
         bgm.pause();
-        flags.keyUnitsEnabled = tab == ActiveTab.KEYBOARD;
+        flags.keyUnitsEnabled = tab == "keyboard";
         setActiveTabInner(tab);
     }
     
@@ -239,7 +239,7 @@ export default function Editor() {
                 handleRedo()
         }
         
-        if (activeTab != ActiveTab.DETAILS && activeModal == ActiveModal.NONE) {
+        if (activeTab != "details" && activeModal == ActiveModal.NONE) {
             window.addEventListener("wheel", onScroll);
             window.addEventListener("keydown", onKeyDown);
         };
@@ -256,15 +256,21 @@ export default function Editor() {
             <div className="absolute cover m-1 flex flex-col">
                 
                 {/* top row */}
-                <nav className="flex flex-col gap-5 mb-8 z-20">
+                <nav className="flex flex-col gap-7 mb-8 z-20">
                     <div className="relative flex gap-1">
-                        <MuseButton onClick={handleQuit}> <ArrowLeft /> quit </MuseButton>
+                        <MuseButton className="red-outline-btn" onClick={handleQuit}> <ArrowLeft /> quit </MuseButton>
                         <MuseButton onClick={() => handleSave()}> save {!saved && "*"} </MuseButton>
-                        <div className="grow flex flex-row-reverse gap-1">
-                            {/* TODO: visual indicator which is active */}
-                            <MuseButton onClick={() => setActiveTab(ActiveTab.DETAILS)}> details </MuseButton>
-                            <MuseButton onClick={() => setActiveTab(ActiveTab.TIMING)}> timing </MuseButton>
-                            <MuseButton onClick={() => setActiveTab(ActiveTab.KEYBOARD)}> keyboard </MuseButton>
+                        <div className="grow flex flex-reverse justify-end gap-3">
+                            {   
+                                ["keyboard", "timing", "details"].map(tab => 
+                                    <MuseButton
+                                        className={tab == activeTab ? "mauve-btn-selected" : "mauve-btn"}
+                                        onClick={() => setActiveTab(tab as ActiveTab)}
+                                    > 
+                                        {tab} 
+                                    </MuseButton>
+                                )
+                            }
                         </div>
                     </div>
                     
@@ -292,11 +298,11 @@ export default function Editor() {
                         />
                     }
                     
-                    { activeTab == ActiveTab.KEYBOARD &&
+                    { activeTab == "keyboard" &&
                         <EditorKeyboard events={events} onHit={toggleEventHere} />
                     }
                     
-                    { activeTab == ActiveTab.TIMING && 
+                    { activeTab == "timing" && 
                         <TimingTab
                             metadata={metadata}
                             setMetadata={setMetadata}
@@ -304,7 +310,7 @@ export default function Editor() {
                             setPreviewHere={() => setMetadata({...metadata, preview_time: bgm.pos})}
                         />
                     }
-                    { activeTab == ActiveTab.DETAILS && 
+                    { activeTab == "details" && 
                         <DetailsTab
                             metadata={metadata}
                             workingChartFolderRef={workingChartFolderRef}
@@ -358,8 +364,8 @@ function MusicControls({ firstBeat, previewTime }: Props) {
             
             <SeekBar 
                 ticks={[
-                    ["first beat",      firstBeat, "var(--color1)"],
-                    ["preview time",    previewTime, "var(--color2)"],
+                    ["first beat",      firstBeat, "var(--color-red-600)"],
+                    ["preview time",    previewTime, "var(--color-green-600)"],
                 ]}
             />
             
@@ -395,9 +401,9 @@ function SpeedButton({ speed }: { speed: number }) {
         <button
             onClick={() => bgm.speed = speed}
             className={`
-                outline-2 outline-background font-mono rounded-md
-                ${currentSpeed == speed ? "bg-background text-foreground" : "text-background"}
-            `}
+                font-mono rounded-md
+                ${currentSpeed == speed ? "mauve-btn-selected" : "mauve-btn"}
+            `} 
         >
             { speed * 100 }%
         </button>
@@ -420,7 +426,7 @@ function SeekBar({ ticks }: SeekBarProps) {
                 min={0}
                 max={duration}
                 bind={[pos, pos => bgm.pos = pos]}
-                thumbClassName="seek-bar-tick bg-blue-500!"
+                thumbClassName="seek-bar-tick bg-blue-500"
             >
                 {
                     ticks.map(([key, ms, backgroundColor]) => 

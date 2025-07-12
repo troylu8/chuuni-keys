@@ -66,7 +66,7 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
             <div 
                 key={px} 
                 style={{left: px, height: beat % measure_size == 0? 18 : 12}} 
-                className="inspector-tick bg-background">
+                className="inspector-tick bg-ctp-text">
             </div>
         );
         
@@ -133,7 +133,7 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
             {/* horizontal inspector bar */}
             <div 
                 style={{left: startPx, right: -startPx}} 
-                className="absolute bottom-0 h-[3px] bg-background rounded-full"
+                className="absolute bottom-0 h-[3px] bg-ctp-text rounded-full"
             ></div>
             
             { inspectorElements }
@@ -144,13 +144,13 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
             {/* first beat marker */}
             <div 
                 style={{left: getPosOnInspector(first_beat)}} 
-                className="inspector-tick bg-color1 h-5">
+                className="inspector-tick bg-red-600 h-5">
             </div>
             
             {/* preview time marker */}
             <div 
                 style={{left: getPosOnInspector(preview_time)}} 
-                className="inspector-tick bg-color2 h-5">
+                className="inspector-tick bg-green-600 h-5">
             </div>
         </div>
     );
@@ -214,8 +214,8 @@ function MuseEventTicker({ children, onLeftClick, onRightClick }: MuseEventTicke
     return (
         <button 
             className="
-                font-mono text-sm rounded-sm bg-background px-1
-                hover:bg-color2 hover:text-background
+                font-mono text-sm rounded-sm bg-ctp-text text-ctp-base px-1
+                hover:bg-ctp-mauve
             "
             onClick={() => {if (onLeftClick) onLeftClick()}}
             onContextMenu={() => { if (onRightClick) onRightClick(); }}

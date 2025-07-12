@@ -1,7 +1,7 @@
 import { useState, createContext, useContext, useEffect } from "react";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { flags, stringifyIgnoreNull, USERDATA_DIR } from "../lib/lib";
+import { flags } from "../lib/lib";
 import bgm from "../lib/sound";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 /** activation duration = hitring duration + this value */
 const ACTIVATION_BUFFER = 500;
@@ -12,8 +12,9 @@ export type Settings = {
     musicVolume: number
     sfxVolume: number
     hitsoundVolume: number
-    showCombo: boolean,
+    showCombo: boolean
     showAccuracyBar: boolean
+    fullscreen: boolean
 }
 
 type SetSettings = (setting: keyof Settings, value: Settings[keyof Settings]) => void;
@@ -32,8 +33,11 @@ const SETTINGS_HOOKS: SettingsHooks = {
     "musicVolume": vol => bgm.volume = vol,
     "sfxVolume": vol => flags.sfxVolume = vol,
     "hitsoundVolume": vol => flags.hitsoundVolume = vol,
-    "showCombo": bo => {}
+    "fullscreen": fullscreen => getCurrentWindow().setFullscreen(fullscreen)
 }
+
+const initialFullscreen = await getCurrentWindow().isFullscreen();
+console.log(initialFullscreen);
 
 type Props = Readonly<{
     children: React.ReactNode;
@@ -46,7 +50,8 @@ export default function SettingsProvider({ children }: Props) {
         sfxVolume: 1,
         hitsoundVolume: 1,
         showCombo: true,
-        showAccuracyBar: true
+        showAccuracyBar: true,
+        fullscreen: initialFullscreen
     });
     
     // load saved settings
@@ -64,7 +69,7 @@ export default function SettingsProvider({ children }: Props) {
                         loadedSettings[key] = Number(savedVal);
                         break;
                     case "boolean":
-                        loadedSettings[key] = Boolean(savedVal);
+                        loadedSettings[key] = savedVal === "true";
                         break;
                 }
             }

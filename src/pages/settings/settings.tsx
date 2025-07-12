@@ -62,6 +62,7 @@ export default function Settings() {
                 
                 <h2> <AppWindow /> &nbsp; [ user interface ] </h2>
                 <div className="flex flex-col gap-3">
+                    <MuseCheckbox label="fullscreen" bind={bindSetting("fullscreen")} />
                     <MuseCheckbox label="show combo" bind={bindSetting("showCombo")} />
                     <MuseCheckbox label="show accuracy bar" bind={bindSetting("showAccuracyBar")} />
                 </div>

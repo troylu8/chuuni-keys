@@ -103,7 +103,7 @@ export default function ChartSelect() {
     }
     
     return (
-        <div className="fixed cover">
+        <div className="fixed cover bg-ctp-base">
             <NavigationBar />
             
             <ChartInfo metadata={activeChart} />
@@ -163,17 +163,17 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
     return (
         <div className="
             absolute left-0 bottom-1/10 flex gap-1 ml-1 w-[35vw] z-10
-            [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3
+            [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3 text-ctp-base font-mono
         ">
             <MuseButton 
                 onClick={() => setActionsState(actionsState == ActionsState.DEFAULT ? ActionsState.OPTIONS : ActionsState.DEFAULT)}
-                className="bg-color2 grow-0! px-0.5!"
+                className="bg-ctp-blue grow-0! px-0.5!"
             > 
                 { actionsState == ActionsState.DEFAULT ? <EllipsisVertical /> : <XIcon /> }
             </MuseButton>
             
             { actionsState == ActionsState.DEFAULT &&
-                <MuseButton onClick={play} className="bg-color1!"> 
+                <MuseButton onClick={play} className="bg-ctp-green"> 
                     [ play ] 
                 </MuseButton>
             }
@@ -182,11 +182,11 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
                 <>
                     <MuseButton 
                         onClick={() => setActionsState(ActionsState.DELETING)}
-                        className="bg-error! grow-0!"
+                        className="bg-ctp-red grow-0!"
                     > 
                         [ delete ] 
                     </MuseButton>
-                    <MuseButton onClick={edit} className="bg-color1!"> 
+                    <MuseButton onClick={edit} className="bg-ctp-blue"> 
                         [ edit ] 
                     </MuseButton>
                 </>
@@ -194,16 +194,15 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
             
             { actionsState == ActionsState.DELETING &&
                 <>
-                    <p> delete this chart? </p>
+                    <p className="text-ctp-text"> delete this chart? </p>
                     
                     <MuseButton 
                         onClick={() => setActionsState(ActionsState.DEFAULT)}
-                        className="bg-color1!" 
                     > [ no ] </MuseButton>
                     
                     <MuseButton 
                         onClick={deleteActiveChart} 
-                        className="bg-error!"
+                        className="bg-ctp-red"
                     > [ yes ] </MuseButton>
                 </>
             }

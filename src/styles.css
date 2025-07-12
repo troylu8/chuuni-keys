@@ -1,7 +1,12 @@
 @import "tailwindcss";
 @import "@catppuccin/tailwindcss/config.css";
 
-@custom-variant dark (&:where(.dark, .dark *));
+:root {
+    --easy: var(--color-ctp-green);
+    --normal: var(--color-ctp-yellow);
+    --hard: var(--color-ctp-red);
+    --fated: var(--color-ctp-mauve);
+}
 
 .lucide {
     display: inline;
@@ -42,6 +47,21 @@ button {
 .red-outline-btn:hover {
     outline-color: var(--color-ctp-pink);
     color: var(--color-ctp-pink);
+}
+
+.mauve-btn {
+    outline: solid 2px var(--color-ctp-mauve);
+    color: var(--color-ctp-mauve);
+}
+.mauve-btn:hover {
+    outline: solid 2px var(--color-ctp-lavender);
+    color: var(--color-ctp-lavender);
+}
+
+.mauve-btn-selected {
+    outline: solid 2px var(--color-ctp-mauve);
+    background-color: var(--color-ctp-mauve);
+    color: var(--color-ctp-base);
 }
 
 .anim-accuracy-tick {
@@ -130,6 +150,6 @@ button {
     background: var(--color-ctp-pink);
 }
 
-.light-text-outline {
-    text-shadow: -1px -1px 0 var(--background), 1px -1px 0 var(--background), -1px 1px 0 var(--background), 1px 1px 0 var(--background);
+.mauve-text-outline {
+    text-shadow: -1px -1px 0 var(--color-ctp-mauve), 1px -1px 0 var(--color-ctp-mauve), -1px 1px 0 var(--color-ctp-mauve), 1px 1px 0 var(--color-ctp-mauve);
 }

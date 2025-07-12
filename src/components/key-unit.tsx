@@ -64,8 +64,8 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
                 opacity: fadeOut && allHitsPassed ? Math.max(0.25, 1 + latestHitProgress) : undefined 
             }}
             className={`
-                flex flex-col-reverse rounded-[25%] relative
-                ${pressed? "bg-color1 text-background" : "bg-background opacity-25" }
+                flex flex-col-reverse rounded-[25%] relative text-ctp-base
+                ${pressed? "bg-ctp-mauve" : "bg-ctp-text opacity-25" }
                 ${labelCentered && "items-center justify-center"}
                 ${activated && "opacity-100 transition-opacity"}
             `}
@@ -89,7 +89,7 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-color1 outline-7 pointer-events-none"
+                className="absolute outline-ctp-mauve outline-7 pointer-events-none"
                 style={{
                     top: -gap,
                     bottom: -gap,
