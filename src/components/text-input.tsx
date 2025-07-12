@@ -30,9 +30,10 @@ export default function TextInput({
     return (
         <div className="relative grow">
             <input
+                spellCheck={false}
                 placeholder={placeholder}
                 onInput={(e) => setText(e.currentTarget.value) }
-                className={`${className} w-full rounded-lg outline-0 ${showCharLimit && "pr-15"} border-2 p-1 ${!valid && "border-error text-error" }`}
+                className={`${className} w-full rounded-lg outline-0 ${showCharLimit && "pr-15"} border-2 p-1 ${valid ? "border-ctp-mauve" : "border-ctp-red text-ctp-red" }`}
                 value={text}
                 onKeyDown={handleKeyDown}
             />

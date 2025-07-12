@@ -53,7 +53,7 @@ export default function Editor() {
     const [metadata, setMetadataInner] = useState<ChartMetadata & {imgCacheBust?: string}>(savedMetadata);
     async function setMetadata(metadata: ChartMetadata, save: boolean = false, imgCacheBust?: string) {
         setMetadataInner({...metadata, imgCacheBust });
-        if (save) await handleSave(metadata);
+        if (save) await handleSave(metadata, true);
         else            setSaved(false);
     }
     const chartFolder = getChartFolder(metadata);
@@ -160,8 +160,8 @@ export default function Editor() {
     const workingChartFolderRef = useRef(chartFolder);
     
     const [saved, setSaved] = useState(true);
-    async function handleSave(newMetadata: ChartMetadata = metadata) {
-        if (saved) return;
+    async function handleSave(newMetadata: ChartMetadata = metadata, force: boolean = false) {
+        if (saved && !force) return;
         
         const newChartFolder = getChartFolder(newMetadata);
         
@@ -248,11 +248,15 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [metadata.first_beat, activeTab, activeModal]);
+    }, [metadata.first_beat, saved, activeTab, activeModal]);
     
     return (
         <>
-            <Background imgPath={metadata.img_ext && `${workingChartFolderRef.current}\\img.${metadata.img_ext}`} imgCacheBust={metadata.imgCacheBust} />
+            <Background 
+                brightness={activeTab == "keyboard" ? 30 : 15}
+                imgPath={metadata.img_ext && `${workingChartFolderRef.current}\\img.${metadata.img_ext}`} 
+                imgCacheBust={metadata.imgCacheBust} 
+            />
             <div className="absolute cover flex flex-col">
                 
                 {/* top row */}
@@ -270,6 +274,7 @@ export default function Editor() {
                             {   
                                 ["keyboard", "timing", "details"].map(tab => 
                                     <MuseButton
+                                        key={tab}
                                         className={
                                             "[--btn-color:var(--color-ctp-mauve)] " +
                                             (tab == activeTab ? "outline-btn-selected" : "outline-btn")

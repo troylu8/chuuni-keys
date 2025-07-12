@@ -197,6 +197,7 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
                     <p className="text-ctp-text"> delete this chart? </p>
                     
                     <MuseButton 
+                        className="bg-ctp-blue"
                         onClick={() => setActionsState(ActionsState.DEFAULT)}
                     > [ no ] </MuseButton>
                     

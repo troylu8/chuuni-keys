@@ -30,9 +30,6 @@ body::selection {
     background: var(--color-ctp-mauve);
 }
 
-input {
-    user-select: auto;
-}
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -152,4 +149,14 @@ button {
 
 .mauve-text-outline {
     text-shadow: -1px -1px 0 var(--color-ctp-mauve), 1px -1px 0 var(--color-ctp-mauve), -1px 1px 0 var(--color-ctp-mauve), 1px 1px 0 var(--color-ctp-mauve);
+}
+
+.difficulty-dropdown-option {
+    color: var(--diff-color);
+    background-color: var(--color-ctp-base);
+    cursor: pointer;
+}
+.difficulty-dropdown-option:hover {
+    background-color: var(--diff-color);
+    color: var(--color-ctp-base);
 }

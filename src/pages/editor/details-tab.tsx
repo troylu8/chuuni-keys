@@ -9,6 +9,7 @@ import MuseButton from '../../components/muse-button';
 import { useEffect, useState } from 'react';
 import { publishChart, unpublishChart, updateChart } from '../../lib/publish';
 import bcrypt from 'bcryptjs';
+import { ChevronDown, Image, Keyboard, Music } from 'lucide-react';
 
 
 type Props = Readonly<{
@@ -23,7 +24,6 @@ type Props = Readonly<{
 }>
 export default function DetailsTab({ metadata, workingChartFolderRef, handleSave, setMetadata }: Props) {
 
-    
     function bindMetadata<K extends keyof ChartMetadata>(field: K): Bind<ChartMetadata[K]> {
         return [
             metadata[field], 
@@ -40,8 +40,67 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
         ];
     }
     
+    return (
+        <div className='absolute top-10 bottom-0 left-0 right-0 flex justify-center'>
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "fit-content(100%) 1fr",
+                    alignItems: "center"
+                }} 
+                className="
+                    w-[700px] max-w-[70vw]
+                    overflow-auto gap-3 px-3 pb-3 
+                    [&>span]:self-center [&>span]:text-ctp-blue
+                    [&_button]:text-ctp-base
+                "
+            >
+                <span> title </span>
+                <TextInput bind={bindMetadata("title")} placeholder="enter a title.."/>
+                
+                <span> difficulty </span>
+                <DifficultyDropdown bind={bindMetadata("difficulty")} />
+                
+                <span> image </span>
+                <ImagePicker
+                    metadata={metadata}
+                    setMetadata={setMetadata}
+                    workingChartFolderRef={workingChartFolderRef} 
+                />
+                
+                <h2 style={{gridColumn: "1 / -1", fontSize: "1.5em", marginTop: "15px"}}> credits </h2>
+                <span> <Music /> &nbsp; music </span>
+                <TextInput bind={bindMetadataOptional("credit_audio")} placeholder="who wrote the song?" />
+                <span> <Image /> &nbsp; image </span>
+                <TextInput bind={bindMetadataOptional("credit_img")} placeholder="who made the background?" />
+                <span> <Keyboard /> &nbsp; chart </span>
+                <TextInput bind={bindMetadataOptional("credit_chart")}  placeholder="who created this chart?"/>
+                
+                <MuseButton 
+                    className='self-center col-start-1 -col-end-1 mx-auto bg-ctp-mauve'
+                    onClick={() => openPath(workingChartFolderRef.current)}
+                > 
+                    open chart folder 
+                </MuseButton>
+                
+                <PublishOptions 
+                    chart={metadata} 
+                    save={handleSave}
+                    updatePublishInfo={publishInfo => setMetadata({...metadata, ...publishInfo}, true)}
+                />
+            </div>
+        </div>
+    );
+}
+
+type ImagePickerProps = Readonly<{
+    workingChartFolderRef: {current: string} 
+    metadata: ChartMetadata
+    setMetadata: (metadata: ChartMetadata, save?: boolean, imgCacheBust?: string) => void
+}>
+function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePickerProps) {
+    
     async function handleUploadImg() {
-        await handleSave();
         
         const imgFilepath = await open({
             multiple: false,
@@ -62,10 +121,9 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
         await copyFile(imgFilepath, `${workingChartFolderRef.current}\\img.${newImgExt}`);
         
         // delete old img if necessary (if same exts, then file will be overwritten so no need to delete)
-        if (oldImgExt != null && oldImgExt != newImgExt) {
+        if (oldImgExt != undefined && oldImgExt != newImgExt) {
             await remove(`${workingChartFolderRef.current}\\img.${oldImgExt}`);
         }
-        
         setMetadata(
             { ...metadata, img_ext: newImgExt }, 
             true,                                   // save chart
@@ -73,59 +131,87 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
         );
     }
     
+    async function handleClearImg() {
+        if (!metadata.img_ext) return;
+        
+        await remove(`${workingChartFolderRef.current}\\img.${metadata.img_ext}`);
+        setMetadata({...metadata, img_ext: undefined}, true);
+    }
+    
+    const [confirmVisible, setConfirmVisible] = useState(false);
+    
     return (
-        <div className="absolute cover flex justify-center items-center">
-            <div className="w-fit bg-background p-3 rounded-md max-h-[70vh] overflow-auto">
-                <div 
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "fit-content(100%) 1fr",
-                    }} 
-                    className="gap-3 px-3 pb-3 [&>span]:self-center"
-                >
-                    <span> title </span>
-                    <TextInput bind={bindMetadata("title")} placeholder="enter a title.."/>
-                    
-                    <span> difficulty </span>
-                    <DifficultyDropdown bind={bindMetadata("difficulty")} />
-                    
-                    <span> image </span>
-                    <button onClick={handleUploadImg}> [select] </button>
-                    
-                    <h2 style={{gridColumn: "1 / -1"}}> credits </h2>
-                    <span> music </span>
-                    <TextInput bind={bindMetadataOptional("credit_audio")} placeholder="who wrote the song?" />
-                    <span> image </span>
-                    <TextInput bind={bindMetadataOptional("credit_img")} placeholder="who made the background?" />
-                    <span> chart </span>
-                    <TextInput bind={bindMetadataOptional("credit_chart")}  placeholder="who mapped this chart?"/>
-                    
-                    <MuseButton 
-                        className='self-center col-start-1 -col-end-1 mx-auto'
-                        onClick={() => openPath(workingChartFolderRef.current)}
-                    > 
-                        open chart folder 
-                    </MuseButton>
-                    
-                    <PublishOptions 
-                        chart={metadata} 
-                        save={handleSave}
-                        updatePublishInfo={publishInfo => setMetadata({...metadata, ...publishInfo}, true)}
-                    />
-                </div>
-            </div>
+        <div className='flex gap-5'>
+            <MuseButton 
+                className='bg-ctp-blue outline-btn px-5 py-0.5'
+                onClick={handleUploadImg}
+            > [ upload ] </MuseButton>
+            <MuseButton 
+                className='[bg-ctp-red outline-btn px-5 py-0.5'
+                onClick={() => setConfirmVisible(true)}
+            > [ clear ] </MuseButton>
+            
+            { confirmVisible &&
+                <Modal onClose={() => setConfirmVisible(false)}>
+                    <div className='p-2'>
+                        <p> clear current background image? </p>
+                        <div className='flex justify-center gap-5 mt-3'>
+                            <MuseButton 
+                                onClick={() => setConfirmVisible(false)}
+                                className='bg-ctp-blue outline-btn'
+                            >
+                                cancel
+                            </MuseButton>
+                            <MuseButton 
+                                onClick={handleClearImg}
+                                className='bg-ctp-red outline-btn'
+                            >
+                                yes
+                            </MuseButton>
+                        </div>
+                    </div>
+                </Modal>
+            }
         </div>
-    );
+    )
 }
 
 function DifficultyDropdown({ bind: [value, setter] }: { bind: Bind<Difficulty> }) {
+    const [dropdownVisible, setDropdownVisible] = useState(false);
+    
     return (
-        <select value={value} onChange={e => setter(e.target.value as Difficulty)}>
-            <option value="easy"> easy </option>
-            <option value="normal"> normal </option>
-            <option value="hard"> hard </option>
-            <option value="fated"> fated </option>
-        </select>
+        <div
+            onClick={() => setDropdownVisible(!dropdownVisible)}
+            onMouseLeave={() => setDropdownVisible(false)}
+            className="border-2 relative cursor-pointer rounded-sm px-1 w-30 text-center h-fit"
+            style={{
+                color: `var(--${value})`,
+                display: "grid",
+                gridTemplateColumns: "1fr fit-content(100%)"
+            }}
+        > 
+            {value}
+            
+            <ChevronDown/>
+            
+            {/* dropdown panel */}
+            { dropdownVisible && 
+                <div className='absolute left-0 right-0 top-full border-2 border-ctp-mauve rounded-sm'>
+                    {["easy", "normal", "hard", "fated"].map(diff => 
+                        <p 
+                            key={diff}
+                            style={{"--diff-color": `var(--${diff})`} as React.CSSProperties} 
+                            className="difficulty-dropdown-option"
+                            onClick={e => {
+                                e.stopPropagation();
+                                setter(diff as Difficulty);
+                                setDropdownVisible(false);
+                            }}
+                        > {diff} </p>
+                    )}
+                </div>
+            }
+        </div>
     )
 }
 
