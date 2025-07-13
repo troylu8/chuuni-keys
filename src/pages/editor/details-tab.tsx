@@ -9,7 +9,9 @@ import MuseButton from '../../components/muse-button';
 import { useEffect, useState } from 'react';
 import { publishChart, unpublishChart, updateChart } from '../../lib/publish';
 import bcrypt from 'bcryptjs';
-import { ChevronDown, Image, Keyboard, Music } from 'lucide-react';
+import { ChevronDown, FolderOpen, Globe, Image, Keyboard, Music, Trash2, TriangleAlert, Upload } from 'lucide-react';
+import ExternalUrl from '../../components/external-url';
+import LoadingSpinner from '../../components/loading-spinner';
 
 
 type Props = Readonly<{
@@ -77,17 +79,19 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
                 <TextInput bind={bindMetadataOptional("credit_chart")}  placeholder="who created this chart?"/>
                 
                 <MuseButton 
-                    className='self-center col-start-1 -col-end-1 mx-auto bg-ctp-mauve'
+                    className='col-start-1 -col-end-1 mx-auto bg-ctp-mauve'
                     onClick={() => openPath(workingChartFolderRef.current)}
                 > 
-                    open chart folder 
+                    <FolderOpen /> &nbsp; open chart folder 
                 </MuseButton>
                 
-                <PublishOptions 
-                    chart={metadata} 
-                    save={handleSave}
-                    updatePublishInfo={publishInfo => setMetadata({...metadata, ...publishInfo}, true)}
-                />
+                <div className='col-start-1 -col-end-1 mx-auto'>
+                    <PublishOptions 
+                        chart={metadata} 
+                        save={handleSave}
+                        updatePublishInfo={publishInfo => setMetadata({...metadata, ...publishInfo}, true)}
+                    />
+                </div>
             </div>
         </div>
     );
@@ -143,13 +147,13 @@ function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePick
     return (
         <div className='flex gap-5'>
             <MuseButton 
-                className='bg-ctp-blue outline-btn px-5 py-0.5'
+                className='bg-ctp-blue text-ctp-base px-5 py-0.5'
                 onClick={handleUploadImg}
-            > [ upload ] </MuseButton>
+            > <Upload /> &nbsp; upload </MuseButton>
             <MuseButton 
-                className='[bg-ctp-red outline-btn px-5 py-0.5'
+                className='bg-ctp-red text-ctp-base'
                 onClick={() => setConfirmVisible(true)}
-            > [ clear ] </MuseButton>
+            > <Trash2 /> </MuseButton>
             
             { confirmVisible &&
                 <Modal onClose={() => setConfirmVisible(false)}>
@@ -239,18 +243,22 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
     
     return (
         <>
-            { publishState == PublishState.UNSURE && 
-                <p> ... </p>
+            { publishState == PublishState.UNSURE &&
+                <MuseButton className='self-center col-start-1 -col-end-1 bg-ctp-base'> 
+                    ...
+                </MuseButton>
             }
-            
             { publishState == PublishState.NOT_OWNED && 
-                <p> you don't have permission to publish this map </p>
+                <MuseButton className='self-center col-start-1 -col-end-1 bg-ctp-base'> 
+                    you don't have permission to publish this map
+                </MuseButton>
             }
             
             { publishState == PublishState.LOCAL &&
                 <ActionButtonAndModal
-                    buttonLabel='publish'
-                    prompt={<p> upload chart to <a href="https://chuuni-keys.troylu.com/charts.html" target='_blank'> chuuni-keys.troylu.com </a>? </p>}
+                    buttonLabel={<> <Globe /> &nbsp; publish </>}
+                    buttonClassName='bg-ctp-mauve'
+                    prompt={<p> upload this chart to <ExternalUrl url="https://www.example.com/" label="public chart listing" />? </p>}
                     loadingLabel='uploading your chart...'
                     successLabel='chart published!'
                     action={() => save().then(() => publishChart(chart)).then(updatePublishInfo)}
@@ -258,10 +266,11 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
             }
             
             { publishState == PublishState.PUBLISHED &&
-                <div className="flex gap-3">
+                <div className="flex gap-3 ">
                     { unsynced &&
                         <ActionButtonAndModal
-                            buttonLabel='update this chart'
+                            buttonLabel={<> <Globe /> &nbsp; update this chart </>}
+                            buttonClassName='bg-ctp-mauve'
                             prompt="update this chart?"
                             loadingLabel='syncing...'
                             successLabel='chart updated!'
@@ -273,6 +282,7 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
                     }
                     <ActionButtonAndModal
                         buttonLabel='take down'
+                        buttonClassName='bg-ctp-red'
                         prompt="take down this chart?"
                         loadingLabel='deleting your chart from server...'
                         successLabel='chart taken down!'
@@ -290,13 +300,14 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
 enum ActionState { MODAL_CLOSED, CONFIRMING, LOADING, SUCCESS }
 
 type ActionButtonAndModalProps = Readonly<{
-    buttonLabel: string,
+    buttonLabel: React.ReactNode,
+    buttonClassName: string,
     prompt: React.ReactNode
     loadingLabel: string
     successLabel: string,
     action: () => Promise<void>
 }>
-function ActionButtonAndModal({ buttonLabel, prompt, loadingLabel, successLabel, action }: ActionButtonAndModalProps) {
+function ActionButtonAndModal({ buttonLabel, buttonClassName, prompt, loadingLabel, successLabel, action }: ActionButtonAndModalProps) {
     
     const [actionState, setActionState] = useState<ActionState | Error>(ActionState.MODAL_CLOSED);
     
@@ -316,7 +327,7 @@ function ActionButtonAndModal({ buttonLabel, prompt, loadingLabel, successLabel,
     return (
         <>
             <MuseButton
-                className='self-center col-start-1 -col-end-1 mx-auto'
+                className={`text-ctp-base ${buttonClassName}`}
                 onClick={() => setActionState(ActionState.CONFIRMING)}
             > 
                 { buttonLabel }
@@ -324,33 +335,49 @@ function ActionButtonAndModal({ buttonLabel, prompt, loadingLabel, successLabel,
             
             { actionState != ActionState.MODAL_CLOSED &&
                 <Modal onClose={handleClickOutside}>
-                    <div className='flex flex-col gap-2 p-2 max-w-[300px]'>
+                    <div className='flex flex-col gap-2 p-2 max-w-[300px] [&_button]:text-ctp-base'>
                         { 
                             actionState == ActionState.CONFIRMING ?
                             <>
                                 { prompt }
-                                <div className="flex gap-2">
-                                    <MuseButton onClick={() => setActionState(ActionState.MODAL_CLOSED)}> cancel </MuseButton>
-                                    <MuseButton onClick={handleStartAction}> yes </MuseButton>
+                                <div className="flex gap-3">
+                                    <MuseButton 
+                                        className='bg-ctp-red'
+                                        onClick={() => setActionState(ActionState.MODAL_CLOSED)}
+                                    > cancel </MuseButton>
+                                    <MuseButton 
+                                        className='bg-ctp-blue'
+                                        onClick={handleStartAction}
+                                    > yes </MuseButton>
                                 </div>
                             </>
                             :
                             actionState == ActionState.LOADING ?
                             <>
                                 { loadingLabel } 
-                                {/* TODO */}
-                                <p> loading spinner here </p> 
+                                <div className='mx-auto'>
+                                    <LoadingSpinner />
+                                </div>
                             </>
                             :
                             actionState == ActionState.SUCCESS ?
                             <>
                                 { successLabel }
-                                <MuseButton onClick={() => setActionState(ActionState.MODAL_CLOSED)}> ok </MuseButton>
+                                <MuseButton 
+                                    className='bg-ctp-blue' 
+                                    onClick={() => setActionState(ActionState.MODAL_CLOSED)}
+                                > ok </MuseButton>
                             </>
                             :
                             <>
-                                <p className='text-error'> {actionState.message} </p>
-                                <MuseButton onClick={() => setActionState(ActionState.MODAL_CLOSED)}> ok </MuseButton>
+                                <h2 className='text-ctp-red! font-bold'> 
+                                    <TriangleAlert /> &nbsp; Upload failed!
+                                </h2>
+                                <p className='text-ctp-red'> {actionState + ""} </p>
+                                <MuseButton 
+                                    className='bg-ctp-blue self-center' 
+                                    onClick={() => setActionState(ActionState.MODAL_CLOSED)}
+                                > ok </MuseButton>
                             </>
                         }  
                     </div>

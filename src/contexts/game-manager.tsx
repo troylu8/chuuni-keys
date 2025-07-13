@@ -97,6 +97,11 @@ export default function GameManager({ children }: Props) {
     
     // game loop
     useEffect(() => {
+        
+        // hide cursor while playing
+        console.log("hiding cursor", GameStage.STARTED && !paused);
+        document.body.style.cursor = GameStage.STARTED && !paused ? "none" : "";
+        
         if (gameStage != GameStage.STARTED || paused) return;
         
         if (i.current == 0) museEmitter.emit("start");
@@ -123,7 +128,10 @@ export default function GameManager({ children }: Props) {
             
         });
         
-        return unlisten;
+        return () => {
+            unlisten();
+            document.body.style.cursor = "";
+        };
     }, [gameStage, paused]);
     
     function restartGame() {

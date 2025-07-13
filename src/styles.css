@@ -24,10 +24,51 @@ body {
     color: var(--color-ctp-text);
     font-family: Signika, sans-serif;
     caret-color: var(--color-ctp-mauve);
+
+    display: grid;
+    grid-template-rows: fit-content(100%) 1fr;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 body::selection {
     color: var(--color-ctp-base);
     background: var(--color-ctp-mauve);
+}
+
+#titlebar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) fit-content(100%);
+
+    background-color: var(--color-ctp-crust);
+    padding: 0 4px;
+}
+
+#titlebar-header {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+#titlebar-text {
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-family: monospace;
+}
+
+#titlebar-controls {
+    width: fit-content;
+    display: flex;
+}
+
+#titlebar-close:hover {
+    color: var(--color-ctp-red);
+    filter: brightness(100%) !important;
+}
+
+#root {
+    transform: rotate(0deg);
 }
 
 input::-webkit-outer-spin-button,
@@ -46,15 +87,14 @@ h2 {
 button {
     cursor: pointer;
 }
+button:hover {
+    filter: brightness(135%);
+}
 
 .outline-btn {
     outline: solid 2px var(--btn-color);
     color: var(--btn-color);
 }
-.outline-btn:hover {
-    filter: brightness(135%);
-}
-
 .outline-btn-selected {
     outline: solid 2px var(--btn-color);
     background-color: var(--btn-color);
@@ -159,4 +199,25 @@ button {
 .difficulty-dropdown-option:hover {
     background-color: var(--diff-color);
     color: var(--color-ctp-base);
+}
+
+.anim-loading {
+    animation: anim-loading 1.5s ease-in-out infinite;
+}
+@keyframes anim-loading {
+    0% {
+        rotate: 0;
+    }
+    25% {
+        rotate: 90deg;
+    }
+    50% {
+        rotate: 180deg;
+    }
+    75% {
+        rotate: 270deg;
+    }
+    100% {
+        rotate: 360deg;
+    }
 }

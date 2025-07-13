@@ -73,7 +73,7 @@ export default function ChartList({ charts, activeChartId, onEntryClick, onEntry
         const entryCenterY = (entryRect.top + entryRect.bottom) / 2;
         const listRect = chartList.getBoundingClientRect();
         
-        const scrollTarget = chartList.scrollTop + listRect.top + entryCenterY - listRect.height / 2;
+        const scrollTarget = chartList.scrollTop + entryCenterY - listRect.height / 2;
         if (instant) {
             chartList.scrollTo({top: scrollTarget, behavior: "instant"});
             scrollTargetRef.current = scrollTarget;

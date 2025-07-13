@@ -6,7 +6,30 @@
     </head>
 
     <body>
-        <div id="root"></div>
-        <script type="module" src="/src/main.tsx"></script>
+        <nav id="titlebar">
+            <div id="titlebar-header" data-tauri-drag-region>
+                <p id="titlebar-text">chuuni keys</p>
+            </div>
+            <div id="titlebar-controls">
+                <button id="titlebar-minimize" class="titlebar-control">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-icon lucide-minus"><path d="M5 12h14" /></svg>
+                </button>
+                <button id="titlebar-toggle-maximize" class="titlebar-control">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="6" y="6" width="12" height="12" rx="2" />
+                    </svg>
+                </button>
+                <button id="titlebar-close" class="titlebar-control">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x">
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <main id="root"></main>
     </body>
+
+    <script type="module" src="/src/main.tsx"></script>
 </html>

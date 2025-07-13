@@ -16,6 +16,7 @@ import bgm from "../../lib/sound";
 import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
 import Slider from "../../components/slider";
 import { ArrowLeft, Pause, Play } from "lucide-react";
+import { useTitlebarText } from "../../lib/titlebar";
 
 
 type ActiveTab = "keyboard" | "timing" | "details";
@@ -57,6 +58,8 @@ export default function Editor() {
         else            setSaved(false);
     }
     const chartFolder = getChartFolder(metadata);
+    
+    useTitlebarText(metadata.title);
     
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     
@@ -181,8 +184,8 @@ export default function Editor() {
         
         setSaved(true);
         
-        // mark that this song is unsynced with network
-        if (newMetadata.online_id)
+        // if this chart was online before and is still online now
+        if (newMetadata.online_id && metadata.online_id == newMetadata.online_id)
             localStorage.setItem("unsynced." + newMetadata.id, "");
     }
     function handleQuit() {
@@ -307,7 +310,7 @@ export default function Editor() {
                             quit={() => {
                                 activeModal == ActiveModal.CONFIRM_QUIT_TO_SELECT ? 
                                     setPageParams([Page.MAIN_MENU]) :
-                                    getCurrentWindow().destroy()
+                                    getCurrentWindow().close()
                             }}
                         />
                     }

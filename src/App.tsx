@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import bgm from "./lib/sound";
 import BgmStateProvider from "./contexts/bgm-state";
 
+
 export default function App() {
     return (
         <SettingsProvider>

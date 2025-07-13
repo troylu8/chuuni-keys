@@ -11,6 +11,8 @@ import { usePage } from "../../contexts/page";
 import { ChartMetadata, getChartFolder } from "../../lib/lib";
 import { useSettings } from "../../contexts/settings";
 import Praise from "../../components/praise";
+import { useTitlebarText } from "../../lib/titlebar";
+import LoadingSpinner from "../../components/loading-spinner";
 
 export default function Game() {
     return (
@@ -25,11 +27,15 @@ function GameInner() {
     const [[, params]] = usePage();
     const metadata = params as ChartMetadata;
     const [{showCombo, showAccuracyBar}] = useSettings();
+    
+    useTitlebarText(metadata.title);
+    
 
     return (
         <div className="fixed cover">
             <Background imgPath={metadata.img_ext && `${getChartFolder(metadata)}\\img.${metadata.img_ext}`} />
-            { gameStage == GameStage.LOADING && <p> loading... </p> }
+            
+            { gameStage == GameStage.LOADING && <LoadingSpinner /> }
             
             <DeltaProvider>
                 { gameStage == GameStage.STARTED &&
@@ -54,6 +60,7 @@ function GameInner() {
                         </div>
                     </>
                 }
+                
                 { gameStage == GameStage.ENDED && <Results /> }
             </DeltaProvider>
         </div>
