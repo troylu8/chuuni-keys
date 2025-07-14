@@ -2,7 +2,7 @@ import GameManager, { GameStage, useGameStage as useGameStage } from "../../cont
 import DeltaProvider from "../../contexts/score";
 import AccuracyBar from "../../components/accuracy-bar";
 import KeyboardLayout from "../../components/keyboard-layout";
-import PauseModal from "./pause-modal";
+import PauseScreen from "./pause-screen";
 import Background from "../../components/background";
 import Combo from "./combo";
 import ResultsScreen from "./results-screen";
@@ -38,7 +38,7 @@ function GameInner() {
             { gameStage == GameStage.LOADING && <LoadingSpinner /> }
             
             <DeltaProvider>
-                { gameStage == GameStage.STARTED &&
+                { gameStage == GameStage.PLAYING &&
                     <>
                         <KeyboardLayout keyComponent={key => 
                             <KeyUnitGame 
@@ -50,7 +50,7 @@ function GameInner() {
                             </KeyUnitGame>
                         } />
                         
-                        <PauseModal />
+                        <PauseScreen />
                         { showCombo && <Combo /> }
                         <div className="absolute left-1/2 -translate-x-1/2 bottom-[5vh]">
                             { showAccuracyBar && <AccuracyBar /> }

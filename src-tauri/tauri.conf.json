@@ -13,8 +13,8 @@
         "windows": [
             {
                 "title": "chuuni keys",
-                "width": 800,
-                "height": 410,
+                "width": 700,
+                "height": 400,
                 "backgroundColor": "#1e1e2e",
                 "decorations": false
             }

@@ -21,7 +21,7 @@ export default function TimingTab({ metadata, setMetadata, setOffsetHere, setPre
     
     return (
         <div className="absolute cover flex justify-center items-center">
-            <div style={{fontSize: "calc(max(3vh, 16px))"}} className="w-fit flex gap-[5vw] p-5 items-center">
+            <div style={{fontSize: "calc(max(3vh, 12px))"}} className="w-fit flex gap-[5vw] p-5 items-center">
                 
                 <div className="w-fit rounded-md outline-2 outline-ctp-red flex flex-col items-center p-3">
                     <h2 className="text-[1.5em] text-ctp-red!"> <TriangleAlert /> Important </h2>

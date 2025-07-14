@@ -9,7 +9,7 @@ import MuseButton from '../../components/muse-button';
 import { useEffect, useState } from 'react';
 import { publishChart, unpublishChart, updateChart } from '../../lib/publish';
 import bcrypt from 'bcryptjs';
-import { ChevronDown, FolderOpen, Globe, Image, Keyboard, Music, Trash2, TriangleAlert, Upload } from 'lucide-react';
+import { ChevronDown, FolderOpen, Globe, Image, Keyboard, Music, RefreshCcw, Trash2, TriangleAlert, Upload } from 'lucide-react';
 import ExternalUrl from '../../components/external-url';
 import LoadingSpinner from '../../components/loading-spinner';
 
@@ -43,7 +43,7 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
     }
     
     return (
-        <div className='absolute top-10 bottom-0 left-0 right-0 flex justify-center'>
+        <div className='absolute top-5 bottom-0 left-0 right-0 flex justify-center'>
             <div
                 style={{
                     display: "grid",
@@ -52,9 +52,10 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
                 }} 
                 className="
                     w-[700px] max-w-[70vw]
-                    overflow-auto gap-3 px-3 pb-3 
+                    overflow-auto gap-3 px-3 pb-20
                     [&>span]:self-center [&>span]:text-ctp-blue
                     [&_button]:text-ctp-base
+                    [&>h2]:col-start-1 [&>h2]:-col-end-1 [&>h2]:text-[1.5em] mt-4
                 "
             >
                 <span> title </span>
@@ -70,7 +71,7 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
                     workingChartFolderRef={workingChartFolderRef} 
                 />
                 
-                <h2 style={{gridColumn: "1 / -1", fontSize: "1.5em", marginTop: "15px"}}> credits </h2>
+                <h2> credits </h2>
                 <span> <Music /> &nbsp; music </span>
                 <TextInput bind={bindMetadataOptional("credit_audio")} placeholder="who wrote the song?" />
                 <span> <Image /> &nbsp; image </span>
@@ -85,6 +86,7 @@ export default function DetailsTab({ metadata, workingChartFolderRef, handleSave
                     <FolderOpen /> &nbsp; open chart folder 
                 </MuseButton>
                 
+                <h2> online </h2>
                 <div className='col-start-1 -col-end-1 mx-auto'>
                     <PublishOptions 
                         chart={metadata} 
@@ -249,17 +251,17 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
                 </MuseButton>
             }
             { publishState == PublishState.NOT_OWNED && 
+                <p>you don't have permission to publish this map</p>
                 <MuseButton className='self-center col-start-1 -col-end-1 bg-ctp-base'> 
-                    you don't have permission to publish this map
+                    
                 </MuseButton>
             }
             
             { publishState == PublishState.LOCAL &&
                 <ActionButtonAndModal
-                    buttonLabel={<> <Globe /> &nbsp; publish </>}
-                    buttonClassName='bg-ctp-mauve'
-                    prompt={<p> upload this chart to <ExternalUrl url="https://www.example.com/" label="public chart listing" />? </p>}
-                    loadingLabel='uploading your chart...'
+                    buttonLabel={<> <Globe /> &nbsp; publish! </>}
+                    buttonClassName='bg-ctp-green'
+                    prompt={<p> Upload this chart to the <br /> <ExternalUrl url="https://www.example.com/" label="public chart listing" />? </p>}
                     successLabel='chart published!'
                     action={() => save().then(() => publishChart(chart)).then(updatePublishInfo)}
                 />
@@ -269,10 +271,9 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
                 <div className="flex gap-3 ">
                     { unsynced &&
                         <ActionButtonAndModal
-                            buttonLabel={<> <Globe /> &nbsp; update this chart </>}
-                            buttonClassName='bg-ctp-mauve'
+                            buttonLabel={<> <RefreshCcw /> &nbsp; update this chart </>}
+                            buttonClassName='bg-ctp-yellow'
                             prompt="update this chart?"
-                            loadingLabel='syncing...'
                             successLabel='chart updated!'
                             action={
                                 () => save().then(() => updateChart(chart))
@@ -284,7 +285,6 @@ function PublishOptions({ chart, save, updatePublishInfo }: PublishOptionsProps)
                         buttonLabel='take down'
                         buttonClassName='bg-ctp-red'
                         prompt="take down this chart?"
-                        loadingLabel='deleting your chart from server...'
                         successLabel='chart taken down!'
                         action={() => save().then(() => unpublishChart(chart)).then(() => updatePublishInfo({}))} // remove publish info afterwards
                     />
@@ -303,11 +303,10 @@ type ActionButtonAndModalProps = Readonly<{
     buttonLabel: React.ReactNode,
     buttonClassName: string,
     prompt: React.ReactNode
-    loadingLabel: string
     successLabel: string,
     action: () => Promise<void>
 }>
-function ActionButtonAndModal({ buttonLabel, buttonClassName, prompt, loadingLabel, successLabel, action }: ActionButtonAndModalProps) {
+function ActionButtonAndModal({ buttonLabel, buttonClassName, prompt, successLabel, action }: ActionButtonAndModalProps) {
     
     const [actionState, setActionState] = useState<ActionState | Error>(ActionState.MODAL_CLOSED);
     
@@ -354,7 +353,6 @@ function ActionButtonAndModal({ buttonLabel, buttonClassName, prompt, loadingLab
                             :
                             actionState == ActionState.LOADING ?
                             <>
-                                { loadingLabel } 
                                 <div className='mx-auto'>
                                     <LoadingSpinner />
                                 </div>

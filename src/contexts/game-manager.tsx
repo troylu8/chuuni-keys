@@ -6,9 +6,8 @@ import { Page, usePage } from "./page";
 import { getChartFolder as getChartFolder, flags, ChartMetadata } from '../lib/lib';
 import bgm from '../lib/sound';
 import { useSettings } from './settings';
-import { useTitlebarText } from '../lib/titlebar';
 
-export enum GameStage { LOADING, STARTED, ENDED };
+export enum GameStage { LOADING, PLAYING, ENDED };
 const GameStageContext = createContext<[GameStage, (next: GameStage) => any] | null>(null);
 
 type RestartGame = () => void;
@@ -88,7 +87,7 @@ export default function GameManager({ children }: Props) {
             eventsRef.current = joinEvents(otherEvents, noteEvents);
             
             await bgm.play();
-            setGameStage(GameStage.STARTED);
+            setGameStage(GameStage.PLAYING);
         })();
     }, []);
     
@@ -98,39 +97,53 @@ export default function GameManager({ children }: Props) {
     // game loop
     useEffect(() => {
         
-        // hide cursor while playing
-        document.body.style.cursor = gameStage == GameStage.STARTED && !paused ? "none" : "";
+        function showCursor() { document.body.style.cursor = ""; }
+        function hideCursor() { document.body.style.cursor = "none"; }
         
-        if (gameStage != GameStage.STARTED || paused) return;
+        if (gameStage == GameStage.PLAYING) {
+            if (!paused) hideCursor();
+            window.addEventListener("mousemove", showCursor);
+            window.addEventListener("keydown", hideCursor);
+        }
         
-        if (i.current == 0) museEmitter.emit("start");
         
-        const events = eventsRef.current;
-        const lastEventTime = events.length == 0 ? 0 : events[events.length-1][0];
+        let unlistenPos: (() => void) | null = null;
         
-        const unlisten = bgm.addPosListener(pos => {
-            const offsetPos = pos + offset;
+        
+        if (gameStage == GameStage.PLAYING || !paused) {
             
-            // send all ready muse events
-            while (i.current < events.length) {
-                const nextEvent = events[i.current];
-                if (offsetPos >= nextEvent[0]) {
-                    museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
-                    i.current++;
+            if (i.current == 0) museEmitter.emit("start");
+            
+            const events = eventsRef.current;
+            const lastEventTime = events.length == 0 ? 0 : events[events.length-1][0];
+            
+            unlistenPos = bgm.addPosListener(pos => {
+                const offsetPos = pos + offset;
+                
+                // send all ready muse events
+                while (i.current < events.length) {
+                    const nextEvent = events[i.current];
+                    if (offsetPos >= nextEvent[0]) {
+                        museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
+                        i.current++;
+                    }
+                    else break;
                 }
-                else break;
-            }
-            
-            if (offsetPos > lastEventTime + 2000) {
-                resetEvents();
-                setGameStage(GameStage.ENDED);
-            }
-            
-        });
+                
+                if (offsetPos > lastEventTime + 2000) {
+                    resetEvents();
+                    setGameStage(GameStage.ENDED);
+                }
+                
+            });
+        }
         
         return () => {
-            unlisten();
-            document.body.style.cursor = "";
+            unlistenPos?.call(null);
+            showCursor();
+            
+            window.removeEventListener("mousemove", showCursor);
+            window.removeEventListener("keydown", hideCursor);
         };
     }, [gameStage, paused]);
     

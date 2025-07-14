@@ -4,7 +4,7 @@ import MuseButton from "../../components/muse-button";
 import { useBgmState } from "../../contexts/bgm-state";
 import bgm from "../../lib/sound";
 
-export default function PauseModal() {
+export default function PauseScreen() {
     const { paused } = useBgmState();
     const [ restartGame, stopGame ] = useGameControls();
     
@@ -24,8 +24,8 @@ export default function PauseModal() {
         <> 
             { paused &&
                 <div className="
-                    absolute cover flex flex-col z-20 items-start pl-[20vw] bg-[#1e1e2e88]
-                    font-serif tracking-widest [&>button]:text-[5vh]
+                    absolute cover flex flex-col z-20 items-start pl-[20vw] bg-[#1e1e2eb8]
+                    font-serif tracking-widest [&>button]:text-[5vh] gap-[2vh]
                 ">
                     <h1 className="mt-[15vh] text-[10vh]"> paused </h1>
                     
