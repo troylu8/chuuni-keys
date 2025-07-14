@@ -33,7 +33,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
     useEffect(() => {
         
         function handleKeyDown(e: KeyboardEvent) {
-            if (flags.keyUnitsEnabled && e.key === keyCode && noModifiersPressed(e) ) {
+            if (flags.keyUnitsEnabled && e.key === keyCode && noModifiersPressed(e) && !pressed ) {
                 setPressed(true);
                 hit();
             }

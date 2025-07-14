@@ -20,12 +20,8 @@ export default function NumberInput({ bind: [value, setter], label, largeIncreme
             <label htmlFor={label} className="text-ctp-text"> {label} </label>
             
             <div className="flex [&>svg]:hover:text-ctp-yellow [&>svg]:hover:cursor-pointer ">
-                { value > min && 
-                    <>
-                        { largeIncrements && <DoubleChevronLeft size="1.5em" onClick={() => clampedSetter(value - 10)} /> }
-                        <ChevronLeft size="1.5em" onClick={() => clampedSetter(value - 1)} />
-                    </>
-                }
+                <DoubleChevronLeft visibility={value > min && largeIncrements ? "visible" : "hidden"} size="1.5em" onClick={() => clampedSetter(value - 10)} />
+                <ChevronLeft visibility={value > min ? "visible" : "hidden"} size="1.5em" onClick={() => clampedSetter(value - 1)} />
                 <input 
                     id={label}
                     type="number" 
@@ -36,12 +32,8 @@ export default function NumberInput({ bind: [value, setter], label, largeIncreme
                         outline-2 outline-ctp-mauve rounded-sm text-center
                     "
                 />
-                { value < max &&
-                    <>
-                        <ChevronRight size="1.5em" onClick={() => clampedSetter(value + 1)} />
-                        { largeIncrements && <DoubleChevronRight size="1.5em" onClick={() => clampedSetter(value + 10)} /> }
-                    </>
-                }
+                <ChevronRight visibility={value < max ? "visible" : "hidden"} size="1.5em" onClick={() => clampedSetter(value + 1)} />
+                <DoubleChevronRight visibility={value < max && largeIncrements ? "visible" : "hidden"} size="1.5em" onClick={() => clampedSetter(value + 10)} />
             </div>
         </div>
     )

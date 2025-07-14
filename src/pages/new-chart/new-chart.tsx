@@ -8,10 +8,22 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Upload } from 'lucide-react';
 import MuseButton from '../../components/muse-button';
 
+const VALID_AUDIO_EXTS = ["mp3", "wav", "aac", "ogg", "webm"];
+
 export default function NewChart() {
     const [,setPageParams] = usePage();
     
+    const [errMsg, setErrMsg] = useState<string | null>(null);
+    
     async function initNewChart(audioFilepath: string) {
+        const audio_ext = await extname(audioFilepath);
+        console.log(audio_ext);
+        
+        if (!VALID_AUDIO_EXTS.includes(audio_ext)) {
+            setErrMsg(`[ ${audio_ext} ] is not a supported file type: ( ${VALID_AUDIO_EXTS} )`);
+            return;
+        }
+        
         const metadata: ChartMetadata = {
             id: genRandStr(),
             title: 'no title yet',
@@ -21,7 +33,7 @@ export default function NewChart() {
             preview_time: 0,
             measure_size: 4,
             snaps: 1,
-            audio_ext: await extname(audioFilepath)
+            audio_ext
         }
         const chartFolder = getChartFolder(metadata);
         await mkdir(chartFolder);
@@ -42,7 +54,7 @@ export default function NewChart() {
             title: "Select audio file",
             filters: [{
                 name: "Audio",
-                extensions: ["mp3", "wav", "aac", "ogg", "webm"]
+                extensions: VALID_AUDIO_EXTS
             }],
             defaultPath: await downloadDir()
         });
@@ -51,13 +63,16 @@ export default function NewChart() {
         await initNewChart(audioFilepath);
     }
     
-    const [hovering, setHovering] = useState(false); //TODO 
+    const [ hovering, setHovering ] = useState(false);
     
     useEffect(() => {
         const unlisten = getCurrentWindow().onDragDropEvent(e => {
             if (e.payload.type == "enter")      setHovering(true);
             else if (e.payload.type == "leave") setHovering(false);
-            else if (e.payload.type == "drop")  initNewChart(e.payload.paths[0]);
+            else if (e.payload.type == "drop")  {
+                initNewChart(e.payload.paths[0]);
+                setHovering(false);
+            }
         });
         
         return () => { unlisten.then(unlisten => unlisten()); }
@@ -71,19 +86,21 @@ export default function NewChart() {
                 </MuseButton>
             </div>
             
-            <h1 className='mt-6'> create new chart </h1>
+            <h1 className='text-[6vh] '> create new chart </h1>
             <div 
                 onClick={handleUploadAudio}
-                className="
+                className={`
+                    ${hovering && "text-ctp-blue"}
                     outline-dashed outline-2 w-64 h-42 rounded-lg
                     flex flex-col gap-3 justify-center items-center cursor-pointer
-                "
+                `}
             >
                 <Upload size="20%" />
                 <p> click to upload audio </p>
                 <p> or drop audio file here </p>
             </div>
             
+            <p className='text-ctp-red font-mono'> { errMsg } </p>
         </div>
     );
 }

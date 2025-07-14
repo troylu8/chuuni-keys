@@ -8,6 +8,7 @@ import DeltaProvider, { Delta, getPraise, PRAISE_COLORS, useDelta } from "../../
 import bgm from "../../lib/sound";
 import { USERDATA_DIR } from "../../lib/lib";
 import Praise from "../../components/praise";
+import NumberInput from "../../components/number-input";
 
 const MS_PER_BEAT = 500;
 const MS_FIRST_BEAT = 475;
@@ -51,20 +52,24 @@ export default function TimingEditor({ onClose }: Props) {
     }
     
     return (
-        <div className="absolute cover flex flex-col items-center justify-center bg-gray-500 gap-10">
+        <div className="absolute cover flex flex-col items-center justify-center">
             <MuseButton className="absolute left-1 top-1" onClick={handleClose}> exit </MuseButton>
             
             <div className="flex gap-8 items-center">
                 <div className="flex flex-col gap-20">
-                    <input 
-                        type="number" 
-                        value={offset}
-                        onChange={e => setSettings("offset", Number(e.target.value))} 
+                    <NumberInput 
+                        label="hit offset"
+                        bind={[offset, val => setSettings("offset", val)]}
+                        min={-300}
+                        max={300}
+                        largeIncrements
                     />
-                    <input 
-                        type="number" 
-                        value={hitringDuration}
-                        onChange={e => setSettings("hitringDuration", Number(e.target.value))} 
+                    <NumberInput 
+                        label="hitring duration"
+                        bind={[hitringDuration, val => setSettings("hitringDuration", val)]}
+                        min={-300}
+                        max={300}
+                        largeIncrements
                     />
                 </div>
                 <DeltaProvider>
@@ -96,7 +101,7 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
     }
     
     return (
-        <div className="flex flex-col gap-20 items-center">
+        <div className="flex flex-col gap-25 items-center relative">
             <KeyUnit 
                 keyCode="z"
                 label="z"
@@ -104,7 +109,9 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
                 hitProgresses={hitProgresses}
             />
             <AccuracyBar />
-            <Praise showRawDeltas />
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-[6vh]">
+                <Praise showRawDeltas />
+            </div>
         </div>
     );
 }

@@ -215,7 +215,11 @@ export default function Editor() {
         
         function onScroll(e: WheelEvent) {
             bgm.pause();
-            const snapSize = e.ctrlKey ? MS_PER_BEAT : MS_PER_SNAP;
+            const snapSize = 
+                e.ctrlKey ? MS_PER_BEAT : 
+                e.altKey ? 1 :
+                MS_PER_SNAP;
+            
             if (e.deltaY < 0) {
                 bgm.pos = snapLeft(bgm.pos, FIRST_BEAT, snapSize);
             }
