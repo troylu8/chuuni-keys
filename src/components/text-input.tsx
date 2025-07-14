@@ -40,7 +40,7 @@ export default function TextInput({
             {   showCharLimit && 
                 <p className={`
                     absolute right-2 top-1/2 -translate-y-1/2 
-                    bg-background ${limitExceeded && "text-failure"} rounded-md px-1
+                    ${limitExceeded && "text-ctp-red"} rounded-md px-1
                     text-sm
                 `}>
                     {text.length}/{maxChars}

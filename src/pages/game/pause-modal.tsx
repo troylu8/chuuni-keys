@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useGameControls } from "../../contexts/game-manager";
-import Modal from "../../components/modal";
 import MuseButton from "../../components/muse-button";
 import { useBgmState } from "../../contexts/bgm-state";
 import bgm from "../../lib/sound";
@@ -20,16 +19,20 @@ export default function PauseModal() {
         return () => { window.removeEventListener("keydown", handleKeyDown); }
     }, []);
     
+    
     return (
-        <>
-            { paused && 
-                <Modal title="paused">
-                    <div className="flex flex-col gap-3 p-2">
-                        <MuseButton onClick={bgm.play}> resume </MuseButton>
-                        <MuseButton onClick={restartGame}> restart </MuseButton>
-                        <MuseButton onClick={stopGame}> quit </MuseButton>
-                    </div>
-                </Modal>
+        <> 
+            { paused &&
+                <div className="
+                    absolute cover flex flex-col z-20 items-start pl-[20vw] bg-[#1e1e2e88]
+                    font-serif tracking-widest [&>button]:text-[5vh]
+                ">
+                    <h1 className="mt-[15vh] text-[10vh]"> paused </h1>
+                    
+                    <MuseButton className="mt-[6vh]" onClick={() => bgm.play()}> resume </MuseButton>
+                    <MuseButton className="ml-5" onClick={restartGame}> restart </MuseButton>
+                    <MuseButton className="ml-10 text-ctp-red" onClick={stopGame}> quit stage </MuseButton>
+                </div>
             }
         </>
     )

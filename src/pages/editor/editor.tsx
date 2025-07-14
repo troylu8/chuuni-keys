@@ -59,7 +59,7 @@ export default function Editor() {
     }
     const chartFolder = getChartFolder(metadata);
     
-    useTitlebarText(metadata.title);
+    useTitlebarText(metadata.title + (metadata.credit_audio? " - " + metadata.credit_audio : ""));
     
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     
@@ -310,7 +310,7 @@ export default function Editor() {
                             quit={() => {
                                 activeModal == ActiveModal.CONFIRM_QUIT_TO_SELECT ? 
                                     setPageParams([Page.MAIN_MENU]) :
-                                    getCurrentWindow().close()
+                                    getCurrentWindow().destroy()
                             }}
                         />
                     }

@@ -23,7 +23,7 @@ export default function ChartInfo({ metadata }: Props) {
                         borderBottom: "solid 3px var(--color-ctp-mauve)",
                     }}
                     className="
-                        absolute -left-5 top-3 px-5 rounded-md
+                        absolute -left-5 top-3 px-5 rounded-md font-serif
                         text-[6vh] wrap-anywhere overflow-y-hidden text-ctp-mauve bg-ctp-crust
                     "> {metadata.title} </p>
                     

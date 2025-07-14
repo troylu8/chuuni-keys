@@ -2,7 +2,7 @@ import { Page, ChartSelectParams, usePage } from "../../contexts/page";
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import ChartInfo from './chart-info';
-import { ChartMetadata, flags, getChartFolder, SERVER_URL } from "../../lib/lib";
+import { ChartMetadata, compareDifficulty, flags, getChartFolder, SERVER_URL } from "../../lib/lib";
 import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
 import { ArrowLeft, EllipsisVertical, Plus, XIcon } from "lucide-react";
@@ -43,6 +43,7 @@ export default function ChartSelect() {
     // load charts
     useEffect(() => {
         invoke<ChartMetadata[]>("get_all_charts").then(charts => {
+            charts.sort(compareDifficulty);
             setCharts(charts);
             
             const initialChartId = (params as ChartSelectParams)?.activeChartId ?? flags.lastActiveChartId;

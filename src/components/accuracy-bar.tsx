@@ -28,8 +28,8 @@ export default function AccuracyBar() {
     
     
     return (
-        <div className="relative w-[15vw] h-[2px] rounded-full bg-background">
-            <AccuracyTick delta={0} color="var(--background)" />
+        <div className="relative w-[15vw] h-[2px] rounded-full bg-ctp-text">
+            <AccuracyTick delta={0} color="var(--color-ctp-text)" />
             {
                 deltas.map(([id, delta]) => <AccuracyTick key={id} delta={delta} color={PRAISE_COLORS[getPraise(delta)]} onEnd={popDelta} />)
             }

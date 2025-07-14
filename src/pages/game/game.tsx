@@ -28,7 +28,7 @@ function GameInner() {
     const metadata = params as ChartMetadata;
     const [{showCombo, showAccuracyBar}] = useSettings();
     
-    useTitlebarText(metadata.title);
+    useTitlebarText(metadata.title + (metadata.credit_audio? " - " + metadata.credit_audio : ""));
     
 
     return (

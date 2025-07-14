@@ -30,7 +30,7 @@ export default function Combo() {
     return (
         <> 
             { combo != 0 &&
-                <p ref={comboLabelRef} className="absolute top-7 right-3 text-background anim-combo"> {combo}x </p>
+                <p ref={comboLabelRef} className="absolute top-7 right-3 text-ctp-mauve anim-combo font-mono"> {combo}x </p>
             }
         </>
     );

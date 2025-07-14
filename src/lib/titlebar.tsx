@@ -30,7 +30,7 @@ export function useTitlebarText(text: string) {
     useEffect(() => {
         setTitlebarText("chuuni keys // " + text);
         return () => resetTitlebarText();
-    }, []);
+    }, [text]);
 }
 
 export function setTitlebarVisible(visible: boolean) {

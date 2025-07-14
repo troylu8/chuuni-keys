@@ -6,6 +6,7 @@ import { Page, usePage } from "./page";
 import { getChartFolder as getChartFolder, flags, ChartMetadata } from '../lib/lib';
 import bgm from '../lib/sound';
 import { useSettings } from './settings';
+import { useTitlebarText } from '../lib/titlebar';
 
 export enum GameStage { LOADING, STARTED, ENDED };
 const GameStageContext = createContext<[GameStage, (next: GameStage) => any] | null>(null);
@@ -46,6 +47,7 @@ type Props = Readonly<{
 }>
 export default function GameManager({ children }: Props) {
     const [[,params], setPage] = usePage();
+    const metadata = params as ChartMetadata;
     
     const { paused } = useBgmState();
     const [{ offset },, activationDuration] = useSettings();
@@ -64,8 +66,6 @@ export default function GameManager({ children }: Props) {
     useEffect(() => {
         flags.keyUnitsEnabled = true;
         museEmitter.setMaxListeners(100);
-        
-        const metadata = params as ChartMetadata;
         
         (async () => {
             const chartFolder = getChartFolder(metadata);
@@ -99,8 +99,7 @@ export default function GameManager({ children }: Props) {
     useEffect(() => {
         
         // hide cursor while playing
-        console.log("hiding cursor", GameStage.STARTED && !paused);
-        document.body.style.cursor = GameStage.STARTED && !paused ? "none" : "";
+        document.body.style.cursor = gameStage == GameStage.STARTED && !paused ? "none" : "";
         
         if (gameStage != GameStage.STARTED || paused) return;
         
@@ -121,7 +120,7 @@ export default function GameManager({ children }: Props) {
                 else break;
             }
             
-            if (offsetPos > lastEventTime + 5000) {
+            if (offsetPos > lastEventTime + 2000) {
                 resetEvents();
                 setGameStage(GameStage.ENDED);
             }

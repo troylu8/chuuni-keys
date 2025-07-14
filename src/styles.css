@@ -6,6 +6,10 @@
     --normal: var(--color-ctp-yellow);
     --hard: var(--color-ctp-red);
     --fated: var(--color-ctp-mauve);
+
+    --miss: var(--color-ctp-red);
+    --good: var(--color-ctp-green);
+    --perfect: var(--color-ctp-blue);
 }
 
 .lucide {

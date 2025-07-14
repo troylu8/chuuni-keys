@@ -3,6 +3,10 @@ import { readTextFile, exists, writeTextFile } from "@tauri-apps/plugin-fs";
 import filenamify from "filenamify";
 
 export type Difficulty = "easy" | "normal" | "hard" | "fated";
+export function compareDifficulty(a: { difficulty: Difficulty }, b: { difficulty: Difficulty }) {
+    const orderedDiffs = ["easy", "normal", "hard", "fated"];
+    return orderedDiffs.indexOf(a.difficulty) - orderedDiffs.indexOf(b.difficulty);
+}
 
 export type ChartMetadata = {
     id: string,

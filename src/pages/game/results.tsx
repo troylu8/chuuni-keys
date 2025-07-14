@@ -7,13 +7,13 @@ import MuseButton from "../../components/muse-button";
 
 const SCORE_WEIGHTS = {
     perfect: 3,
-    good: 1,
+    good: 2,
     miss: 0
 }
 
 function calculateLetter(accuracy: number, fullCombo: boolean) {
-    const LETTERS = ["C", "B", "A", "S", "S+"];
-    const ACCURACY_REQS = [0, 0.75, 0.85, 0.95];
+    const LETTERS = ["F", "C", "B", "A", "S", "S+", "X"];
+    const ACCURACY_REQS = [0, 0.3, 0.5, 0.7, 0.9, 1];
     
     for (let i = ACCURACY_REQS.length-1; i >= 0; i--) {
         if (accuracy >= ACCURACY_REQS[i]) {
@@ -62,8 +62,8 @@ export default function Results() {
     }
     
     return (
-        <div className="absolute cover flex flex-col justify-center items-center gap-3 z-20 text-background text-[5vh]">
-            <p style={{fontSize: "7em", lineHeight: 1}}> {letter} </p>
+        <div className="absolute cover flex flex-col justify-center items-center gap-3 z-20 text-[5vh]">
+            <p style={{fontSize: "7em", lineHeight: 1}} className="text-ctp-red font-serif"> {letter} </p>
             <p>
                 <span style={{color: PRAISE_COLORS["perfect"]}}> {perfect} </span> /
                 <span style={{color: PRAISE_COLORS["good"]}}> {good} </span> /
@@ -79,7 +79,7 @@ export default function Results() {
             
             <MuseButton 
                 onClick={handleToChartSelect}
-                className="self-center mt-[10vh]"
+                className="self-center mt-[10vh] text-ctp-base bg-ctp-mauve"
             > back to song select </MuseButton>
         </div>
     )
