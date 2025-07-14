@@ -228,7 +228,7 @@ export default function Editor() {
             }
         }
         function onKeyDown(e: KeyboardEvent) {
-            if (e.code === "Space")
+            if (e.key === " ")
                 bgm.paused ? bgm.play() : bgm.pause();
             else if (e.code === "ShiftLeft") 
                 bgm.pos = bgm.pos <= FIRST_BEAT ? 0 : snapLeft(bgm.pos, FIRST_BEAT, MS_PER_SNAP);
@@ -239,11 +239,13 @@ export default function Editor() {
             else if (e.key === "ArrowRight")
                 bgm.pos += 1;
             else if (e.ctrlKey && e.key === "s")
-                handleSave()
+                handleSave();
             else if (e.ctrlKey && e.key === "z")
-                handleUndo()
+                handleUndo();
             else if (e.ctrlKey && e.key === "y")
-                handleRedo()
+                handleRedo();
+            else if (e.key === "Escape")
+                handleQuit();
         }
         
         if (activeTab != "details" && activeModal == ActiveModal.NONE) {
@@ -255,7 +257,7 @@ export default function Editor() {
             window.removeEventListener("wheel", onScroll); 
             window.removeEventListener("keydown", onKeyDown); 
         }
-    }, [metadata.first_beat, saved, activeTab, activeModal]);
+    }, [metadata.id, metadata.first_beat, saved, activeTab, activeModal]);
     
     return (
         <>

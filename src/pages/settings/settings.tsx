@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Settings as SettingsType, useSettings } from "../../contexts/settings";
 import TimingEditor from "./timing-editor";
 import MuseButton from "../../components/muse-button";
 import { Bind } from "../../lib/lib";
 import Slider from "../../components/slider";
 import MuseCheckbox from "../../components/muse-checkbox";
-import { AppWindow, ArrowLeft, Volume2, Gamepad2 } from "lucide-react";
+import { AppWindow, ArrowLeft, Volume2 } from "lucide-react";
 import { Page, usePage } from "../../contexts/page";
 
 export default function Settings() {
@@ -18,6 +18,15 @@ export default function Settings() {
     function bindSetting<K extends keyof SettingsType>(field: K): Bind<SettingsType[K]> {
         return [settings[field], val => setSettings(field, val)];
     }
+    
+    // keybinds
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key == "Escape") setPageParams([Page.MAIN_MENU]);
+        }
+        window.addEventListener("keydown", handleKeyDown);
+        return () => { window.removeEventListener("keydown", handleKeyDown); }
+    }, []);
     
     return (
         <div className="absolute cover flex justify-center overflow-auto bg-ctp-base">

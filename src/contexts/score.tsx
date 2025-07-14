@@ -4,7 +4,7 @@ export const PERFECT_THRESHOLD = 40;
 export const GOOD_THRESHOLD = 100;
 
 /** hits outside this threshold are ignored, they don't even count as a miss */
-export const HIT_THRESHOLD = 150;
+export const HIT_THRESHOLD = 250;
 
 export type Stats = {
     perfect: number,

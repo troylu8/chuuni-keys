@@ -103,6 +103,38 @@ export default function ChartSelect() {
         setActiveChart(charts[i == 0 ? 1 : i - 1]);
     }
     
+    // keybinds
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (!activeChart) return;
+            
+            console.log(e.key);
+            
+            if (e.key == "Enter") {
+                if (e.shiftKey) edit();
+                else            play();
+            }
+            
+            else if (e.key == "ArrowUp") {
+                const i = charts.findIndex(chart => chart.id == activeChart.id);
+                if (i != 0) 
+                    setActiveChart(charts[i - 1]);
+            }
+            else if (e.key == "ArrowDown") {
+                const i = charts.findIndex(chart => chart.id == activeChart.id);
+                if (i != charts.length - 1)
+                    setActiveChart(charts[i + 1]);
+            }
+            
+            else if (e.key == "Escape") {
+                setPageParams([Page.MAIN_MENU]);
+            }
+        }
+        
+        window.addEventListener("keydown", handleKeyDown);
+        return () => { window.removeEventListener("keydown", handleKeyDown); }
+    }, [activeChart, charts]);
+    
     return (
         <div className="fixed cover bg-ctp-base">
             <NavigationBar />

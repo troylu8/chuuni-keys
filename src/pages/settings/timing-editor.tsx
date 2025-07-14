@@ -68,7 +68,7 @@ export default function TimingEditor({ onClose }: Props) {
             <MuseButton 
                 className="absolute left-1 top-1 text-ctp-mauve" 
                 onClick={handleClose}
-            > <ArrowLeft /> exit </MuseButton>
+            > <ArrowLeft /> quit </MuseButton>
             
             <div className="flex gap-16 items-center">
                 <div className="flex flex-col gap-20">
@@ -96,7 +96,7 @@ export default function TimingEditor({ onClose }: Props) {
                 </DeltaProvider>
             </div>
             
-            <div className="absolute left-0 bottom-0 h-3 bg-ctp-red" style={{width: (msSinceLastBeat / MS_PER_BEAT * 100) + "%" }}></div>
+            <div className="absolute left-0 bottom-0 h-1 bg-ctp-mauve" style={{width: (msSinceLastBeat / MS_PER_BEAT * 100) + "%" }}></div>
         </div>
     );
 }
