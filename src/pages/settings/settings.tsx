@@ -32,13 +32,13 @@ export default function Settings() {
                 <h1 className="my-5 text-center text-xl"> Settings </h1>
                 
                 
-                <div className="flex gap-6 justify-center">
+                <div className="flex gap-6 justify-center text-ctp-base">
                     <MuseButton 
-                        className="red-outline-btn" 
+                        className="bg-ctp-mauve" 
                         onClick={() => setTimingEditorVisible(true)}
-                    > edit note timing </MuseButton>
+                    > edit hit offset </MuseButton>
                     <MuseButton 
-                        className="red-outline-btn" 
+                        className="bg-ctp-mauve" 
                         onClick={() => setTimingEditorVisible(true)} 
                     > edit hitring speed </MuseButton>
                 </div>

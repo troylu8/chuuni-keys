@@ -16,7 +16,7 @@ export default function NumberInput({ bind: [value, setter], label, largeIncreme
     }
     
     return (
-        <div className="flex justify-between text-nowrap text-ctp-mauve">
+        <div className="flex justify-between text-nowrap text-ctp-mauve gap-5">
             <label htmlFor={label} className="text-ctp-text"> {label} </label>
             
             <div className="flex [&>svg]:hover:text-ctp-yellow [&>svg]:hover:cursor-pointer ">

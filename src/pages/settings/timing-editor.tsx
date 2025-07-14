@@ -9,11 +9,31 @@ import bgm from "../../lib/sound";
 import { USERDATA_DIR } from "../../lib/lib";
 import Praise from "../../components/praise";
 import NumberInput from "../../components/number-input";
+import { ArrowLeft } from "lucide-react";
 
 const MS_PER_BEAT = 500;
 const MS_FIRST_BEAT = 475;
 const MS_LAST_BEAT = 1975;
 const MS_PER_LOOP = 2000;
+
+
+const MIN_HITRING_SPEED = 1;
+const MAX_HITRING_SPEED = 9;
+const MIN_HITRING_DURATION = 200;
+const MAX_HITRING_DURATION = 1000;
+
+function hitringSpeedToDuration(speed: number) {
+    return (
+        (1 - (speed - MIN_HITRING_SPEED) / (MAX_HITRING_SPEED - MIN_HITRING_SPEED) ) *
+        (MAX_HITRING_DURATION - MIN_HITRING_DURATION) + MIN_HITRING_DURATION
+    );
+}
+function hitringDurationToSpeed(duration: number) {
+    return Math.round(
+        (1 - (duration - MIN_HITRING_DURATION) / (MAX_HITRING_DURATION - MIN_HITRING_DURATION) ) *
+        (MAX_HITRING_SPEED - MIN_HITRING_SPEED) + MIN_HITRING_SPEED
+    );
+}
 
 type Props = Readonly<{
     onClose: () => any
@@ -30,17 +50,9 @@ export default function TimingEditor({ onClose }: Props) {
         bgm.src = USERDATA_DIR + "\\metronome.mp3";
         bgm.play();
         
-        let prevI = 0;
-        
         const unlisten = bgm.addPosListener(pos => {
             if (pos > MS_PER_LOOP) 
                 bgm.pos = pos - MS_PER_LOOP;
-            
-            const i = Math.floor((pos + offset - MS_FIRST_BEAT) / MS_PER_BEAT);
-            if (i != prevI && i != -1) {
-                // playSfx("hitsound");
-                prevI = i;
-            }
         });
         
         return unlisten;
@@ -53,9 +65,12 @@ export default function TimingEditor({ onClose }: Props) {
     
     return (
         <div className="absolute cover flex flex-col items-center justify-center">
-            <MuseButton className="absolute left-1 top-1" onClick={handleClose}> exit </MuseButton>
+            <MuseButton 
+                className="absolute left-1 top-1 text-ctp-mauve" 
+                onClick={handleClose}
+            > <ArrowLeft /> exit </MuseButton>
             
-            <div className="flex gap-8 items-center">
+            <div className="flex gap-16 items-center">
                 <div className="flex flex-col gap-20">
                     <NumberInput 
                         label="hit offset"
@@ -65,10 +80,13 @@ export default function TimingEditor({ onClose }: Props) {
                         largeIncrements
                     />
                     <NumberInput 
-                        label="hitring duration"
-                        bind={[hitringDuration, val => setSettings("hitringDuration", val)]}
-                        min={-300}
-                        max={300}
+                        label="hitring speed"
+                        min={MIN_HITRING_SPEED}
+                        max={MAX_HITRING_SPEED}
+                        bind={[
+                            hitringDurationToSpeed(hitringDuration), 
+                            speed => setSettings("hitringDuration", hitringSpeedToDuration(speed))
+                        ]}
                         largeIncrements
                     />
                 </div>
@@ -116,7 +134,8 @@ function Metronome({ msSinceLastBeat }: MetronomeProps) {
     );
 }
 
-const MAX_DELTA_HISTORY = 10;
+const MAX_DELTA_HISTORY = 12;
+const HISTORY_ENTRY_HEIGHT = 1 / MAX_DELTA_HISTORY * 100 * 0.7 + "vh";
 
 function DeltaHistory() {
     const [, addDeltaListener] = useDelta();
@@ -126,28 +145,40 @@ function DeltaHistory() {
     useEffect(() => {
         const unlisten = addDeltaListener(delta => {
             setHistory(prev => {
-                const next: [number, Delta][] = [...prev, [Math.random(), delta]];
-                if (next.length > MAX_DELTA_HISTORY) next.shift();
-                return next;
+                return (prev.length == MAX_DELTA_HISTORY)?
+                    [ [Math.random(), delta] ] :
+                    [...prev, [Math.random(), delta]];
             });
         });
         return unlisten;
     }, []);
     
     return (
-        <div className="flex flex-col-reverse items-center w-20">
+        <div 
+            style={{height: `calc(${HISTORY_ENTRY_HEIGHT} * ${MAX_DELTA_HISTORY})`}}
+            className="flex flex-col-reverse items-end w-20 self-end font-mono"
+        >
             {
-                history.map(([key, delta]) => 
-                    <p 
-                        key={key}    
-                        style={{
-                            color: PRAISE_COLORS[getPraise(delta)],
-                            height: 1 / MAX_DELTA_HISTORY * 100 * 0.7 + "vh",
-                        }}
-                    > 
-                        { typeof delta == "number" ? Math.round(delta) : delta } 
-                    </p>
-                )
+                history.map(([key, delta]) => {
+                    if (delta == "miss") return;
+                    
+                    return (
+                        <p 
+                            key={key}    
+                            style={{
+                                color: PRAISE_COLORS[getPraise(delta)],
+                                height: HISTORY_ENTRY_HEIGHT,
+                            }}
+                        > 
+                            { ("" + Math.round(delta)).padStart(4) } 
+                            &nbsp;
+                            <span className={delta < 0 ? "text-ctp-yellow" : "text-ctp-red"}> 
+                                { delta < 0 ? "early" : <>late&nbsp;</>} 
+                                
+                            </span>
+                        </p>
+                    )
+                })
             }
         </div>
     )

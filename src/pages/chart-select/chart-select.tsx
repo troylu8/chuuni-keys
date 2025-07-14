@@ -132,9 +132,9 @@ function NavigationBar() {
     const { paused } =  useBgmState();
     
     return (
-        <nav className="absolute top-1 left-1 z-10 flex gap-3">
+        <nav className="absolute top-1 left-1 z-10 flex gap-3 text-ctp-mauve">
             <MuseButton onClick={() => setPageParams([Page.MAIN_MENU])}>
-                <ArrowLeft /> home
+                <ArrowLeft /> quit
             </MuseButton>
             <MuseButton onClick={() => setPageParams([Page.NEW_CHART])}>
                 <Plus /> new
