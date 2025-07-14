@@ -105,14 +105,15 @@ export default function GameManager({ children }: Props) {
         
         if (i.current == 0) museEmitter.emit("start");
         
-        const lastEventTime = eventsRef.current[eventsRef.current.length-1][0];
+        const events = eventsRef.current;
+        const lastEventTime = events.length == 0 ? 0 : events[events.length-1][0];
         
         const unlisten = bgm.addPosListener(pos => {
             const offsetPos = pos + offset;
             
             // send all ready muse events
-            while (i.current < eventsRef.current.length) {
-                const nextEvent = eventsRef.current[i.current];
+            while (i.current < events.length) {
+                const nextEvent = events[i.current];
                 if (offsetPos >= nextEvent[0]) {
                     museEmitter.emit(nextEvent[1], nextEvent[0], nextEvent[2]);
                     i.current++;

@@ -10,7 +10,7 @@ const ANSI_STAGGER = [
 ];
 
 const QWERTY = [
-    // "q".split("")
+    // "k".split("")
     "qwertyuiop".split(""),
     "asdfghjkl".split(""),
     "zxcvbnm,".split("")

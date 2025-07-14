@@ -80,7 +80,6 @@ export default function SettingsProvider({ children }: Props) {
             
             SETTINGS_HOOKS[key]?.call(null, loadedSettings[key]);
         }
-        console.log(loadedSettings);
         setSettingsInner(loadedSettings);
     }, []);
     

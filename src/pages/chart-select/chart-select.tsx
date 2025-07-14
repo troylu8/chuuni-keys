@@ -108,8 +108,6 @@ export default function ChartSelect() {
         function handleKeyDown(e: KeyboardEvent) {
             if (!activeChart) return;
             
-            console.log(e.key);
-            
             if (e.key == "Enter") {
                 if (e.shiftKey) edit();
                 else            play();

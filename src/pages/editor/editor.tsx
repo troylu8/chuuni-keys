@@ -272,15 +272,15 @@ export default function Editor() {
                 <nav className="flex flex-col gap-5 mb-8 z-20">
                     <div className="relative flex gap-3 m-2">
                         <MuseButton 
-                            className="[--btn-color:var(--color-ctp-red)] outline-btn" 
+                            className="bg-ctp-red text-ctp-base" 
                             onClick={handleQuit}
                         > <ArrowLeft /> quit </MuseButton>
                         <MuseButton 
-                            className={"outline-btn " + (saved? "[--btn-color:var(--color-ctp-blue)]" : "[--btn-color:var(--color-ctp-yellow)]")}
+                            className={"text-ctp-base " + (saved? "bg-ctp-blue" : "bg-ctp-yellow")}
                             onClick={() => handleSave()}
                         > {saved ? "saved" : "save *"} </MuseButton>
                         <div className="grow flex flex-reverse justify-end gap-3">
-                            {   
+                            {
                                 ["keyboard", "timing", "details"].map(tab => 
                                     <MuseButton
                                         key={tab}
@@ -361,9 +361,9 @@ type ConfirmQuitModalProps = Readonly<{
 function ConfirmQuitModal({ onClose, saveChanges, quit }: ConfirmQuitModalProps) {
     return (
         <Modal title="you have unsaved changes!" onClose={onClose}>
-            <div className="flex gap-2 p-2">
-                <MuseButton onClick={quit}> discard changes </MuseButton>
-                <MuseButton onClick={() => saveChanges().then(quit)}> save and quit </MuseButton>
+            <div className="flex gap-2 p-2 text-ctp-base">
+                <MuseButton onClick={quit} className="bg-ctp-red"> discard changes </MuseButton>
+                <MuseButton onClick={() => saveChanges().then(quit)} className="bg-ctp-blue"> save and quit </MuseButton>
             </div>
         </Modal>
     )

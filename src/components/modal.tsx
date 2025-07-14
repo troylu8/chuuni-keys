@@ -22,13 +22,9 @@ export default function Modal({ onClose, title, children }: Props) {
         >
             <div className="max-h-[80%] bg-ctp-crust rounded-md flex flex-col outline-2 outline-ctp-mauve">
                 { title != undefined && 
-                    <div className="flex justify-between p-2">
-                        <h1 className={`text-nowrap ${onClose == undefined && "w-full text-center"}`}>
-                            {title}
-                        </h1>
-                        
-                        { onClose && <MuseButton onClick={handleClose}> x </MuseButton> }
-                    </div>
+                    <h1 className="text-nowrap w-full text-center mt-2">
+                        {title}
+                    </h1>
                 }
                 
                 <div className="overflow-auto">

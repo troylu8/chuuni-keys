@@ -17,7 +17,6 @@ export default function NewChart() {
     
     async function initNewChart(audioFilepath: string) {
         const audio_ext = await extname(audioFilepath);
-        console.log(audio_ext);
         
         if (!VALID_AUDIO_EXTS.includes(audio_ext)) {
             setErrMsg(`[ ${audio_ext} ] is not a supported file type: ( ${VALID_AUDIO_EXTS} )`);
@@ -38,11 +37,12 @@ export default function NewChart() {
         const chartFolder = getChartFolder(metadata);
         await mkdir(chartFolder);
         
-        await Promise.all([
+        const [, chartFileHandle] = await Promise.all([
             writeTextFile(chartFolder + "\\metadata.json", stringifyIgnoreNull(metadata)),
             create(chartFolder + "\\chart.txt"),
             copyFile(audioFilepath, `${chartFolder}\\audio.${metadata.audio_ext}`),
         ]);
+        await chartFileHandle.close();
         
         setPageParams([Page.EDITOR, { metadata, isNew: true }]);
     }

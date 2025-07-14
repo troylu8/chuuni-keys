@@ -12,6 +12,8 @@ const SCORE_WEIGHTS = {
 }
 
 function calculateLetter(accuracy: number, fullCombo: boolean) {
+    if (Number.isNaN(accuracy)) return "F";
+    
     const LETTERS = ["F", "C", "B", "A", "S", "S+", "X"];
     const ACCURACY_REQS = [0, 0.3, 0.5, 0.7, 0.9, 1];
     
@@ -22,7 +24,7 @@ function calculateLetter(accuracy: number, fullCombo: boolean) {
     }
 }
 
-export default function Results() {
+export default function ResultsScreen() {
     const [[,params], setPage] = usePage();
     const metadata = params as ChartMetadata;
     
@@ -53,12 +55,13 @@ export default function Results() {
     function handleToChartSelect() {
         setPage([Page.CHART_SELECT]); 
         
-        if (!params) return;
-        writeTextFile(
-            getChartFolder(metadata) + "\\leaderboard.csv", 
-            `${Date.now()},${accuracyPercent},${maxCombo},${letter}${fullCombo? ",FC" : ""}\n`,
-            {append: true}
-        );
+        if (Number.isInteger(accuracyPercent)) { // accuracy may be NaN if chart was empty
+            writeTextFile(
+                getChartFolder(metadata) + "\\leaderboard.csv", 
+                `${Date.now()},${accuracyPercent},${maxCombo},${letter}${fullCombo? ",FC" : ""}\n`,
+                {append: true}
+            );
+        }
     }
     
     return (

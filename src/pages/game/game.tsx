@@ -5,7 +5,7 @@ import KeyboardLayout from "../../components/keyboard-layout";
 import PauseModal from "./pause-modal";
 import Background from "../../components/background";
 import Combo from "./combo";
-import Results from "./results";
+import ResultsScreen from "./results-screen";
 import KeyUnitGame from "./key-unit-game";
 import { usePage } from "../../contexts/page";
 import { ChartMetadata, getChartFolder } from "../../lib/lib";
@@ -61,7 +61,7 @@ function GameInner() {
                     </>
                 }
                 
-                { gameStage == GameStage.ENDED && <Results /> }
+                { gameStage == GameStage.ENDED && <ResultsScreen /> }
             </DeltaProvider>
         </div>
     )

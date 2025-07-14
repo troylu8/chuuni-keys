@@ -39,10 +39,11 @@ export default function KeyUnitGame( { keyCode, museEvent, children, labelCenter
             const offsetPos = pos + offset;
             if (hitTimes.length != 0 && offsetPos > hitTimes[0] + GOOD_THRESHOLD) {
                 popHitTime();
+                unlistenPos();  //immediately unlisten because `hitTimes` is now stale after popHitTime()
             }
         });
         return unlistenPos;
-    }, [hitTimes]);
+    }, [hitTimes, offset]);
     
     // add/clear hitrings on museEvent/start
     useEffect(() => {

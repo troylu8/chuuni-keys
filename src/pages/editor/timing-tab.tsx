@@ -29,6 +29,7 @@ export default function TimingTab({ metadata, setMetadata, setOffsetHere, setPre
                     <p> otherwise, your notes may not align with the beat. </p>
                     
                     <div className="mt-5 flex flex-col items-center w-full [&>*]:w-full">
+                        
                         <MuseButton 
                             className="[--btn-color:var(--color-ctp-teal)] outline-btn mb-3 w-fit!"
                             onClick={setOffsetHere}
