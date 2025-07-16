@@ -39,6 +39,8 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             }
         }
         function handleKeyUp(e: KeyboardEvent) {
+            if (keyCode === "a")
+                console.log("keyup");
             if (e.key === keyCode) setPressed(false);
         }
         
@@ -49,7 +51,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
         }
-    }, [onHit]);
+    }, [onHit, pressed, keyCode]);
     
     const allHitsPassed = hitProgresses.length != 0 && hitProgresses.every(v => v < 0);
     const latestHitProgress = hitProgresses.reduce((accum, curr) => Math.max(accum, curr), -Infinity);
@@ -89,7 +91,7 @@ function Hitring({ progress }: HitringProps) {
     return (
         <>
             <div 
-                className="absolute outline-ctp-mauve outline-7 pointer-events-none"
+                className="absolute outline-ctp-mauve outline-[1.4vh] pointer-events-none"
                 style={{
                     top: -gap,
                     bottom: -gap,

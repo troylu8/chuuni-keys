@@ -73,7 +73,7 @@ export default function ChartList({ charts, activeChartId, onEntryClick, onEntry
         const entryCenterY = (entryRect.top + entryRect.bottom) / 2;
         const listRect = chartList.getBoundingClientRect();
         
-        const scrollTarget = chartList.scrollTop + entryCenterY - listRect.height / 2;
+        const scrollTarget = chartList.scrollTop - listRect.top + entryCenterY - listRect.height / 2;
         if (instant) {
             chartList.scrollTo({top: scrollTarget, behavior: "instant"});
             scrollTargetRef.current = scrollTarget;
@@ -164,7 +164,7 @@ type ChartEntryProps = Readonly<{
     onContextMenu: () => any
     active: boolean
 }>
-function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProps) { //TODO use "active"
+function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProps) {
     
     return (
         <section 
@@ -174,11 +174,16 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
             onContextMenu={onContextMenu}
         >            
             {/* thumbnail */}
-            <div className="relative w-[25vh] h-[25vh] overflow-hidden rotate-45 rounded-[25%] z-10">
-                <img 
-                    src={metadata.img_ext && convertFileSrc(`${getChartFolder(metadata)}\\img.${metadata.img_ext}`)} //TODO default img
-                    className='absolute cover w-full h-full scale-125 object-cover -rotate-45'
-                />
+            <div className="relative w-[25vh] h-[25vh] rotate-45  z-10">
+                <div className="absolute cover overflow-hidden rounded-[25%]">
+                    <img 
+                        src={metadata.img_ext && convertFileSrc(`${getChartFolder(metadata)}\\img.${metadata.img_ext}`)} //TODO default img
+                        className='absolute cover w-full h-full scale-125 object-cover -rotate-45'
+                    />
+                </div>
+                { active &&
+                    <div className="absolute -left-2 -right-2 -top-2 -bottom-2 rounded-[25%] outline-8 outline-ctp-red"></div>
+                }
             </div>
             
             {/* difficulty label */}
@@ -187,7 +192,7 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
                 className='
                     absolute top-1/2 -translate-y-1/2 left-full -translate-x-1/2 ml-[7vh]
                     w-[10vh] h-[10vh] rotate-45 rounded-[25%]
-                    flex justify-center items-center z-20
+                    flex justify-center items-center z-10
                 '
             >
                 <div className="-rotate-45 text-ctp-base text-[4vh] font-mono"> 
@@ -202,17 +207,23 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
             {/* song title / producer label */}
             <header 
                 style={{
-                    border: "solid 2px",
-                    borderImage: "linear-gradient(to right, var(--color-ctp-mauve) 80%, rgba(0, 0, 0, 0) 90%) 100% 1"
+                    borderStyle: "solid",
+                    borderWidth: active ? "5px" : "2px",
+                    borderImage: `linear-gradient(to right, ${active ? "var(--color-ctp-red)" : "var(--color-ctp-mauve)"} 80%, rgba(0, 0, 0, 0) 90%) 100% 1`
                 }}
                 className='
                     absolute left-1/2 top-1/10 bottom-1/10 text-nowrap 
                     flex flex-col justify-center pl-[27vh] w-[50vw]
                 '
             >
-                <p className='text-[6vh] text-ctp-red'> {metadata.title} </p>
+                <p className={`text-[6vh] ${active ? "text-ctp-red" : "text-ctp-mauve"}`}> {metadata.title} </p>
                 <p className='text-[3vh]'> {metadata.credit_audio} </p>
             </header>
+            
+            { active && 
+                <div 
+                ></div>
+            }
         </section>
     )
 }

@@ -28,7 +28,7 @@ export default function NumberInput({ bind: [value, setter], label, largeIncreme
                     value={value ?? "-1"} 
                     onChange={e => clampedSetter(Number(e.currentTarget.value))}
                     className="
-                        w-20 text-ctp-yellow font-mono mx-1
+                        w-30 text-ctp-yellow font-mono mx-1
                         outline-2 outline-ctp-mauve rounded-sm text-center
                     "
                 />

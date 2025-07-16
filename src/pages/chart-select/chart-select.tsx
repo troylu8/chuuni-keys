@@ -9,6 +9,7 @@ import { ArrowLeft, EllipsisVertical, Plus, XIcon } from "lucide-react";
 import { remove } from "@tauri-apps/plugin-fs";
 import { useBgmState } from "../../contexts/bgm-state";
 import ChartList from "./chart-list";
+import Modal from "../../components/modal";
 
 
 export default function ChartSelect() {
@@ -197,49 +198,50 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
     return (
         <div className="
             absolute left-0 bottom-1/10 flex gap-1 ml-1 w-[35vw] z-10
-            [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3 text-ctp-base font-mono
+            [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3 text-ctp-base 
         ">
             <MuseButton 
                 onClick={() => setActionsState(actionsState == ActionsState.DEFAULT ? ActionsState.OPTIONS : ActionsState.DEFAULT)}
-                className="bg-ctp-blue grow-0! px-0.5!"
+                className="bg-ctp-blue grow-0! px-0.5! "
             > 
                 { actionsState == ActionsState.DEFAULT ? <EllipsisVertical /> : <XIcon /> }
             </MuseButton>
             
-            { actionsState == ActionsState.DEFAULT &&
-                <MuseButton onClick={play} className="bg-ctp-green"> 
+            { actionsState == ActionsState.DEFAULT ?
+                <MuseButton onClick={play} className="bg-ctp-green font-mono"> 
                     [ play ] 
                 </MuseButton>
-            }
-            
-            { actionsState == ActionsState.OPTIONS &&
+                :
                 <>
                     <MuseButton 
                         onClick={() => setActionsState(ActionsState.DELETING)}
-                        className="bg-ctp-red grow-0!"
+                        className="bg-ctp-red grow-0! font-mono"
                     > 
                         [ delete ] 
                     </MuseButton>
-                    <MuseButton onClick={edit} className="bg-ctp-blue"> 
+                    <MuseButton onClick={edit} className="bg-ctp-blue font-mono"> 
                         [ edit ] 
                     </MuseButton>
                 </>
             }
             
             { actionsState == ActionsState.DELETING &&
-                <>
-                    <p className="text-ctp-text"> delete this chart? </p>
-                    
-                    <MuseButton 
-                        className="bg-ctp-blue"
-                        onClick={() => setActionsState(ActionsState.DEFAULT)}
-                    > [ no ] </MuseButton>
-                    
-                    <MuseButton 
-                        onClick={deleteActiveChart} 
-                        className="bg-ctp-red"
-                    > [ yes ] </MuseButton>
-                </>
+                <Modal onClose={() => setActionsState(ActionsState.OPTIONS)}>
+                    <div className="p-2 flex flex-col text-ctp-text">
+                        <p> delete this chart? </p>
+                        <p> this can't be undone! </p>
+                        <div className="text-ctp-base flex gap-2 justify-center">
+                            <MuseButton 
+                                className="bg-ctp-blue"
+                                onClick={() => setActionsState(ActionsState.OPTIONS)}
+                            > cancel </MuseButton>
+                            <MuseButton 
+                                className="bg-ctp-red"
+                                onClick={deleteActiveChart}
+                            > delete </MuseButton>
+                        </div>
+                    </div>
+                </Modal>
             }
         </div>
     )

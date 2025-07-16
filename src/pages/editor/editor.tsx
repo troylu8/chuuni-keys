@@ -15,12 +15,12 @@ import DetailsTab from "./details-tab";
 import bgm from "../../lib/sound";
 import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
 import Slider from "../../components/slider";
-import { ArrowLeft, Pause, Play } from "lucide-react";
+import { ArrowLeft, Keyboard, Pause, Play, XIcon } from "lucide-react";
 import { useTitlebarText } from "../../lib/titlebar";
 
 
 type ActiveTab = "keyboard" | "timing" | "details";
-enum ActiveModal { NONE, CONFIRM_QUIT_TO_SELECT, CONFIRM_QUIT_APP }
+enum ActiveModal { NONE, KEYBINDS, CONFIRM_QUIT_TO_SELECT, CONFIRM_QUIT_APP }
 
 function snapLeft(ms: number, startingFrom: number, size: number) {
     const beat = (ms - startingFrom) / size;
@@ -144,6 +144,8 @@ export default function Editor() {
     function toggleEventHere(key: string) {
         const pos = bgm.pos;
         setSaved(false);
+        
+        console.log("toggle");
         
         setEvents(events => {
             const event: MuseEvent = [pos, ":" + key];
@@ -269,16 +271,20 @@ export default function Editor() {
             <div className="absolute cover flex flex-col">
                 
                 {/* top row */}
-                <nav className="flex flex-col gap-5 mb-8 z-20">
+                <nav className="flex flex-col gap-5 mb-8 z-20 text-ctp-base">
                     <div className="relative flex gap-3 m-2">
                         <MuseButton 
-                            className="bg-ctp-red text-ctp-base" 
+                            className="bg-ctp-red" 
                             onClick={handleQuit}
                         > <ArrowLeft /> quit </MuseButton>
                         <MuseButton 
-                            className={"text-ctp-base " + (saved? "bg-ctp-blue" : "bg-ctp-yellow")}
+                            className={saved? "bg-ctp-blue" : "bg-ctp-yellow"}
                             onClick={() => handleSave()}
                         > {saved ? "saved" : "save *"} </MuseButton>
+                        <MuseButton 
+                            className="bg-ctp-mauve"
+                            onClick={() => setActiveModal(ActiveModal.KEYBINDS)}
+                        > <Keyboard /> </MuseButton>
                         <div className="grow flex flex-reverse justify-end gap-3">
                             {
                                 ["keyboard", "timing", "details"].map(tab => 
@@ -309,7 +315,7 @@ export default function Editor() {
                 
                 {/* center */}
                 <div className="relative grow">
-                    { (activeModal != ActiveModal.NONE) && 
+                    { activeModal == ActiveModal.CONFIRM_QUIT_APP || activeModal == ActiveModal.CONFIRM_QUIT_TO_SELECT && 
                         <ConfirmQuitModal 
                             onClose={() => setActiveModal(ActiveModal.NONE)}
                             saveChanges={handleSave}
@@ -320,6 +326,9 @@ export default function Editor() {
                             }}
                         />
                     }
+                    { activeModal == ActiveModal.KEYBINDS &&
+                        <KeybindsModal onClose={() => setActiveModal(ActiveModal.NONE)} />
+                    }
                     
                     { activeTab == "keyboard" &&
                         <EditorKeyboard events={events} onHit={toggleEventHere} />
@@ -329,8 +338,6 @@ export default function Editor() {
                         <TimingTab
                             metadata={metadata}
                             setMetadata={setMetadata}
-                            setOffsetHere={() => setMetadata({...metadata, first_beat: bgm.pos})}
-                            setPreviewHere={() => setMetadata({...metadata, preview_time: bgm.pos})}
                         />
                     }
                     { activeTab == "details" && 
@@ -353,6 +360,57 @@ export default function Editor() {
         </>
     );
 }
+
+type KeybindsModalProps = Readonly<{
+    onClose: () => any
+}>
+function KeybindsModal({ onClose }: KeybindsModalProps) {
+    return (
+        <Modal onClose={onClose}>
+            <div className="p-2 flex flex-col">
+                <header className="flex mb-2">
+                    <h1 className="text-[1.3em]"> Keybinds </h1>
+                    <MuseButton className="text-ctp-red ml-auto w-6 h-6 p-0!" onClick={onClose}> <XIcon size="100%" /> </MuseButton>
+                </header>
+                
+                <div 
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "fit-content(100%) 1fr",
+                        alignItems: "center"
+                    }}
+                    className="
+                        gap-x-3 gap-y-6
+                        [&_span]:bg-ctp-mauve [&_span]:text-ctp-base [&_span]:w-fit!
+                        [&_span]:font-mono [&_span]:px-2 [&_span]:rounded-sm
+                    "
+                >
+                    <span> a-z </span>
+                    <p> Add / remove that note at the current time. <br/> You can also <span>left click</span> the keys. </p>
+                    <span> Scroll </span>
+                    <p> Move timeline. Hold <span>Ctrl</span> to move by beat. <br/> Hold <span>Alt</span> to move by millisecond. </p>
+                    <span> L Shift </span> 
+                    <p> Move one beat to the left </p>
+                    <span> R Shift </span> 
+                    <p> Move one beat to the right </p>
+                    <span> ← </span> 
+                    <p> Move one millisecond to the left </p>
+                    <span> → </span> 
+                    <p> Move one millisecond to the right </p>
+                    <span> Ctrl + S </span> 
+                    <p> Save </p>
+                    <span> Ctrl + Z </span> 
+                    <p> Undo place note </p>
+                    <span> Ctrl + Y </span> 
+                    <p> Redo place note </p>
+                    <span> Esc </span> 
+                    <p> Quit </p>
+                </div>
+            </div>
+        </Modal>
+    )
+}
+
 
 type ConfirmQuitModalProps = Readonly<{
     onClose: () => any
@@ -389,7 +447,7 @@ function MusicControls({ firstBeat, previewTime }: Props) {
             <SeekBar 
                 ticks={[
                     ["first beat",      firstBeat, "var(--color-ctp-teal)"],
-                    ["preview time",    previewTime, "var(--color-green-600)"],
+                    ["preview time",    previewTime, "var(--color-ctp-yellow)"],
                 ]}
             />
             
