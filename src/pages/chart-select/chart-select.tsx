@@ -95,6 +95,9 @@ export default function ChartSelect() {
         // delete chart folder
         await remove(getChartFolder(activeChart), {recursive: true});
         
+        // remove unsynced mark
+        localStorage.removeItem("unsynced." + activeChart.id);
+        
         // remove this active chart from charts[]
         setCharts(charts.filter(chart => chart.id != activeChart.id));
         

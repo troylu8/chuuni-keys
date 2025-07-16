@@ -41,7 +41,6 @@ const SETTINGS_HOOKS: SettingsHooks = {
 }
 
 const initialFullscreen = await getCurrentWindow().isFullscreen();
-console.log(initialFullscreen);
 
 type Props = Readonly<{
     children: React.ReactNode;

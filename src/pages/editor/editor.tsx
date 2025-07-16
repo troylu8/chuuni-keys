@@ -184,7 +184,7 @@ export default function Editor() {
         
         setSaved(true);
         
-        // if this chart was online before and is still online now
+        // if this chart was online before and is still online now, mark it as unsynced
         if (newMetadata.online_id && metadata.online_id == newMetadata.online_id)
             localStorage.setItem("unsynced." + newMetadata.id, "");
     }
@@ -338,6 +338,7 @@ export default function Editor() {
                             metadata={metadata}
                             workingChartFolderRef={workingChartFolderRef}
                             setMetadata={setMetadata}
+                            saved={saved}
                             handleSave={handleSave}
                         />
                     }

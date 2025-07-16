@@ -66,7 +66,6 @@ export default function DeltaProvider({ children }: Props) {
     const listeners = useRef<Set<DeltaListener>>(new Set()).current;
     
     function broadcastDelta(delta: Delta) {
-        console.log("broadcasting", delta);
         
         // if delta is so big its not even considered a hit, ignore it
         if (delta != "miss" && delta > HIT_THRESHOLD) return;
