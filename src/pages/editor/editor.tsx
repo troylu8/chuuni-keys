@@ -261,7 +261,7 @@ export default function Editor() {
     return (
         <>
             <Background 
-                brightness={activeTab == "keyboard" ? 30 : 15}
+                brightness={activeTab == "keyboard" ? 40 : 15}
                 imgPath={metadata.img_ext && `${workingChartFolderRef.current}\\img.${metadata.img_ext}`} 
                 imgCacheBust={metadata.imgCacheBust} 
             />

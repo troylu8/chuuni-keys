@@ -1,4 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { USERDATA_DIR } from "../lib/lib";
 
 type Props = Readonly<{
     imgPath?: string
@@ -6,7 +7,7 @@ type Props = Readonly<{
     brightness?: number
 }>
 export default function Background({ imgPath, imgCacheBust, brightness }: Props) {
-    const src = imgPath && convertFileSrc(imgPath);
+    const src = convertFileSrc(imgPath ?? USERDATA_DIR + "\\default-bg.png");
     
     return (
         <>
@@ -14,7 +15,7 @@ export default function Background({ imgPath, imgCacheBust, brightness }: Props)
                 <div className="absolute cover -z-10">
                     <img 
                         src={imgCacheBust? `${src}?v=${imgCacheBust}` : src}
-                        style={{filter: `brightness(${brightness ?? 30}%)`}}
+                        style={{filter: `brightness(${brightness ?? 40}%)`}}
                         className="w-full h-full object-cover"
                     ></img>
                 </div>

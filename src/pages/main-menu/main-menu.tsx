@@ -1,7 +1,7 @@
 import { exit } from '@tauri-apps/plugin-process';
 import { Page, usePage } from "../../contexts/page";
 import MuseButton from '../../components/muse-button';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { resetAnimation, USERDATA_DIR } from '../../lib/lib';
 import NowPlaying from '../../components/now-playing';
@@ -30,11 +30,10 @@ export default function MainMenu() {
     
     
     return (
-        <div className="
-            fixed left-[7vw] top-[5vh]
-            flex flex-col justify-center 
-        ">
+        <div className="fixed left-[7vw] top-[5vh] flex flex-col justify-center">
             <NowPlaying />
+            
+            <FlairText />
             
             <img src={convertFileSrc(USERDATA_DIR + "\\logo.png")} className='w-[60vw]' />
             
@@ -52,4 +51,39 @@ export default function MainMenu() {
             </div>
         </div>
     );
+}
+
+function FlairText() {
+    
+    const FLAIR_TEXTS = [
+        "the voice of fate calls your name",
+        "beneath the facade, an identity only you know",
+        "you, me, and delusions of grandeur",
+        "heroes of the world only we can see",
+        "the truth lies beneath a shattered reality"
+    ];
+    function getRandomFlairText() {
+        return FLAIR_TEXTS[Math.floor(Math.random() * FLAIR_TEXTS.length)];
+    }
+    
+    // flair text only applied on mount
+    const [flairText] = useState(getRandomFlairText());
+    
+    return (
+        <div className='
+            fixed bottom-[17vh] right-0 w-[55vw] h-[40vh] 
+            text-[5vh] font-serif tracking-[0.3em]
+            opacity-25 flex flex-col-reverse
+        '>
+            <div className='max-h-full'>
+                <div 
+                    style={{shapeOutside: "polygon(0 0, 100% 0, 0 100%)"}}
+                    className='h-full w-[15vw] float-left'
+                >
+                </div>
+                
+                { flairText }
+            </div>
+        </div>
+    )
 }
