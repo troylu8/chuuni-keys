@@ -1,6 +1,9 @@
 import { readFile } from "@tauri-apps/plugin-fs";
-import { flags, USERDATA_DIR } from "./lib";
+import { appWindow, flags, USERDATA_DIR } from "./lib";
 import { convertFileSrc } from "@tauri-apps/api/core";
+
+
+
 
 const audioContext = new AudioContext();
 
@@ -44,6 +47,7 @@ class BgmPlayer {
     private posIntervalId?: NodeJS.Timeout;
     
     private _src: string | null = null;
+    private _volume = 1;
     
     public onLoad?: (info?: {title: string, credit_audio?: string }) => any;
     public onPlayOrPause?: (paused: boolean) => any; 
@@ -64,7 +68,12 @@ class BgmPlayer {
         this.audio.onended = () => {
             this.onPlayOrPause?.call(null, true);
         }
+        
+        appWindow.onResized(async () => {
+            this.gainNode.gain.value = await appWindow.isMinimized() ? 0 : this._volume;
+        });
     }
+    
     
     public get src() {
         return this._src;
@@ -83,7 +92,6 @@ class BgmPlayer {
         this.onLoad?.call(null, info);
         this.onPlayOrPause?.call(null, true);
     }
-    
     
     private callPosListeners() {
         for (const listener of this.posListeners) {
@@ -114,11 +122,12 @@ class BgmPlayer {
     }
     
     public get volume() {
-        return this.gainNode.gain.value;
+        return this._volume;
     }
     public set volume(value: number) {
-        this.gainNode.gain.value = Math.max(0, value);
-        this.onVolumeChange?.call(null, value);
+        this._volume = Math.max(0, value);
+        this.gainNode.gain.value = this._volume;
+        this.onVolumeChange?.call(null, this._volume);
     }
     
     public get pos() {

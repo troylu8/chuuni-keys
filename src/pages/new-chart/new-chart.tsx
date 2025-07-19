@@ -1,9 +1,8 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { Page, usePage } from "../../contexts/page";
 import { copyFile, create, mkdir, writeTextFile } from '@tauri-apps/plugin-fs';
-import { ChartMetadata, genRandStr, getChartFolder, stringifyIgnoreNull } from '../../lib/lib';
+import { appWindow, ChartMetadata, genRandStr, getChartFolder, stringifyIgnoreNull } from '../../lib/lib';
 import { downloadDir, extname } from '@tauri-apps/api/path';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Upload } from 'lucide-react';
 import MuseButton from '../../components/muse-button';
@@ -66,7 +65,7 @@ export default function NewChart() {
     const [ hovering, setHovering ] = useState(false);
     
     useEffect(() => {
-        const unlisten = getCurrentWindow().onDragDropEvent(e => {
+        const unlisten = appWindow.onDragDropEvent(e => {
             if (e.payload.type == "enter")      setHovering(true);
             else if (e.payload.type == "leave") setHovering(false);
             else if (e.payload.type == "drop")  {

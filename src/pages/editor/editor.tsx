@@ -8,8 +8,7 @@ import createTree, { Tree } from "functional-red-black-tree";
 import EditorKeyboard from "./editor-keyboard";
 import { rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import MuseButton from "../../components/muse-button";
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { getChartFolder, flags, stringifyIgnoreNull, ChartMetadata } from "../../lib/lib";
+import { getChartFolder, flags, stringifyIgnoreNull, ChartMetadata, appWindow } from "../../lib/lib";
 import TimingTab from "./timing-tab";
 import DetailsTab from "./details-tab";
 import bgm from "../../lib/sound";
@@ -198,7 +197,7 @@ export default function Editor() {
     
     // confirm if want to quit app with unsaved changes
     useEffect(() => {
-        const unlisten = getCurrentWindow().onCloseRequested(e => {
+        const unlisten = appWindow.onCloseRequested(e => {
             if (!saved) {
                 e.preventDefault();
                 setActiveModal(ActiveModal.CONFIRM_QUIT_APP);
@@ -320,7 +319,7 @@ export default function Editor() {
                             quit={() => {
                                 activeModal == ActiveModal.CONFIRM_QUIT_TO_SELECT ? 
                                     setPageParams([Page.MAIN_MENU]) :
-                                    getCurrentWindow().destroy()
+                                    appWindow.destroy()
                             }}
                         />
                     }

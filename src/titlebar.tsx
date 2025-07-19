@@ -1,11 +1,8 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useBgmState } from "./contexts/bgm-state";
 import { useSettings } from "./contexts/settings";
 import { Page, usePage } from "./contexts/page";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { USERDATA_DIR } from "./lib/lib";
-
-const appWindow = getCurrentWindow();
+import { appWindow, USERDATA_DIR } from "./lib/lib";
 
 
 export default function Titlebar() {

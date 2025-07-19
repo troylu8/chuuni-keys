@@ -1,6 +1,9 @@
 import { appLocalDataDir, homeDir } from "@tauri-apps/api/path";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { readTextFile, exists, writeTextFile } from "@tauri-apps/plugin-fs";
 import filenamify from "filenamify";
+
+export const appWindow = getCurrentWindow();
 
 export type Difficulty = "easy" | "normal" | "hard" | "fated";
 export function compareDifficulty(a: { difficulty: Difficulty }, b: { difficulty: Difficulty }) {
