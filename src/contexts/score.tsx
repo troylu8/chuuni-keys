@@ -1,10 +1,10 @@
 import { useState, createContext, useContext, useRef } from "react";
 
 export const PERFECT_THRESHOLD = 40;
-export const GOOD_THRESHOLD = 100;
+export const GOOD_THRESHOLD = 140;
 
 /** hits outside this threshold are ignored, they don't even count as a miss */
-export const HIT_THRESHOLD = 250;
+export const HIT_THRESHOLD = 225;
 
 export type Stats = {
     perfect: number,

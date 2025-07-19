@@ -67,7 +67,7 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             }}
             className={`
                 flex flex-col-reverse rounded-[25%] relative text-ctp-base
-                ${pressed? "bg-ctp-mauve" : "bg-ctp-text opacity-25" }
+                ${pressed? "bg-ctp-mauve" : "bg-light opacity-25" }
                 ${labelCentered && "items-center justify-center"}
                 ${activated && "opacity-100 transition-opacity"}
             `}

@@ -215,7 +215,7 @@ function MuseEventTicker({ children, onLeftClick, onRightClick }: MuseEventTicke
     return (
         <button 
             className="
-                font-mono text-sm rounded-sm bg-ctp-text text-ctp-base px-1
+                font-mono text-sm rounded-sm bg-light text-ctp-base px-1
                 hover:bg-ctp-mauve
             "
             onClick={() => {if (onLeftClick) onLeftClick()}}

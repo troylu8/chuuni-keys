@@ -2,6 +2,8 @@
 @import "@catppuccin/tailwindcss/config.css";
 
 :root {
+    --light: #eaeaea;
+
     --easy: var(--color-ctp-green);
     --normal: var(--color-ctp-yellow);
     --hard: var(--color-ctp-red);
@@ -10,6 +12,10 @@
     --miss: var(--color-ctp-red);
     --good: var(--color-ctp-green);
     --perfect: var(--color-ctp-blue);
+}
+
+@theme {
+    --color-light: var(--light);
 }
 
 .lucide {
