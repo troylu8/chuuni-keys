@@ -1,4 +1,3 @@
-import MuseButton from "./muse-button";
 
 type Props = Readonly<{
     onClose?: () => any

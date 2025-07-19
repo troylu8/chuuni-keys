@@ -45,6 +45,7 @@ class BgmPlayer {
     
     private _src: string | null = null;
     
+    public onLoad?: (info?: {title: string, credit_audio?: string }) => any;
     public onPlayOrPause?: (paused: boolean) => any; 
     public onDurationChange?: (duration: number) => any; 
     public onVolumeChange?: (volume: number) => any; 
@@ -68,18 +69,21 @@ class BgmPlayer {
     public get src() {
         return this._src;
     }
-    public set src(value) {
-        this._src = value;
-        if (value == null) {
+    public load(src: string, info?: { title: string, credit_audio?: string }) {
+        this._src = src;
+        if (src == null) {
             this.audio.src = "";
             this.onDurationChange?.call(null, 0);
         }
         else {
-            this.audio.src = convertFileSrc(value);    
+            this.audio.src = convertFileSrc(src);    
             this.audio.load();
         }
+        console.log("calling onload with ", info);
+        this.onLoad?.call(null, info);
         this.onPlayOrPause?.call(null, true);
     }
+    
     
     private callPosListeners() {
         for (const listener of this.posListeners) {

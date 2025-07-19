@@ -19,6 +19,8 @@ type BgmState = {
     duration: number
     speed: number
     volume: number
+    title?: string
+    credit_audio?: string
 }
 const BgmStateContext = createContext<BgmState | null>(null);
 
@@ -38,12 +40,14 @@ export default function BgmStateProvider({ children }: Props) {
     });
     
     useEffect(() => {
+        bgm.onLoad = info => setBgmState(prev => ({...prev, title: info?.title, credit_audio: info?.credit_audio}));
         bgm.onPlayOrPause = paused => setBgmState(prev => ({...prev, paused}));
-        bgm.onDurationChange = duration => setBgmState({...bgmState, duration});
+        bgm.onDurationChange = duration => setBgmState(prev => ({...prev, duration}));
         bgm.onSpeedChange = speed => setBgmState(prev => ({...prev, speed}));
         bgm.onVolumeChange = volume => setBgmState(prev => ({...prev, volume}));
         
         return () => {
+            delete bgm.onLoad;
             delete bgm.onPlayOrPause;
             delete bgm.onDurationChange;
             delete bgm.onSpeedChange;

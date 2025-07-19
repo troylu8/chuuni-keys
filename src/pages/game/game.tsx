@@ -11,7 +11,6 @@ import { usePage } from "../../contexts/page";
 import { ChartMetadata, getChartFolder } from "../../lib/lib";
 import { useSettings } from "../../contexts/settings";
 import Praise from "../../components/praise";
-import { useTitlebarText } from "../../lib/titlebar";
 import LoadingSpinner from "../../components/loading-spinner";
 
 export default function Game() {
@@ -28,9 +27,6 @@ function GameInner() {
     const metadata = params as ChartMetadata;
     const [{showCombo, showAccuracyBar}] = useSettings();
     
-    useTitlebarText(metadata.title + (metadata.credit_audio? " - " + metadata.credit_audio : ""));
-    
-
     return (
         <div className="fixed cover">
             <Background imgPath={metadata.img_ext && `${getChartFolder(metadata)}\\img.${metadata.img_ext}`} />

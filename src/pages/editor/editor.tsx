@@ -16,7 +16,6 @@ import bgm from "../../lib/sound";
 import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
 import Slider from "../../components/slider";
 import { ArrowLeft, Keyboard, Pause, Play, XIcon } from "lucide-react";
-import { useTitlebarText } from "../../lib/titlebar";
 
 
 type ActiveTab = "keyboard" | "timing" | "details";
@@ -59,7 +58,6 @@ export default function Editor() {
     }
     const chartFolder = getChartFolder(metadata);
     
-    useTitlebarText(metadata.title + (metadata.credit_audio? " - " + metadata.credit_audio : ""));
     
     const [events, setEvents] = useState<Tree<number, MuseEvent>>(createTree());
     
@@ -75,7 +73,7 @@ export default function Editor() {
     }
     
     function loadResources(audioPos: number) {
-        bgm.src = `${chartFolder}\\audio.${metadata.audio_ext}`;
+        bgm.load(`${chartFolder}\\audio.${metadata.audio_ext}`, metadata);
         bgm.pos = audioPos;
         
         readChartFile(chartFolder + "\\chart.txt").then(events => {

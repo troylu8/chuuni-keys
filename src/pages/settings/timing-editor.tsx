@@ -47,7 +47,7 @@ export default function TimingEditor({ onClose }: Props) {
     
     
     useEffect(() => {
-        bgm.src = USERDATA_DIR + "\\metronome.mp3";
+        bgm.load(USERDATA_DIR + "\\metronome.mp3");
         bgm.play();
         
         const unlisten = bgm.addPosListener(pos => {

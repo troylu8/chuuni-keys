@@ -3,8 +3,8 @@ import { Page, usePage } from "../../contexts/page";
 import MuseButton from '../../components/muse-button';
 import { useEffect } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
-import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs';
 import { USERDATA_DIR } from '../../lib/lib';
+import NowPlaying from '../../components/now-playing';
 
 
 export default function MainMenu() {
@@ -24,8 +24,9 @@ export default function MainMenu() {
         <div className="
             fixed left-[7vw] top-[5vh]
             flex flex-col justify-center items-start gap-[2vh]
-            text-[5vh] font-serif tracking-widest text-ctp-blue
+            text-[5vh] [&>button]:font-serif [&>button]:tracking-widest text-ctp-blue
         ">
+            <NowPlaying />
             
             <img src={convertFileSrc(USERDATA_DIR + "\\logo.png")} className='w-[60vw]' />
             

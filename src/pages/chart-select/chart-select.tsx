@@ -10,6 +10,7 @@ import { remove } from "@tauri-apps/plugin-fs";
 import { useBgmState } from "../../contexts/bgm-state";
 import ChartList from "./chart-list";
 import Modal from "../../components/modal";
+import NowPlaying from "../../components/now-playing";
 
 
 export default function ChartSelect() {
@@ -27,7 +28,7 @@ export default function ChartSelect() {
         
         // this is a different song, so play it from the preview point
         if (bgm.src != activeSongSrc) {
-            bgm.src = activeSongSrc;
+            bgm.load(activeSongSrc, metadata);
             bgm.pos = metadata.preview_time;
             await bgm.play();
         }
@@ -139,6 +140,7 @@ export default function ChartSelect() {
     
     return (
         <div className="fixed cover bg-ctp-base">
+            <NowPlaying />
             <NavigationBar />
             
             <ChartInfo metadata={activeChart} />
@@ -163,7 +165,6 @@ export default function ChartSelect() {
 
 function NavigationBar() {
     const [, setPageParams] = usePage();
-    const { paused } =  useBgmState();
     
     return (
         <nav className="absolute top-1 left-1 z-10 flex gap-3 text-ctp-mauve">
@@ -173,9 +174,6 @@ function NavigationBar() {
             <MuseButton onClick={() => setPageParams([Page.NEW_CHART])}>
                 <Plus /> new
             </MuseButton>
-            <p onClick={() => bgm.paused? bgm.play() : bgm.pause()}>
-                { paused? "[ music paused ]" :  "now playing.."}
-            </p>
         </nav>
     )
 }

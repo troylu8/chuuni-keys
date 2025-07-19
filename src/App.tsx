@@ -10,6 +10,7 @@ import SettingsProvider from "./contexts/settings";
 import { useEffect } from "react";
 import bgm from "./lib/sound";
 import BgmStateProvider from "./contexts/bgm-state";
+import Titlebar from "./titlebar";
 
 
 export default function App() {
@@ -17,12 +18,23 @@ export default function App() {
         <SettingsProvider>
             <PageProvider>
                 <BgmStateProvider>
-                    <ActivePage />
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateRows: "fit-content(100%) 1fr"
+                        }}
+                        className="fixed cover"
+                    >
+                        <Titlebar />
+                        <ActivePage />
+                    </div>
                 </BgmStateProvider>
             </PageProvider>
         </SettingsProvider>
     );
 }
+
+
 
 function ActivePage() {
     const [[page]] = usePage();
@@ -42,14 +54,15 @@ function ActivePage() {
     }, [page]);
     
     return (
-        <>
+        // rotate-0 to create a new stacking context for items of position "fixed"
+        <div className="rotate-0"> 
             {page == Page.MAIN_MENU && <MainMenu />}
             {page == Page.SETTINGS && <Settings />}
             {page == Page.NEW_CHART && <NewChart />}
             {page == Page.CHART_SELECT && <ChartSelect />}
             {page == Page.GAME && <Game />}
             {page == Page.EDITOR && <Editor />}
-        </>
+        </div>
     )
 }
 

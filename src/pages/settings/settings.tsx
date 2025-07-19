@@ -7,6 +7,7 @@ import Slider from "../../components/slider";
 import MuseCheckbox from "../../components/muse-checkbox";
 import { AppWindow, ArrowLeft, Volume2 } from "lucide-react";
 import { Page, usePage } from "../../contexts/page";
+import NowPlaying from "../../components/now-playing";
 
 export default function Settings() {
     const [settings, setSettings] = useSettings(); 
@@ -30,6 +31,8 @@ export default function Settings() {
     
     return (
         <div className="absolute cover flex justify-center overflow-auto bg-ctp-base">
+            <NowPlaying />
+            
             <MuseButton className="fixed top-1 left-1 z-10 text-ctp-mauve" onClick={() => setPageParams([Page.MAIN_MENU])}>
                 <ArrowLeft /> main menu
             </MuseButton>

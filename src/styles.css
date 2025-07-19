@@ -34,14 +34,6 @@ body {
     color: var(--color-ctp-text);
     font-family: Signika, sans-serif;
     caret-color: var(--color-ctp-mauve);
-
-    display: grid;
-    grid-template-rows: fit-content(100%) 1fr;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
 }
 body::selection {
     color: var(--color-ctp-base);
@@ -75,10 +67,6 @@ body::selection {
 #titlebar-close:hover {
     color: var(--color-ctp-red);
     filter: brightness(100%) !important;
-}
-
-#root {
-    transform: rotate(0deg);
 }
 
 input::-webkit-outer-spin-button,

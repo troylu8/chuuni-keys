@@ -2,7 +2,6 @@ import { useState, createContext, useContext, useEffect } from "react";
 import { flags } from "../lib/lib";
 import bgm from "../lib/sound";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { setTitlebarVisible } from "../lib/titlebar";
 
 /** activation duration = hitring duration + this value */
 const ACTIVATION_BUFFER = 500;
@@ -34,10 +33,7 @@ const SETTINGS_HOOKS: SettingsHooks = {
     "musicVolume": vol => bgm.volume = vol,
     "sfxVolume": vol => flags.sfxVolume = vol,
     "hitsoundVolume": vol => flags.hitsoundVolume = vol,
-    "fullscreen": fullscreen => {
-        setTitlebarVisible(!fullscreen);
-        getCurrentWindow().setFullscreen(fullscreen);
-    }
+    "fullscreen": fullscreen => getCurrentWindow().setFullscreen(fullscreen)
 }
 
 const initialFullscreen = await getCurrentWindow().isFullscreen();
