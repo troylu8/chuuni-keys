@@ -7,3 +7,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <App />
     </React.StrictMode>,
 );
+
+// after app is rendered, remove the loading spinner in the corner
+document.getElementById("initial-loading-spinner")?.remove();

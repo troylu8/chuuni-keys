@@ -2,6 +2,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useBgmState } from "./contexts/bgm-state";
 import { useSettings } from "./contexts/settings";
 import { Page, usePage } from "./contexts/page";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { USERDATA_DIR } from "./lib/lib";
 
 const appWindow = getCurrentWindow();
 
@@ -16,6 +18,10 @@ export default function Titlebar() {
     return (
         <nav id="titlebar" style={{height: fullscreen ? 0 : "auto"}}>
             <div id="titlebar-header" data-tauri-drag-region>
+                
+                {/* i swear the image quality is higher when using a 24x24 img and scaling it down to 16 over just using a 16x16 img */}
+                <img src={convertFileSrc(USERDATA_DIR + "\\icon24x24.png")} width={16} height={16} data-tauri-drag-region />
+                
                 <p id="titlebar-text" data-tauri-drag-region>
                     chuuni keys { showBgmTitle && ( " // " + bgmTitle + (credit_audio ? " - " + credit_audio : "") ) }
                 </p>

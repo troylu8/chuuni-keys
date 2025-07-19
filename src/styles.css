@@ -52,6 +52,7 @@ body::selection {
     display: flex;
     align-items: center;
     overflow: hidden;
+    gap: 6px;
 }
 #titlebar-text {
     text-wrap: nowrap;
@@ -197,25 +198,4 @@ button:hover {
 .difficulty-dropdown-option:hover {
     background-color: var(--diff-color);
     color: var(--color-ctp-base);
-}
-
-.anim-loading {
-    animation: anim-loading 1.5s ease-in-out infinite;
-}
-@keyframes anim-loading {
-    0% {
-        rotate: 0;
-    }
-    25% {
-        rotate: 90deg;
-    }
-    50% {
-        rotate: 180deg;
-    }
-    75% {
-        rotate: 270deg;
-    }
-    100% {
-        rotate: 360deg;
-    }
 }
