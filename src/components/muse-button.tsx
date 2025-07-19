@@ -12,7 +12,8 @@ export default function MuseButton({ className, children, onClick }: Props) {
                 e.currentTarget.blur(); // prevent keyboard focus
                 if (onClick) onClick();
             }}
-            className={`rounded-sm ${className}`}
+            style={{animationDuration: "inherit"}}
+            className={`px-2 rounded-sm ${className}`}
         >
             { children }
         </button>

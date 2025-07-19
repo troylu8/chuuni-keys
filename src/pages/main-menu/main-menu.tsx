@@ -1,10 +1,11 @@
 import { exit } from '@tauri-apps/plugin-process';
 import { Page, usePage } from "../../contexts/page";
 import MuseButton from '../../components/muse-button';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
-import { USERDATA_DIR } from '../../lib/lib';
+import { resetAnimation, USERDATA_DIR } from '../../lib/lib';
 import NowPlaying from '../../components/now-playing';
+import { useOnBeat } from '../../lib/sound';
 
 
 export default function MainMenu() {
@@ -20,19 +21,35 @@ export default function MainMenu() {
     }, []);
     
     
+    const buttonsCont = useRef<HTMLDivElement | null>(null);
+    const beatDuration = useOnBeat(beat => {
+        const buttons = buttonsCont.current;
+        if (!buttons) return;
+        resetAnimation(buttons.children[beat % buttons.children.length] as HTMLElement)
+    });
+    
+    
     return (
         <div className="
             fixed left-[7vw] top-[5vh]
-            flex flex-col justify-center items-start gap-[2vh]
-            text-[5vh] [&>button]:font-serif [&>button]:tracking-widest text-ctp-blue
+            flex flex-col justify-center 
         ">
             <NowPlaying />
             
             <img src={convertFileSrc(USERDATA_DIR + "\\logo.png")} className='w-[60vw]' />
             
-            <MuseButton className="ml-[4vh] mt-[5vh]" onClick={() => setPageParams([Page.CHART_SELECT])}> song select </MuseButton>
-            <MuseButton className="ml-[2vh]" onClick={() => setPageParams([Page.SETTINGS])}> settings </MuseButton>
-            <MuseButton onClick={() => exit(0)}> quit </MuseButton>
+            <div 
+                ref={buttonsCont} 
+                style={{animationDuration: beatDuration ? beatDuration + "ms" : ""}}
+                className='
+                    flex flex-col [&>button]:font-serif [&>button]:tracking-widest text-[5vh] text-ctp-blue
+                    gap-[2vh] items-start
+                '
+            >
+                <MuseButton className="anim-flash ml-[4vh] mt-[5vh]" onClick={() => setPageParams([Page.CHART_SELECT])}> song select </MuseButton>
+                <MuseButton className="anim-flash ml-[2vh]" onClick={() => setPageParams([Page.SETTINGS])}> settings </MuseButton>
+                <MuseButton className='anim-flash' onClick={() => exit(0)}> quit </MuseButton>
+            </div>
         </div>
     );
 }

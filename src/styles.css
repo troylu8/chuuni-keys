@@ -87,7 +87,7 @@ button {
     cursor: pointer;
 }
 button:hover {
-    filter: brightness(135%);
+    filter: brightness(135%) !important;
 }
 
 .outline-btn {
@@ -171,6 +171,65 @@ button:hover {
     }
     100% {
         font-size: 5vh;
+    }
+}
+
+.anim-flash {
+    animation: anim-flash ease-out forwards;
+}
+@keyframes anim-flash {
+    0% {
+        filter: brightness(130%);
+    }
+    100% {
+        filter: brightness(100%);
+    }
+}
+.anim-flash-light {
+    animation: anim-flash-light ease-out forwards;
+}
+@keyframes anim-flash-light {
+    0% {
+        filter: brightness(115%);
+    }
+    100% {
+        filter: brightness(100%);
+    }
+}
+
+.anim-pulse {
+    animation: anim-pulse ease-out forwards;
+}
+@keyframes anim-pulse {
+    0% {
+        opacity: 1;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+    100% {
+        opacity: 0;
+        top: -1.5vh;
+        bottom: -1.5vh;
+        left: -1.5vh;
+        right: -1.5vh;
+    }
+}
+
+.anim-info-frame {
+    animation: anim-info-frame 200ms ease-out forwards;
+}
+@keyframes anim-info-frame {
+    0% {
+        rotate: 0;
+        opacity: 0;
+        outline: solid 0 var(--color-ctp-mauve);
+    }
+    100% {
+        rotate: 12deg;
+        opacity: 0.7;
+        outline: solid 3vh var(--color-ctp-mauve);
     }
 }
 

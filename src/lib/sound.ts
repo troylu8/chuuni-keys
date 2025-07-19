@@ -1,6 +1,9 @@
 import { readFile } from "@tauri-apps/plugin-fs";
 import { appWindow, flags, USERDATA_DIR } from "./lib";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { getBeatDuration } from "../pages/editor/inspector";
+import { useEffect } from "react";
+import { useBgmState } from "../contexts/bgm-state";
 
 
 
@@ -35,6 +38,13 @@ export function playSfx(sfx: SFX) {
 
 
 type PosListener = (pos: number) => any
+type BeatListener = (beat: number) => any
+type BgmInfo = {
+    title?: string
+    credit_audio?: string
+    bpm?: number
+    first_beat?: number
+}
 
 class BgmPlayer {
     
@@ -44,12 +54,15 @@ class BgmPlayer {
     private readonly gainNode = audioContext.createGain();
     
     private readonly posListeners = new Set<PosListener>();
-    private posIntervalId?: NodeJS.Timeout;
+    private readonly beatListeners = new Set<BeatListener>();
+    private playingLoop?: NodeJS.Timeout;
     
     private _src: string | null = null;
     private _volume = 1;
+    private _bpm?: number;
+    private _first_beat?: number;
     
-    public onLoad?: (info?: {title: string, credit_audio?: string }) => any;
+    public onLoad?: (info?: BgmInfo) => any;
     public onPlayOrPause?: (paused: boolean) => any; 
     public onDurationChange?: (duration: number) => any; 
     public onVolumeChange?: (volume: number) => any; 
@@ -74,11 +87,10 @@ class BgmPlayer {
         });
     }
     
-    
     public get src() {
         return this._src;
     }
-    public load(src: string, info?: { title: string, credit_audio?: string }) {
+    public load(src: string, info?: BgmInfo) {
         this._src = src;
         if (src == null) {
             this.audio.src = "";
@@ -88,7 +100,8 @@ class BgmPlayer {
             this.audio.src = convertFileSrc(src);    
             this.audio.load();
         }
-        console.log("calling onload with ", info);
+        this._bpm = info?.bpm;
+        this._first_beat = info?.first_beat;
         this.onLoad?.call(null, info);
         this.onPlayOrPause?.call(null, true);
     }
@@ -98,14 +111,31 @@ class BgmPlayer {
             listener(this.pos);
         }
     }
+    private callBeatListeners(beat: number) {
+        for (const listener of this.beatListeners) {
+            listener(beat);
+        }
+    }
     
     public async play() {
-        if (!this.paused) return;
+        if (!this.paused || this.src === null) return;
         
         await this.audio.play();
         this.onPlayOrPause?.call(null, false);
         
-        this.posIntervalId = setInterval(() => this.callPosListeners(), 0);
+        let prevBeat: number | null = null;
+        this.playingLoop = setInterval(() => {
+            this.callPosListeners();
+            
+            if (this._bpm != undefined && this._first_beat != undefined) {
+                const beat = Math.floor((this.pos - this._first_beat) / getBeatDuration(this._bpm));
+                
+                if (prevBeat !== null && beat === prevBeat + 1) 
+                    this.callBeatListeners(beat);
+                
+                prevBeat = beat;
+            }
+        }, 0);
     }
     public pause() {
         if (this.paused) return;
@@ -113,8 +143,8 @@ class BgmPlayer {
         this.audio.pause();
         this.onPlayOrPause?.call(null, true);
         
-        clearInterval(this.posIntervalId);
-        this.posIntervalId = undefined;
+        clearInterval(this.playingLoop);
+        this.playingLoop = undefined;
     }
     
     public get paused() {
@@ -153,7 +183,25 @@ class BgmPlayer {
         this.audio.playbackRate = Math.max(0, value);
         this.onSpeedChange?.call(null, value);
     }
+    
+    public addBeatListener(listener: BeatListener) {
+        this.beatListeners.add(listener);
+        return () => { this.beatListeners.delete(listener); }
+    }
 }
 
 const bgm = new BgmPlayer();
 export default bgm;
+
+/** returns the duration of one beat */
+export function useOnBeat(onBeat: BeatListener) {
+    const { bpm } = useBgmState();
+    
+    
+    useEffect(() => {
+        const unlisten = bgm.addBeatListener(onBeat);
+        return unlisten;
+    }, []);
+    
+    return bpm && getBeatDuration(bpm);
+}

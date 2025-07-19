@@ -7,7 +7,6 @@ import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
 import { ArrowLeft, EllipsisVertical, Plus, XIcon } from "lucide-react";
 import { remove } from "@tauri-apps/plugin-fs";
-import { useBgmState } from "../../contexts/bgm-state";
 import ChartList from "./chart-list";
 import Modal from "../../components/modal";
 import NowPlaying from "../../components/now-playing";
@@ -196,7 +195,8 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
     return (
         <div className="
             absolute left-0 bottom-1/10 flex gap-1 ml-1 w-[35vw] z-10
-            [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3 text-ctp-base 
+            [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3 text-ctp-base
+            [&>*]:outline-[0.5vh] [&>*]:outline-ctp-base
         ">
             <MuseButton 
                 onClick={() => setActionsState(actionsState == ActionsState.DEFAULT ? ActionsState.OPTIONS : ActionsState.DEFAULT)}

@@ -52,9 +52,17 @@ export function genRandStr(n: number = 10) {
  * https://stackoverflow.com/questions/6268508/restart-animation-in-css3-any-better-way-than-removing-the-element
 */
 export function resetAnimation(element: HTMLElement) {
+    
+    // animation duration is sometimes dealt with in style={{...}}, 
+    // so remember it before clearing animation properties defined in style={{...}}
+    const duration = element.style.animationDuration;
+    
     element.style.animation = "none";
+    
     void element.offsetHeight;
+    
     element.style.animation = "";
+    element.style.animationDuration = duration;
 }
 
 export type Bind<T> = [T, (value: T) => void];

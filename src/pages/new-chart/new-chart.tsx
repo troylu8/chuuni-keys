@@ -6,6 +6,7 @@ import { downloadDir, extname } from '@tauri-apps/api/path';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Upload } from 'lucide-react';
 import MuseButton from '../../components/muse-button';
+import NowPlaying from '../../components/now-playing';
 
 const VALID_AUDIO_EXTS = ["mp3", "wav", "aac", "ogg", "webm"];
 
@@ -79,6 +80,8 @@ export default function NewChart() {
     
     return (
         <div className="absolute cover flex flex-col justify-center items-center gap-3">
+            <NowPlaying />
+            
             <div className="absolute top-1 left-1 z-10 flex gap-3">
                 <MuseButton onClick={() => setPageParams([Page.CHART_SELECT])}>
                     <ArrowLeft /> back

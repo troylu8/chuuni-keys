@@ -1,6 +1,8 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { ChartMetadata, getChartFolder } from "../../lib/lib";
+import { ChartMetadata, getChartFolder, resetAnimation } from "../../lib/lib";
 import { useRef, useEffect } from "react";
+import bgm, { useOnBeat } from "../../lib/sound";
+import { getBeatDuration } from "../editor/inspector";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */
@@ -166,6 +168,17 @@ type ChartEntryProps = Readonly<{
 }>
 function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProps) {
     
+    const titleTextRef = useRef<HTMLParagraphElement | null>(null);
+    const pulseBorderRef = useRef<HTMLDivElement | null>(null);
+    
+    const beatDuration = useOnBeat(() => {
+        if (titleTextRef.current)
+            resetAnimation(titleTextRef.current);
+        if (pulseBorderRef.current)
+            resetAnimation(pulseBorderRef.current);
+    });
+    console.log(beatDuration);
+    
     return (
         <section 
             id={metadata.id}
@@ -182,7 +195,15 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
                     />
                 </div>
                 { active &&
-                    <div className="absolute -left-2 -right-2 -top-2 -bottom-2 rounded-[25%] outline-8 outline-ctp-red"></div>
+                    <>
+                        <div className="absolute -left-2 -right-2 -top-2 -bottom-2 rounded-[25%] outline-8 outline-ctp-red">
+                            <div 
+                                ref={pulseBorderRef} 
+                                style={{animationDuration: beatDuration ? beatDuration * 0.7 + "ms" : ""}}
+                                className="anim-pulse absolute rounded-[25%] outline-8 outline-ctp-red">
+                            </div>
+                        </div>
+                    </>
                 }
             </div>
             
@@ -206,17 +227,25 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
             
             {/* song title / producer label */}
             <header 
+                
                 style={{
                     borderStyle: "solid",
                     borderWidth: active ? "5px" : "2px",
-                    borderImage: `linear-gradient(to right, ${active ? "var(--color-ctp-red)" : "var(--color-ctp-mauve)"} 80%, rgba(0, 0, 0, 0) 90%) 100% 1`
+                    borderImage: `linear-gradient(to right, ${active ? "var(--color-ctp-red)" : "var(--color-ctp-mauve)"} 80%, rgba(0, 0, 0, 0) 90%) 100% 1`,
                 }}
                 className='
                     absolute left-1/2 top-1/10 bottom-1/10 text-nowrap 
-                    flex flex-col justify-center pl-[27vh] w-[50vw]
+                    flex flex-col justify-center pl-[27vh] w-[50vw] 
                 '
             >
-                <p className={`text-[6vh] ${active ? "text-ctp-red" : "text-ctp-mauve"}`}> {metadata.title} </p>
+                <p 
+                    ref={titleTextRef}
+                    style={{animationDuration: beatDuration ? beatDuration + "ms" : ""}}
+                    className={`
+                        ${active && "anim-flash "}
+                        text-[6vh] ${active ? "text-ctp-red" : "text-ctp-mauve"}
+                    `}
+                > {metadata.title} </p>
                 <p className='text-[3vh]'> {metadata.credit_audio} </p>
             </header>
             
