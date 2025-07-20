@@ -1,8 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { ChartMetadata, getChartFolder, resetAnimation, USERDATA_DIR } from "../../lib/lib";
 import { useRef, useEffect } from "react";
-import bgm, { useOnBeat } from "../../lib/sound";
-import { getBeatDuration } from "../editor/inspector";
+import { useOnBeat } from "../../lib/sound";
 
 
 /** https://www.desmos.com/calculator/3zoigxxcl0 */

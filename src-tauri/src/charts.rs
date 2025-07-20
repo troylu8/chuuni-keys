@@ -100,27 +100,23 @@ pub fn zip_chart(
 #[tauri::command]
 pub fn unzip_chart(app: AppHandle, buffer: Vec<u8>) -> Result<ChartMetadata, String> {
     
-    println!("read zip", );
     let mut zip = ZipArchive::new(Cursor::new(buffer)).map_err(|e| e.to_string())?;
     
     // read metadata
     let mut metadata_json = String::new();
     {
-        println!("reading md", );
         let mut metadata_file = zip.by_name("metadata.json").map_err(|e| e.to_string())?;
         metadata_file.read_to_string(&mut metadata_json).map_err(|e| e.to_string())?;
     }
     
-    println!("deserializing", );
     let metadata: ChartMetadata = serde_json::from_str(&metadata_json).map_err(|e| e.to_string())?;
     
-    println!("extracting", );
     // find chart folder
     let app_data_local = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
     let chart_folder = app_data_local.join(format!("userdata/charts/{} {}", metadata.id, filenamify(&metadata.title)));
     let chart_folder = chart_folder.to_str().unwrap();
     
-    // create chart folder exists
+    // create chart folder
     fs::create_dir(chart_folder).map_err(|e| e.to_string())?;
     
     // extract chart files

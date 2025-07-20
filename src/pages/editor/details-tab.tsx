@@ -7,7 +7,7 @@ import { extname, pictureDir } from '@tauri-apps/api/path';
 import { Bind, ChartMetadata, Difficulty,  OWNER_KEY } from '../../lib/lib';
 import MuseButton from '../../components/muse-button';
 import { useEffect, useRef, useState } from 'react';
-import { publishChart, unpublishChart, updateChart } from '../../lib/publish';
+import { publishChart, unpublishChart, updateChart } from '../../lib/chart-listing';
 import bcrypt from 'bcryptjs';
 import { ChevronDown, FolderOpen, Globe, Image, Keyboard, Music, RefreshCcw, Trash2, TriangleAlert, Upload } from 'lucide-react';
 import ChartListingLink from '../../components/chart-listing-link';
@@ -144,20 +144,24 @@ function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePick
         
         await remove(`${workingChartFolderRef.current}\\img.${metadata.img_ext}`);
         setMetadata({...metadata, img_ext: undefined}, true);
+        setConfirmVisible(false);
     }
     
     const [confirmVisible, setConfirmVisible] = useState(false);
     
     return (
-        <div className='flex gap-5'>
+        <div className='flex gap-5 [&>button]:text-ctp-base'>
             <MuseButton 
-                className='bg-ctp-blue text-ctp-base px-5 py-0.5'
+                className='bg-ctp-blue px-5 py-0.5'
                 onClick={handleUploadImg}
             > <Upload /> &nbsp; upload </MuseButton>
-            <MuseButton 
-                className='bg-ctp-red text-ctp-base'
-                onClick={() => setConfirmVisible(true)}
-            > <Trash2 /> </MuseButton>
+            
+            { metadata.img_ext != undefined &&
+                <MuseButton 
+                    className='bg-ctp-red '
+                    onClick={() => setConfirmVisible(true)}
+                > <Trash2 /> </MuseButton>
+            }
             
             <MuseButton 
                 className='col-start-1 -col-end-1 ml-auto bg-ctp-mauve'
@@ -168,18 +172,18 @@ function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePick
             
             { confirmVisible &&
                 <Modal onClose={() => setConfirmVisible(false)}>
-                    <div className='p-2'>
+                    <div className='p-2 [&>button]:text-ctp-base'>
                         <p> clear current background image? </p>
                         <div className='flex justify-center gap-5 mt-3'>
                             <MuseButton 
                                 onClick={() => setConfirmVisible(false)}
-                                className='bg-ctp-blue outline-btn'
+                                className='bg-ctp-blue'
                             >
                                 cancel
                             </MuseButton>
                             <MuseButton 
                                 onClick={handleClearImg}
-                                className='bg-ctp-red outline-btn'
+                                className='bg-ctp-red'
                             >
                                 yes
                             </MuseButton>

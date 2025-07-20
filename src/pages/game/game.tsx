@@ -11,7 +11,6 @@ import { usePage } from "../../contexts/page";
 import { ChartMetadata, getChartFolder } from "../../lib/lib";
 import { useSettings } from "../../contexts/settings";
 import Praise from "../../components/praise";
-import LoadingSpinner from "../../components/loading-spinner";
 
 export default function Game() {
     return (

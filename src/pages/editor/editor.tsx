@@ -318,7 +318,7 @@ export default function Editor() {
                             saveChanges={handleSave}
                             quit={() => {
                                 activeModal == ActiveModal.CONFIRM_QUIT_TO_SELECT ? 
-                                    setPageParams([Page.MAIN_MENU]) :
+                                    setPageParams([Page.CHART_SELECT, {activeChartId: metadata.id}]) :
                                     appWindow.destroy()
                             }}
                         />

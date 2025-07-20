@@ -2,26 +2,46 @@ import { Page, ChartSelectParams, usePage } from "../../contexts/page";
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import ChartInfo from './chart-info';
-import { ChartMetadata, compareDifficulty, flags, getChartFolder, SERVER_URL } from "../../lib/lib";
+import { ChartMetadata, compareDifficulty, flags, getChartFolder } from "../../lib/lib";
 import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
-import { ArrowLeft, EllipsisVertical, Plus, XIcon } from "lucide-react";
+import { ArrowLeft, EllipsisVertical, Plus, TriangleAlert, XIcon } from "lucide-react";
 import { remove } from "@tauri-apps/plugin-fs";
 import ChartList from "./chart-list";
 import Modal from "../../components/modal";
 import NowPlaying from "../../components/now-playing";
+import ChartListingLink from "../../components/chart-listing-link";
+import { downloadChart } from "../../lib/chart-listing";
+import LoadingSpinner from "../../components/loading-spinner";
 
+/** sorts by difficulty first, then title */
+function sortCharts(charts: ChartMetadata[]) {
+    charts.sort((a, b) => {
+        const diff = compareDifficulty(a, b);
+        return diff == 0 ? a.title.localeCompare(b.title) : diff;
+    });
+}
+
+
+enum DownloadingState { NONE, ALREADY_EXISTS, DOWNLOADING }
 
 export default function ChartSelect() {
     
-    const [charts, setCharts] = useState<ChartMetadata[]>([]);
+    const [charts, _setCharts] = useState<ChartMetadata[]>([]);
+    function setCharts(charts: ChartMetadata[]) {
+        sortCharts(charts);
+        _setCharts(charts);
+    }
     const [[,params], setPageParams] = usePage();
     
     
     const [activeChart, setActiveChartInner] = useState<ChartMetadata | null>(null);
-    async function setActiveChart(metadata: ChartMetadata) {
+    async function setActiveChart(metadata: ChartMetadata | null) {
         setActiveChartInner(metadata);
-        flags.lastActiveChartId = metadata.id;
+        flags.lastActiveChartId = metadata?.id;
+        
+        if (metadata == null)
+            return bgm.clear();
         
         const activeSongSrc = `${getChartFolder(metadata)}\\audio.${metadata.audio_ext}`;
         
@@ -40,11 +60,26 @@ export default function ChartSelect() {
         // if the this song is active and playing, do nothing (let it continue playing)
     }
     
+    const [downloadingState, setDownloadingState] = useState<DownloadingState | Error>(DownloadingState.NONE);
+    function downloadFromParam() {
+        const online_id = (params as ChartSelectParams)!.activeChartId!;
+        
+        setDownloadingState(DownloadingState.DOWNLOADING);
+                    
+        downloadChart(online_id)
+        .then(chartMetadata => {
+            setCharts([...charts, chartMetadata]);
+            setActiveChart(chartMetadata);
+            console.log(chartMetadata);
+            setDownloadingState(DownloadingState.NONE);
+        })
+        .catch(err => setDownloadingState(err))
+    }
+    
     
     // load charts
     useEffect(() => {
         invoke<ChartMetadata[]>("get_all_charts").then(charts => {
-            charts.sort(compareDifficulty);
             setCharts(charts);
             
             const initialChartId = (params as ChartSelectParams)?.activeChartId;
@@ -56,19 +91,18 @@ export default function ChartSelect() {
                     return setActiveChart(initialChart);
                 }
                 
-                // theres no chart with this id, so try to download it
+                // try to download it
                 else {
-                    fetch(SERVER_URL + "/charts/download/" + initialChartId)
-                    .then(resp => {
-                        if (resp.ok) return resp.bytes();
-                    })
-                    .then(buffer => {
-                        invoke<ChartMetadata>("unzip_chart", { buffer })
-                        .then(chartMetadata => {
-                            setCharts([...charts, chartMetadata]);
-                            setActiveChart(chartMetadata);
-                        })
-                    })
+                    
+                    // see if this chart is already downloaded
+                    const existingChart = charts.find(chart => chart.online_id == initialChartId);
+                    if (existingChart) {
+                        setActiveChart(existingChart);
+                        setDownloadingState(DownloadingState.ALREADY_EXISTS);
+                    }
+                    else 
+                        downloadFromParam();
+                    
                 }
             }
             
@@ -112,9 +146,15 @@ export default function ChartSelect() {
         // remove this active chart from charts[]
         setCharts(charts.filter(chart => chart.id != activeChart.id));
         
-        // the next active chart is the chart before this one
-        const i = charts.findIndex(chart => chart.id == activeChart.id);
-        setActiveChart(charts[i == 0 ? 1 : i - 1]);
+        if (charts.length == 1) 
+            setActiveChart(null); // this was the last chart
+        
+        else {
+            // the next active chart is the chart before this one
+            const i = charts.findIndex(chart => chart.id == activeChart.id);
+            setActiveChart(charts[i == 0 ? 1 : i - 1]);
+        }
+        
     }
     
     // keybinds
@@ -152,25 +192,94 @@ export default function ChartSelect() {
             <NowPlaying />
             <NavigationBar />
             
-            <ChartInfo metadata={activeChart} />
-            
-            <ChartList
-                charts={charts}
-                activeChartId={activeChart?.id}
-                onEntryClick={handleEntryClick}
-                onEntryContextMenu={handleEntryContextMenu}
+            <DownloadingModal 
+                downloadingState={downloadingState}
+                onDownloadAnotherCopy={downloadFromParam}
+                
+                // can only close if not downloading
+                onClose={() => setDownloadingState(prev => prev === DownloadingState.DOWNLOADING ? prev : DownloadingState.NONE)}
             />
             
-            <ActionsBar 
-                activeSongId={activeChart?.id}
-                play={play}
-                edit={edit}
-                deleteActiveChart={deleteActiveChart}
-            />
+            
+            { charts.length == 0 ? 
+                <div className="absolute left-1/2 top-1/2 -translate-1/2 flex flex-col items-center justify-center">
+                    <h3 className="text-ctp-flamingo font-mono mb-5"> [ No charts installed ] </h3>
+                    <p> download some from the <ChartListingLink /> </p>
+                    <p>
+                        or
+                        <MuseButton 
+                            onClick={() => setPageParams([Page.NEW_CHART])}
+                            className="text-ctp-mauve"
+                        >
+                            create your own
+                        </MuseButton>
+                    </p>
+                </div>
+                :
+                <>
+                    <ChartInfo metadata={activeChart} />
+                    <ChartList
+                        charts={charts}
+                        activeChartId={activeChart?.id}
+                        onEntryClick={handleEntryClick}
+                        onEntryContextMenu={handleEntryContextMenu}
+                    />
+                    <ActionsBar 
+                        activeSongId={activeChart?.id}
+                        play={play}
+                        edit={edit}
+                        deleteActiveChart={deleteActiveChart}
+                    />
+                </>
+            }
         </div>
     )
 }
 
+type DownloadingModalProps = Readonly<{
+    downloadingState: DownloadingState | Error
+    onDownloadAnotherCopy: () => any
+    onClose: () => any
+}>
+function DownloadingModal({ downloadingState, onDownloadAnotherCopy, onClose }: DownloadingModalProps) {
+    return downloadingState != DownloadingState.NONE && (
+        <Modal onClose={onClose}>
+            <div className="flex flex-col p-2 gap-2 [&_button]:text-ctp-base">
+                
+                { downloadingState == DownloadingState.ALREADY_EXISTS &&
+                    <>
+                        <h2> This chart is already installed. </h2>
+                        <div className="flex justify-center gap-2">
+                            <MuseButton 
+                                className='bg-ctp-red'
+                                onClick={onClose}
+                            > cancel </MuseButton>
+                            <MuseButton 
+                                className='bg-ctp-blue' 
+                                onClick={onDownloadAnotherCopy}
+                            > download another copy </MuseButton>
+                        </div>
+                    </>
+                }
+                
+                { downloadingState == DownloadingState.DOWNLOADING && <LoadingSpinner /> }
+                
+                { downloadingState instanceof Error &&
+                    <>
+                        <h2 className='text-ctp-red! font-bold'> 
+                            <TriangleAlert /> &nbsp; Download failed!
+                        </h2>
+                        <p className='text-ctp-red'> {downloadingState.message} </p>
+                        <MuseButton 
+                            className='bg-ctp-blue self-center' 
+                            onClick={onClose}
+                        > ok </MuseButton>
+                    </>
+                }
+            </div>
+        </Modal>
+    )
+}
 
 function NavigationBar() {
     const [, setPageParams] = usePage();

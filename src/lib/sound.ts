@@ -90,7 +90,7 @@ class BgmPlayer {
     public get src() {
         return this._src;
     }
-    public load(src: string, info?: BgmInfo) {
+    public load(src: string | null, info?: BgmInfo) {
         this._src = src;
         if (src == null) {
             this.audio.src = "";
@@ -104,6 +104,10 @@ class BgmPlayer {
         this._first_beat = info?.first_beat;
         this.onLoad?.call(null, info);
         this.onPlayOrPause?.call(null, true);
+    }
+    
+    public clear() {
+        this.load(null);
     }
     
     private callPosListeners() {

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { ChartMetadata, getChartFolder, OWNER_KEY, SERVER_URL } from "./lib";
 import { readFile } from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
 
 async function getBlob(filepath: string) {
     return new Blob([await readFile(filepath)]);
@@ -64,3 +65,7 @@ export async function unpublishChart(chart: {online_id?: string}): Promise<void>
     await fetch(SERVER_URL + "/charts/" + chart.online_id, { method: "DELETE", body: OWNER_KEY }).then(throwIfNotOk);
 }
 
+export async function downloadChart(online_id: string): Promise<ChartMetadata> {
+    const resp = await fetch(SERVER_URL + "/charts/download/" + online_id).then(throwIfNotOk);
+    return await invoke<ChartMetadata>("unzip_chart", { buffer: await resp.bytes() })
+}
