@@ -25,7 +25,16 @@
 @font-face {
     font-display: block;
     font-family: "Signika";
-    src: url("assets/fonts/Signika-Light.woff2");
+    src: url("fonts/Signika-Light.woff2");
+}
+@font-face {
+    font-display: block;
+    font-family: "EB Garamond";
+    src: url("fonts/EBGaramond-Regular.woff2");
+}
+
+.font-serif {
+    font-family: "EB Garamond", serif;
 }
 
 body {

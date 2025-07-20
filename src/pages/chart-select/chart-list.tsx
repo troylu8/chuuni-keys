@@ -177,7 +177,6 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
         if (pulseBorderRef.current)
             resetAnimation(pulseBorderRef.current);
     });
-    console.log(beatDuration);
     
     return (
         <section 

@@ -47,29 +47,39 @@ export default function ChartSelect() {
             charts.sort(compareDifficulty);
             setCharts(charts);
             
-            const initialChartId = (params as ChartSelectParams)?.activeChartId ?? flags.lastActiveChartId;
+            const initialChartId = (params as ChartSelectParams)?.activeChartId;
+            if (initialChartId) {
+                const initialChart = charts.find(chart => chart.id == initialChartId);
+                
+                if (initialChart) {
+                    console.log("found", initialChart);
+                    return setActiveChart(initialChart);
+                }
+                
+                // theres no chart with this id, so try to download it
+                else {
+                    fetch(SERVER_URL + "/charts/download/" + initialChartId)
+                    .then(resp => {
+                        if (resp.ok) return resp.bytes();
+                    })
+                    .then(buffer => {
+                        invoke<ChartMetadata>("unzip_chart", { buffer })
+                        .then(chartMetadata => {
+                            setCharts([...charts, chartMetadata]);
+                            setActiveChart(chartMetadata);
+                        })
+                    })
+                }
+            }
             
-            if (initialChartId == undefined) 
-                return setActiveChart(charts?.[0] ?? null);
+            if (flags.lastActiveChartId) {
+                const lastChart = charts.find(chart => chart.id == flags.lastActiveChartId);
+                if (lastChart) return setActiveChart(lastChart);
+            }
             
-            const activeChart = charts.find(chart => chart.id == initialChartId);
-            if (activeChart) 
-                return setActiveChart(activeChart);
-            
-            // theres no chart with this id, so try to download it
-            fetch(SERVER_URL + "/download/" + initialChartId)
-            .then(resp => {
-                if (resp.ok) return resp.bytes();
-            })
-            .then(buffer => {
-                invoke<ChartMetadata>("unzip_chart", { buffer })
-                .then(chartMetadata => {
-                    setCharts([...charts, chartMetadata]);
-                    setActiveChart(chartMetadata);
-                })
-            })
+            setActiveChart(charts?.[0] ?? null);
         });
-    }, []);
+    }, [params]);
     
     
     function play() {

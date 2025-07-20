@@ -11,6 +11,8 @@ use filenamify::filenamify;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChartMetadata {
+    
+    #[serde(default = "gen_id")]
     id: String,
     online_id: Option<String>,
     owner_hash: Option<String>,
@@ -101,7 +103,7 @@ pub fn unzip_chart(app: AppHandle, buffer: Vec<u8>) -> Result<ChartMetadata, Str
     println!("read zip", );
     let mut zip = ZipArchive::new(Cursor::new(buffer)).map_err(|e| e.to_string())?;
     
-    
+    // read metadata
     let mut metadata_json = String::new();
     {
         println!("reading md", );
@@ -113,9 +115,54 @@ pub fn unzip_chart(app: AppHandle, buffer: Vec<u8>) -> Result<ChartMetadata, Str
     let metadata: ChartMetadata = serde_json::from_str(&metadata_json).map_err(|e| e.to_string())?;
     
     println!("extracting", );
+    // find chart folder
     let app_data_local = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
     let chart_folder = app_data_local.join(format!("userdata/charts/{} {}", metadata.id, filenamify(&metadata.title)));
-    zip.extract(chart_folder).map_err(|e| e.to_string())?;
+    let chart_folder = chart_folder.to_str().unwrap();
+    
+    // create chart folder exists
+    fs::create_dir(chart_folder).map_err(|e| e.to_string())?;
+    
+    // extract chart files
+    fs::write(format!("{chart_folder}\\metadata.json"), serde_json::to_string(&metadata).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    extract_from_zip(&mut zip, "chart.txt", &format!("{chart_folder}\\chart.txt"))?;
+    extract_from_zip(&mut zip, &format!("audio.{}", metadata.audio_ext), &format!("{chart_folder}\\audio.{}", metadata.audio_ext))?;
+    if let Some(img_ext) = &metadata.img_ext {
+        extract_from_zip(&mut zip, &format!("img.{img_ext}"), &format!("{chart_folder}\\img.{img_ext}"))?;
+    }
     
     Ok(metadata)
+}
+
+fn extract_from_zip<R: Read + Seek>(
+    zip: &mut ZipArchive<R>,
+    filename: &str,
+    dest: &str,
+) -> Result<(), String> {
+    
+    let mut file = zip.by_name(filename).map_err(|e| e.to_string())?;
+    let mut buf: Vec<u8> = Vec::with_capacity(file.size() as usize);
+    file.read_to_end(&mut buf).map_err(|e| e.to_string())?;
+    fs::write(dest, buf).map_err(|e| e.to_string())?;
+    
+    Ok(())
+}
+
+pub fn gen_id() -> String {
+    let mut res = [' '; 10];
+    
+    for i in 0..res.len() {
+        res[i] = to_base64_symbol(rand::random::<u8>() & 63)
+    }
+
+    res.iter().collect()
+}
+
+fn to_base64_symbol(num: u8) -> char {
+    if      num < 10    { (num      + '0' as u8) as char }
+    else if num < 36    { (num - 10 + 'a' as u8) as char }
+    else if num < 62    { (num - 36 + 'A' as u8) as char }
+    else if num == 62   { '-' }
+    else if num == 63   { '_' }
+    else                { panic!("cant convert num > 63 to a base64 symbol") }
 }
