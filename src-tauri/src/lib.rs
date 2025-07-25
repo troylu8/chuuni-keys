@@ -43,9 +43,16 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
+// move resources/default_charts to applocaldata/userdata/charts
 
-fn init_userdata_dir(app: &mut App) {
-    // move resources/default_charts to applocaldata/userdata/charts
-    
-    // use resources dir for assets like sfx instead of userdata
+// use resources dir for assets like sfx instead of userdata
+
+pub trait UnwrapOrStr<T> {
+    fn unwrap_or_str(self) -> Result<T, String>;
+}
+
+impl<T, E: ToString> UnwrapOrStr<T> for Result<T, E> {
+    fn unwrap_or_str(self) -> Result<T, String> {
+        self.map_err(|e| e.to_string())
+    }
 }

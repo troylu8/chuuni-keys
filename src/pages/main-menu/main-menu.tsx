@@ -3,7 +3,7 @@ import { Page, usePage } from "../../contexts/page";
 import MuseButton from '../../components/muse-button';
 import { useEffect, useRef, useState } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
-import { resetAnimation, USERDATA_DIR } from '../../lib/lib';
+import { resetAnimation, RESOURCE_DIR } from '../../lib/lib';
 import NowPlaying from '../../components/now-playing';
 import { useOnBeat } from '../../lib/sound';
 
@@ -35,7 +35,7 @@ export default function MainMenu() {
             
             <FlairText />
             
-            <img src={convertFileSrc(USERDATA_DIR + "\\logo.png")} className='w-[60vw]' />
+            <img src={convertFileSrc(RESOURCE_DIR + "\\logo.png")} className='w-[60vw]' />
             
             <div 
                 ref={buttonsCont} 

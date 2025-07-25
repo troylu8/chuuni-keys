@@ -1,5 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { USERDATA_DIR } from "../lib/lib";
+import { RESOURCE_DIR } from "../lib/lib";
 
 type Props = Readonly<{
     imgPath?: string
@@ -7,7 +7,7 @@ type Props = Readonly<{
     brightness?: number
 }>
 export default function Background({ imgPath, imgCacheBust, brightness }: Props) {
-    const src = convertFileSrc(imgPath ?? USERDATA_DIR + "\\default-bg.png");
+    const src = convertFileSrc(imgPath ?? RESOURCE_DIR + "\\default-bg.png");
     
     return (
         <>

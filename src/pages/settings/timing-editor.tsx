@@ -6,7 +6,7 @@ import MuseButton from "../../components/muse-button";
 import AccuracyBar from "../../components/accuracy-bar";
 import DeltaProvider, { Delta, getPraise, PRAISE_COLORS, useDelta } from "../../contexts/score";
 import bgm from "../../lib/sound";
-import { USERDATA_DIR } from "../../lib/lib";
+import { RESOURCE_DIR } from "../../lib/lib";
 import Praise from "../../components/praise";
 import NumberInput from "../../components/number-input";
 import { ArrowLeft } from "lucide-react";
@@ -43,7 +43,7 @@ export default function TimingEditor({ onClose }: Props) {
     const msSinceLastBeat = offsetPos % MS_PER_BEAT;
     
     useEffect(() => {
-        bgm.load(USERDATA_DIR + "\\metronome.mp3");
+        bgm.load(RESOURCE_DIR + "\\metronome.mp3");
         bgm.play();
         
         bgm.onEnd = () => {

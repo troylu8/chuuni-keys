@@ -29,7 +29,7 @@ enum DownloadingState { NONE, ALREADY_EXISTS, DOWNLOADING }
 
 export default function ChartSelect() {
     
-    const [charts, _setCharts] = useState<ChartMetadata[]>([]);
+    const [charts, _setCharts] = useState<ChartMetadata[] | null>(null);
     function setCharts(charts: ChartMetadata[]) {
         sortCharts(charts);
         _setCharts(charts);
@@ -64,19 +64,20 @@ export default function ChartSelect() {
     
     const [downloadingState, setDownloadingState] = useState<DownloadingState | Error>(DownloadingState.NONE);
     function downloadFromParam() {
+        
+        
         const online_id = (params as ChartSelectParams)!.activeChartId!;
         
         setDownloadingState(DownloadingState.DOWNLOADING);
                     
         downloadChart(online_id)
         .then(chartMetadata => {
-            setCharts([...charts, chartMetadata]);
+            setCharts([...(charts ?? []), chartMetadata]);
             setActiveChart(chartMetadata);
             setDownloadingState(DownloadingState.NONE);
         })
         .catch(err => setDownloadingState(err))
     }
-    
     
     // load charts
     useEffect(() => {
@@ -134,7 +135,7 @@ export default function ChartSelect() {
     }
     
     async function deleteActiveChart() {
-        if (!activeChart) return;
+        if (!activeChart || !charts) return;
         
         // delete chart folder
         await remove(getChartFolder(activeChart), {recursive: true});
@@ -159,7 +160,7 @@ export default function ChartSelect() {
     // keybinds
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (!activeChart) return;
+            if (!activeChart || !charts) return;
             
             if (e.key == "Enter") {
                 if (e.shiftKey) edit();
@@ -201,8 +202,14 @@ export default function ChartSelect() {
                 onClose={() => setDownloadingState(prev => prev === DownloadingState.DOWNLOADING ? prev : DownloadingState.NONE)}
             />
             
+            { charts == null &&
+                <div className="absolute left-1/2 top-1/2 -translate-1/2">
+                    <LoadingSpinner />
+                </div>
+            }
             
-            { charts.length == 0 ? 
+            
+            { charts && charts.length == 0 &&
                 <div className="absolute left-1/2 top-1/2 -translate-1/2 flex flex-col items-center justify-center">
                     <h3 className="text-ctp-flamingo font-mono mb-5"> [ No charts installed ] </h3>
                     <p> download some from the <ChartListingLink /> </p>
@@ -216,7 +223,9 @@ export default function ChartSelect() {
                         </MuseButton>
                     </p>
                 </div>
-                :
+            }
+            
+            { charts && charts.length != 0 &&
                 <>
                     <ChartInfo metadata={activeChart} />
                     

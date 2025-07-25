@@ -1,5 +1,5 @@
 import { readFile } from "@tauri-apps/plugin-fs";
-import { appWindow, flags, USERDATA_DIR } from "./lib";
+import { appWindow, flags, RESOURCE_DIR } from "./lib";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { getBeatDuration } from "../pages/editor/inspector";
 import { useEffect } from "react";
@@ -14,8 +14,9 @@ type SFX = "hitsound"
 
 
 const sfxBuffers: Map<SFX, AudioBuffer> = new Map([
-    ["hitsound", await getAudioBuffer(USERDATA_DIR + "\\sfx\\hitsound.ogg")]
+    ["hitsound", await getAudioBuffer(RESOURCE_DIR + "\\sfx\\hitsound.ogg")]
 ]);
+
 
 async function getAudioBuffer(filepath: string) {
     const bytes = await readFile(filepath);

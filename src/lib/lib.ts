@@ -1,4 +1,4 @@
-import { appLocalDataDir, homeDir } from "@tauri-apps/api/path";
+import { appLocalDataDir, homeDir, resourceDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { readTextFile, exists, writeTextFile } from "@tauri-apps/plugin-fs";
 import filenamify from "filenamify";
@@ -69,6 +69,8 @@ export type Bind<T> = [T, (value: T) => void];
 
 
 export const USERDATA_DIR = await appLocalDataDir() + "\\userdata";
+export const RESOURCE_DIR = await resourceDir() + "\\resources";
+
 export const SERVER_URL = "http://localhost:5000";
 export const OWNER_KEY = await getOwnerKey();
 

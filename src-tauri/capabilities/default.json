@@ -16,6 +16,8 @@
         "process:default",
         "dialog:default",
         "deep-link:default",
+        "fs:allow-resource-read-recursive",
+        "fs:allow-resource-write-recursive",
         "fs:allow-applocaldata-read-recursive",
         "fs:allow-applocaldata-write-recursive",
         "fs:allow-rename",
@@ -66,7 +68,7 @@
                     "path": "$APPLOCALDATA/**/*"
                 },
                 {
-                    "url": "https://*"
+                    "url": "https://chuuni-keys.troylu.com/*"
                 }
             ]
         }
