@@ -14,7 +14,7 @@ import DetailsTab from "./details-tab";
 import bgm from "../../lib/sound";
 import { useBgmPos, useBgmState } from "../../contexts/bgm-state";
 import Slider from "../../components/slider";
-import { ArrowLeft, Keyboard, Pause, Play, XIcon } from "lucide-react";
+import { ArrowLeft, Pause, Play, XIcon } from "lucide-react";
 
 
 type ActiveTab = "keyboard" | "timing" | "details";
@@ -279,9 +279,9 @@ export default function Editor() {
                             onClick={() => handleSave()}
                         > {saved ? "saved" : "save *"} </MuseButton>
                         <MuseButton 
-                            className="bg-ctp-mauve"
+                            className="bg-ctp-mauve font-mono"
                             onClick={() => setActiveModal(ActiveModal.KEYBINDS)}
-                        > <Keyboard /> </MuseButton>
+                        > ? </MuseButton>
                         <div className="grow flex flex-reverse justify-end gap-3">
                             {
                                 ["keyboard", "timing", "details"].map(tab => 

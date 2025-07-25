@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Page, usePage } from "../../contexts/page";
 import { PRAISE_COLORS, useStats } from "../../contexts/score";
-import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { exists, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { ChartMetadata, getChartFolder } from "../../lib/lib";
 import MuseButton from "../../components/muse-button";
 
@@ -14,14 +14,41 @@ const SCORE_WEIGHTS = {
 function calculateLetter(accuracy: number, fullCombo: boolean) {
     if (Number.isNaN(accuracy)) return "F";
     
-    const LETTERS = ["F", "C", "B", "A", "S", "S+", "X"];
-    const ACCURACY_REQS = [0, 0.3, 0.5, 0.7, 0.9, 1];
+    const LETTERS = ["F", "C", "B", "A", "S", "X"];
+    const ACCURACY_REQS = [0, 0.6, 0.75, 0.9, 1];
     
     for (let i = ACCURACY_REQS.length-1; i >= 0; i--) {
         if (accuracy >= ACCURACY_REQS[i]) {
             return LETTERS[i + Number(fullCombo)]; // having full combo increases letter by 1
         }
     }
+    
+    return "F";
+}
+
+export type LeaderboardEntry = {
+    timestamp: number
+    accuracyPercent: string
+    maxCombo: number
+    letter: string
+    fullCombo: boolean
+}
+export async function getLeaderboard(chart: ChartMetadata): Promise<LeaderboardEntry[]> {
+    const leaderboardFile = getChartFolder(chart) + "\\leaderboard.csv";
+    
+    if (!(await exists(leaderboardFile))) return [];
+    
+    const contents = await readTextFile(leaderboardFile);
+    return contents === '' ? [] : contents.trim().split("\n").map(row => {
+        const [timestamp, accuracyPercent, maxCombo, letter, fullCombo] = row.split(",");
+        return {
+            timestamp: Number(timestamp),
+            accuracyPercent,
+            maxCombo: Number(maxCombo),
+            letter,
+            fullCombo: fullCombo === "FC"
+        }
+    });
 }
 
 export default function ResultsScreen() {
@@ -44,6 +71,15 @@ export default function ResultsScreen() {
     const letter = calculateLetter(accuracy, fullCombo);
     
     useEffect(() => {
+        // write score in leaderboard file
+        if (!Number.isNaN(accuracyPercent)) { // accuracy may be NaN if chart was empty
+            writeTextFile(
+                getChartFolder(metadata) + "\\leaderboard.csv", 
+                `${Date.now()},${accuracyPercent},${maxCombo},${letter},${fullCombo? "FC" : ""}\n`,
+                {append: true}
+            );
+        }
+        
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") handleToChartSelect();
         }
@@ -51,17 +87,8 @@ export default function ResultsScreen() {
         return () => { window.removeEventListener("keydown", handleKeyDown); }
     }, [metadata]);
     
-    
     function handleToChartSelect() {
         setPage([Page.CHART_SELECT]); 
-        
-        if (Number.isInteger(accuracyPercent)) { // accuracy may be NaN if chart was empty
-            writeTextFile(
-                getChartFolder(metadata) + "\\leaderboard.csv", 
-                `${Date.now()},${accuracyPercent},${maxCombo},${letter}${fullCombo? ",FC" : ""}\n`,
-                {append: true}
-            );
-        }
     }
     
     return (

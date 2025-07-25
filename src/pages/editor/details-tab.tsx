@@ -116,7 +116,7 @@ function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePick
             title: "Select background image",
             filters: [{
                 name: "Image",
-                extensions: ["png", "jpg", "bmp", "webp", "avif"]
+                extensions: ["png", "jpg", "bmp", "webp", "avif", "jpeg"]
             }],
             defaultPath: await pictureDir()
         });

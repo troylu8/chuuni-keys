@@ -6,13 +6,15 @@ import { ChartMetadata, compareDifficulty, flags, getChartFolder } from "../../l
 import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
 import { ArrowLeft, EllipsisVertical, Plus, TriangleAlert, XIcon } from "lucide-react";
-import { remove } from "@tauri-apps/plugin-fs";
+import { exists, readTextFile, remove } from "@tauri-apps/plugin-fs";
 import ChartList from "./chart-list";
 import Modal from "../../components/modal";
 import NowPlaying from "../../components/now-playing";
 import ChartListingLink from "../../components/chart-listing-link";
 import { downloadChart } from "../../lib/chart-listing";
 import LoadingSpinner from "../../components/loading-spinner";
+import { getLeaderboard, LeaderboardEntry } from "../game/results-screen";
+import Leaderboard from "./leaderboard";
 
 /** sorts by difficulty first, then title */
 function sortCharts(charts: ChartMetadata[]) {
@@ -86,10 +88,8 @@ export default function ChartSelect() {
             if (initialChartId) {
                 const initialChart = charts.find(chart => chart.id == initialChartId);
                 
-                if (initialChart) {
-                    console.log("found", initialChart);
+                if (initialChart) 
                     return setActiveChart(initialChart);
-                }
                 
                 // try to download it
                 else {
@@ -187,6 +187,8 @@ export default function ChartSelect() {
         return () => { window.removeEventListener("keydown", handleKeyDown); }
     }, [activeChart, charts]);
     
+    const [scoresVisible, setScoresVisible] = useState(false);
+    
     return (
         <div className="fixed cover bg-ctp-base">
             <NowPlaying />
@@ -218,17 +220,28 @@ export default function ChartSelect() {
                 :
                 <>
                     <ChartInfo metadata={activeChart} />
-                    <ChartList
-                        charts={charts}
-                        activeChartId={activeChart?.id}
-                        onEntryClick={handleEntryClick}
-                        onEntryContextMenu={handleEntryContextMenu}
-                    />
+                    
+                    { scoresVisible && activeChart ?
+                        <Leaderboard 
+                            chart={activeChart} 
+                            onClose={() => setScoresVisible(false)} 
+                        />
+                        :
+                        <ChartList
+                            charts={charts}
+                            activeChartId={activeChart?.id}
+                            onEntryClick={handleEntryClick}
+                            onEntryContextMenu={handleEntryContextMenu}
+                        />
+                    }
+                    
                     <ActionsBar 
                         activeSongId={activeChart?.id}
                         play={play}
                         edit={edit}
                         deleteActiveChart={deleteActiveChart}
+                        scoresVisible={scoresVisible}
+                        setScoresVisible={setScoresVisible}
                     />
                 </>
             }
@@ -296,26 +309,31 @@ function NavigationBar() {
     )
 }
 
-enum ActionsState { DEFAULT, OPTIONS, DELETING }
+enum ActionsState { DEFAULT, OPTIONS, DELETING, SCORES_VISIBLE }
 type Props = Readonly<{
     activeSongId?: string
     play: () => any
     edit: () => any
     deleteActiveChart: () => any
+    scoresVisible: boolean,
+    setScoresVisible: (visible: boolean) => void
 }>
-function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
+function ActionsBar({ activeSongId, play, edit, deleteActiveChart, scoresVisible, setScoresVisible }: Props) {
     
     const [actionsState, setActionsState] = useState(ActionsState.DEFAULT);
     
     // close menu when active song changes
     useEffect(() => setActionsState(ActionsState.DEFAULT), [activeSongId]);
     
+    useEffect(() => {
+        setActionsState(scoresVisible ? ActionsState.SCORES_VISIBLE : ActionsState.DEFAULT);
+    }, [scoresVisible]);
     
     return (
         <div className="
             absolute left-0 bottom-1/10 flex gap-1 ml-1 w-[35vw] z-10
             [&>*]:text-nowrap [&>*]:grow-1 [&>*]:py-0.5 [&>*]:px-3 text-ctp-base
-            [&>*]:outline-[0.5vh] [&>*]:outline-ctp-base
+            [&>*]:outline-[0.5vh] [&>*]:outline-ctp-base [&>button]:font-mono
         ">
             <MuseButton 
                 onClick={() => setActionsState(actionsState == ActionsState.DEFAULT ? ActionsState.OPTIONS : ActionsState.DEFAULT)}
@@ -324,22 +342,34 @@ function ActionsBar({ activeSongId, play, edit, deleteActiveChart }: Props) {
                 { actionsState == ActionsState.DEFAULT ? <EllipsisVertical /> : <XIcon /> }
             </MuseButton>
             
-            { actionsState == ActionsState.DEFAULT ?
-                <MuseButton onClick={play} className="bg-ctp-green font-mono"> 
+            { actionsState == ActionsState.DEFAULT &&
+                <MuseButton onClick={play} className="bg-ctp-green"> 
                     [ play ] 
                 </MuseButton>
-                :
+            }
+            { (actionsState == ActionsState.OPTIONS || actionsState == ActionsState.DELETING) &&
                 <>
                     <MuseButton 
                         onClick={() => setActionsState(ActionsState.DELETING)}
-                        className="bg-ctp-red grow-0! font-mono"
+                        className="bg-ctp-red grow-0!"
                     > 
                         [ delete ] 
                     </MuseButton>
-                    <MuseButton onClick={edit} className="bg-ctp-blue font-mono"> 
+                    <MuseButton 
+                        onClick={() => setScoresVisible(true)}
+                        className="bg-ctp-green grow-0!"
+                    > 
+                        [ scores ] 
+                    </MuseButton>
+                    <MuseButton onClick={edit} className="bg-ctp-blue"> 
                         [ edit ] 
                     </MuseButton>
                 </>
+            }
+            { actionsState == ActionsState.SCORES_VISIBLE && 
+                <MuseButton onClick={() => setScoresVisible(false)} className="bg-ctp-red">
+                    [ close scores ]
+                </MuseButton>
             }
             
             { actionsState == ActionsState.DELETING &&

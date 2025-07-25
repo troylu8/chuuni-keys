@@ -36,7 +36,8 @@ function toMuseEvent(str: string): MuseEvent {
     return [Number(arr[0]), arr[1]];
 }
 export async function readChartFile(path: string) {
-    const contents = await readTextFile(path, {baseDir: BaseDirectory.AppLocalData});
+    console.log("reading chart file ", path);
+    const contents = await readTextFile(path);
     return contents === '' ? [] : contents.trim().split("\n").map(toMuseEvent);
 }
 

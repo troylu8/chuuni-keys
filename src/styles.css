@@ -12,6 +12,13 @@
     --miss: var(--color-ctp-red);
     --good: var(--color-ctp-green);
     --perfect: var(--color-ctp-blue);
+
+    --F: var(--color-ctp-text);
+    --C: var(--color-ctp-lavender);
+    --B: var(--color-ctp-blue);
+    --A: var(--color-ctp-green);
+    --S: var(--color-ctp-yellow);
+    --X: var(--color-ctp-red);
 }
 
 @theme {
@@ -184,6 +191,7 @@ button:hover {
 }
 
 .anim-flash {
+    animation-duration: inherit;
     animation: anim-flash ease-out forwards;
 }
 @keyframes anim-flash {

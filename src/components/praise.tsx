@@ -27,7 +27,6 @@ export default function Praise({showRawDeltas}: Props) {
     
     
     const praiseColor = PRAISE_COLORS[typeof praise === "number" ? getPraise(praise) : praise];
-    
     return (
         <p ref={praiseLabelRef} style={{color: praiseColor}} className="anim-praise font-serif"> {praise} </p>
     );

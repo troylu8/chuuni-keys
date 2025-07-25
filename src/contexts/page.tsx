@@ -31,15 +31,12 @@ export default function PageProvider({ children }: Props) {
     
     useEffect(() => {
         function handleDeepLink(url?: string) {
-            console.log("deep link", url);
             if (url == undefined) return;
             
             // urls look like chuuni://play/<chart-id>
             const [key, value] = url.split("://")[1].split("/");
-            if (key == "play") {
-                console.log(value);
+            if (key == "play") 
                 setPageParams([Page.CHART_SELECT, { activeChartId: value }]);
-            }
         } 
         
         getCurrent().then(urls => handleDeepLink(urls?.[0]));

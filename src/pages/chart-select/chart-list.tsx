@@ -214,13 +214,13 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
                     flex justify-center items-center z-10
                 '
             >
-                <div className="-rotate-45 text-ctp-base text-[4vh] font-mono"> 
+                <p className="-rotate-45 text-ctp-base text-[4vh] font-mono"> 
                     { 
                         metadata.difficulty.length > 5 ?
                             metadata.difficulty.substring(0, 4) + "." : 
                             metadata.difficulty 
                     } 
-                </div>
+                </p>
             </div>
             
             {/* song title / producer label */}
@@ -236,21 +236,16 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
                     flex flex-col justify-center pl-[27vh] w-[50vw] 
                 '
             >
-                <p 
+                <h2 
                     ref={titleTextRef}
                     style={{animationDuration: beatDuration ? beatDuration + "ms" : ""}}
                     className={`
                         ${active && "anim-flash "}
-                        text-[6vh] ${active ? "text-ctp-red" : "text-ctp-mauve"}
+                        text-[6vh] ${active ? "text-ctp-red!" : "text-ctp-mauve!"}
                     `}
-                > {metadata.title} </p>
+                > {metadata.title} </h2>
                 <p className='text-[3vh]'> {metadata.credit_audio} </p>
             </header>
-            
-            { active && 
-                <div 
-                ></div>
-            }
         </section>
     )
 }

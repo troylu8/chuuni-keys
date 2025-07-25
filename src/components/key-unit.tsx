@@ -39,8 +39,6 @@ export function KeyUnit( { onHit, keyCode, label, labelCentered, hitProgresses, 
             }
         }
         function handleKeyUp(e: KeyboardEvent) {
-            if (keyCode === "a")
-                console.log("keyup");
             if (e.key === keyCode) setPressed(false);
         }
         

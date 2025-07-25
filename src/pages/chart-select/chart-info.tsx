@@ -86,10 +86,10 @@ export default function ChartInfo({ metadata }: Props) {
                                 <p style={{animationDuration}} className="anim-flash-light bg-ctp-blue"> <Music /> &nbsp; { metadata.credit_audio } </p>
                             }
                             { metadata.credit_img &&
-                                <p style={{animationDuration}} className="anim-flash-light  bg-ctp-green"> <Image /> &nbsp; { metadata.credit_img } </p>
+                                <p style={{animationDuration}} className="anim-flash-light  bg-ctp-lavender"> <Image /> &nbsp; { metadata.credit_img } </p>
                             }
                             { metadata.credit_chart &&
-                                <p style={{animationDuration}} className="anim-flash-light  bg-ctp-text"> <Keyboard /> &nbsp; { metadata.credit_chart } </p>
+                                <p style={{animationDuration}} className="anim-flash-light  bg-ctp-red"> <Keyboard /> &nbsp; { metadata.credit_chart } </p>
                             }
                         </div>
                         

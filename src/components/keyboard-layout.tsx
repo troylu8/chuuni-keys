@@ -21,7 +21,7 @@ type Props = Readonly<{
 }>
 export default function KeyboardLayout({keyComponent}: Props) {
     return (
-        <div className="absolute cover z-10">
+        <div className="absolute cover z-10"> 
             <div className="flex flex-col gap-[3vw] absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                 {
                     QWERTY.map((row, i) => 
