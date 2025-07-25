@@ -1,4 +1,6 @@
-use tauri::Manager;
+use std::fs;
+
+use tauri::{App, Manager};
 use tauri_plugin_prevent_default::PlatformOptions;
 mod charts;
 
@@ -39,4 +41,11 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+
+fn init_userdata_dir(app: &mut App) {
+    // move resources/default_charts to applocaldata/userdata/charts
+    
+    // use resources dir for assets like sfx instead of userdata
 }
