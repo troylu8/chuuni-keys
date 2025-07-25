@@ -67,6 +67,7 @@ class BgmPlayer {
     public onDurationChange?: (duration: number) => any; 
     public onVolumeChange?: (volume: number) => any; 
     public onSpeedChange?: (speed: number) => any; 
+    public onEnd?: () => any;
     
     constructor() {
         // source -> gainNode -> dest
@@ -80,6 +81,7 @@ class BgmPlayer {
         }
         this.audio.onended = () => {
             this.onPlayOrPause?.call(null, true);
+            this.onEnd?.call(null);
         }
         
         appWindow.onResized(async () => {

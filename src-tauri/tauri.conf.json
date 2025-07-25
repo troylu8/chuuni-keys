@@ -1,7 +1,7 @@
 {
     "$schema": "https://schema.tauri.app/config/2",
     "productName": "chuuni keys",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "identifier": "com.troylu.chuuni-keys",
     "build": {
         "beforeDevCommand": "npm run dev",
@@ -13,8 +13,8 @@
         "windows": [
             {
                 "title": "chuuni keys",
-                "width": 700,
-                "height": 400,
+                "width": 889,
+                "height": 500,
                 "backgroundColor": "#1e1e2e",
                 "decorations": false
             }

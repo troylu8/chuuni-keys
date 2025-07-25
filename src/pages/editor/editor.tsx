@@ -142,8 +142,6 @@ export default function Editor() {
         const pos = bgm.pos;
         setSaved(false);
         
-        console.log("toggle");
-        
         setEvents(events => {
             const event: MuseEvent = [pos, ":" + key];
             

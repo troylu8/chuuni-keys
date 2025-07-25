@@ -12,8 +12,7 @@ pub fn run() {
                         .set_focus();
         }))
         .setup(|app| {
-            // TODO remove in production
-            #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+            #[cfg(dev)]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 app.deep_link().register_all()?;

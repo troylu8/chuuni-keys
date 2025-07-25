@@ -72,7 +72,6 @@ export default function ChartSelect() {
         .then(chartMetadata => {
             setCharts([...charts, chartMetadata]);
             setActiveChart(chartMetadata);
-            console.log(chartMetadata);
             setDownloadingState(DownloadingState.NONE);
         })
         .catch(err => setDownloadingState(err))

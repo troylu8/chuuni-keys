@@ -12,10 +12,7 @@ import NumberInput from "../../components/number-input";
 import { ArrowLeft } from "lucide-react";
 
 const MS_PER_BEAT = 500;
-const MS_FIRST_BEAT = 475;
-const MS_LAST_BEAT = 1975;
-const MS_PER_LOOP = 2000;
-
+const MS_LAST_BEAT = 10000;
 
 const MIN_HITRING_SPEED = 1;
 const MAX_HITRING_SPEED = 9;
@@ -43,20 +40,18 @@ export default function TimingEditor({ onClose }: Props) {
     
     const pos = useBgmPos();
     const offsetPos = pos + offset;
-    const msSinceLastBeat = (offsetPos < MS_FIRST_BEAT)? offsetPos + MS_PER_LOOP - MS_LAST_BEAT : offsetPos % MS_PER_BEAT;
-    
+    const msSinceLastBeat = offsetPos % MS_PER_BEAT;
     
     useEffect(() => {
         bgm.load(USERDATA_DIR + "\\metronome.mp3");
         bgm.play();
         
-        const unlisten = bgm.addPosListener(pos => {
-            if (pos > MS_PER_LOOP) 
-                bgm.pos = pos - MS_PER_LOOP;
-        });
-        
-        return unlisten;
-    }, [offset]);
+        bgm.onEnd = () => {
+            bgm.pos = bgm.duration - MS_LAST_BEAT;
+            bgm.play();
+        }
+        return () => { delete bgm.onEnd; }
+    }, []);
     
     function handleClose() {
         bgm.pause();

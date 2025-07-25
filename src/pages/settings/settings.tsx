@@ -14,8 +14,6 @@ export default function Settings() {
     const [timingEditorVisible, setTimingEditorVisible] = useState(false);
     const [, setPageParams] = usePage();
     
-    if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;
-    
     function bindSetting<K extends keyof SettingsType>(field: K): Bind<SettingsType[K]> {
         return [settings[field], val => setSettings(field, val)];
     }
@@ -29,6 +27,7 @@ export default function Settings() {
         return () => { window.removeEventListener("keydown", handleKeyDown); }
     }, []);
     
+    if (timingEditorVisible) return <TimingEditor onClose={() => setTimingEditorVisible(false)}/>;
     return (
         <div className="absolute cover flex justify-center overflow-auto bg-ctp-base">
             <NowPlaying />
@@ -66,8 +65,8 @@ export default function Settings() {
                 >
                     <span> music </span>
                     <AudioSlider bind={bindSetting("musicVolume")} />
-                    <span> sfx </span>
-                    <AudioSlider bind={bindSetting("sfxVolume")} />
+                    {/* <span> sfx </span>
+                    <AudioSlider bind={bindSetting("sfxVolume")} /> */}
                     <span> hitsounds </span>
                     <AudioSlider bind={bindSetting("hitsoundVolume")} />
                 </div>
