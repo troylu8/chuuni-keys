@@ -79,9 +79,6 @@ pub fn get_all_charts(app: AppHandle) -> Result<Vec<ChartMetadata>, String> {
     )
 }
 
-fn install_default_charts(app: &mut App) {
-    
-}
 
 fn add_file_to_zip<W: Write + Seek>(
     zip: &mut ZipWriter<W>,
