@@ -12,8 +12,6 @@ export default function Titlebar() {
     
     const showBgmTitle = (page == Page.EDITOR || page == Page.GAME) && bgmTitle;
     
-    console.log(fullscreen);
-    
     return (
         <nav id="titlebar" style={{height: fullscreen ? 0 : "fit-content"}}>
             <div id="titlebar-header" data-tauri-drag-region>

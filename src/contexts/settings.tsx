@@ -43,7 +43,7 @@ type Props = Readonly<{
 export default function SettingsProvider({ children }: Props) {
     const [settings, setSettingsInner] = useState<Settings>({
         offset: 0,
-        hitringDuration: 300,
+        hitringDuration: 400,
         musicVolume: 1,
         sfxVolume: 1,
         hitsoundVolume: 1,

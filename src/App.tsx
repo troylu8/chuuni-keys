@@ -54,8 +54,8 @@ function ActivePage() {
     }, [page]);
     
     return (
-        // rotate-0 to create a new stacking context for items of position "fixed"
-        <div className="rotate-0"> 
+        // "translateZ(0)" - create a new stacking context for items of position "fixed"
+        <div style={{transform: "translateZ(0)"}}> 
             {page == Page.MAIN_MENU && <MainMenu />}
             {page == Page.SETTINGS && <Settings />}
             {page == Page.NEW_CHART && <NewChart />}
