@@ -6,14 +6,13 @@ import { ChartMetadata, compareDifficulty, flags, getChartFolder } from "../../l
 import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
 import { ArrowLeft, EllipsisVertical, Plus, TriangleAlert, XIcon } from "lucide-react";
-import { exists, readTextFile, remove } from "@tauri-apps/plugin-fs";
+import { remove } from "@tauri-apps/plugin-fs";
 import ChartList from "./chart-list";
 import Modal from "../../components/modal";
 import NowPlaying from "../../components/now-playing";
 import ChartListingLink from "../../components/chart-listing-link";
 import { downloadChart } from "../../lib/chart-listing";
 import LoadingSpinner from "../../components/loading-spinner";
-import { getLeaderboard, LeaderboardEntry } from "../game/results-screen";
 import Leaderboard from "./leaderboard";
 
 /** sorts by difficulty first, then title */

@@ -1,10 +1,10 @@
 use std::{
     fs,
-    io::{Cursor, ErrorKind, Read, Seek, Write},
+    io::{Cursor, Read, Seek, Write},
 };
 
 use serde::{Deserialize, Serialize};
-use tauri::{App, AppHandle, Manager};
+use tauri::{AppHandle, Manager};
 use zip::{write::SimpleFileOptions, ZipArchive, ZipWriter};
 use filenamify::filenamify;
 

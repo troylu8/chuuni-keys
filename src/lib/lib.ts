@@ -1,7 +1,7 @@
 import { appLocalDataDir, homeDir, resourceDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { readTextFile, exists, writeTextFile } from "@tauri-apps/plugin-fs";
-import filenamify from "filenamify";
+import filenamify from "../deps/filenamify";
 
 export const appWindow = getCurrentWindow();
 

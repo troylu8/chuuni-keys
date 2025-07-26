@@ -1,4 +1,4 @@
-import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
+import { readTextFile } from '@tauri-apps/plugin-fs';
 import { EventEmitter } from 'events';
 import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { useBgmState } from "./bgm-state";

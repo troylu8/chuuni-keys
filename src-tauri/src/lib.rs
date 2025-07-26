@@ -1,9 +1,7 @@
-use std::fs;
-
-use tauri::{App, Manager};
+use tauri::Manager;
 use tauri_plugin_prevent_default::PlatformOptions;
-mod charts;
 
+mod charts;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
