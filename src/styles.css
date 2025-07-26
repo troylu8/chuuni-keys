@@ -62,6 +62,7 @@ body::selection {
 
     background-color: var(--color-ctp-crust);
     padding: 0 4px;
+    overflow: hidden;
 }
 
 #titlebar-header {

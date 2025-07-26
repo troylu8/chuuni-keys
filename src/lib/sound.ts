@@ -83,6 +83,8 @@ class BgmPlayer {
         this.audio.onended = () => {
             this.onPlayOrPause?.call(null, true);
             this.onEnd?.call(null);
+            clearInterval(this.playingLoop);
+            delete this.playingLoop;
         }
         
         appWindow.onResized(async () => {
@@ -94,6 +96,9 @@ class BgmPlayer {
         return this._src;
     }
     public load(src: string | null, info?: BgmInfo) {
+        clearInterval(this.playingLoop);
+        delete this.playingLoop;
+        
         this._src = src;
         if (src == null) {
             this.audio.src = "";
@@ -151,7 +156,7 @@ class BgmPlayer {
         this.onPlayOrPause?.call(null, true);
         
         clearInterval(this.playingLoop);
-        this.playingLoop = undefined;
+        delete this.playingLoop;
     }
     
     public get paused() {
@@ -204,10 +209,12 @@ export default bgm;
 export function useOnBeat(onBeat: BeatListener) {
     const { bpm } = useBgmState();
     
-    
     useEffect(() => {
         const unlisten = bgm.addBeatListener(onBeat);
-        return unlisten;
+        
+        return () => {
+            unlisten();
+        }
     }, []);
     
     return bpm && getBeatDuration(bpm);

@@ -22,12 +22,12 @@ export default function MainMenu() {
     
     
     const buttonsCont = useRef<HTMLDivElement | null>(null);
+    
     const beatDuration = useOnBeat(beat => {
         const buttons = buttonsCont.current;
         if (!buttons) return;
         resetAnimation(buttons.children[beat % buttons.children.length] as HTMLElement)
     });
-    
     
     return (
         <div className="fixed left-[7vw] top-[5vh] flex flex-col justify-center">

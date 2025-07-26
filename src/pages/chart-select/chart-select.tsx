@@ -63,8 +63,6 @@ export default function ChartSelect() {
     
     const [downloadingState, setDownloadingState] = useState<DownloadingState | Error>(DownloadingState.NONE);
     function downloadFromParam() {
-        
-        
         const online_id = (params as ChartSelectParams)!.activeChartId!;
         
         setDownloadingState(DownloadingState.DOWNLOADING);

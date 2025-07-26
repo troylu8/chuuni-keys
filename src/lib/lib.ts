@@ -102,5 +102,3 @@ export const flags: Flags = {
 export function getChartFolder({id, title}: {id: string, title: string}) {
     return `${USERDATA_DIR}\\charts\\${id} ${filenamify(title, {replacement: '_'})}`.trim();
 }
-
-
