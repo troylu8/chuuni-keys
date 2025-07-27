@@ -71,7 +71,8 @@ export type Bind<T> = [T, (value: T) => void];
 export const USERDATA_DIR = await appLocalDataDir() + "\\userdata";
 export const RESOURCE_DIR = await resourceDir() + "\\resources";
 
-export const SERVER_URL = "http://localhost:5000";
+export const SERVER_URL = "https://api-chuuni-keys.troylu.com";
+// export const SERVER_URL = "http://localhost:44777";
 export const OWNER_KEY = await getOwnerKey();
 
 async function getOwnerKey() {

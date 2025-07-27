@@ -1,1 +1,15 @@
-{"id":"XwcbeaNicb","online_id":"d-cZiZj6o4","owner_hash":"$2b$10$.tEQSYOzlXyd9AkLHQUjnuD.7JpnZvLyVoX7ZVmj2Ay4SsyrX0msy","title":"hesitation","difficulty":"normal","bpm":164.0,"first_beat":15193.0,"preview_time":61107.633,"measure_size":4,"snaps":1,"audio_ext":"mp3","img_ext":"png","credit_audio":"Andrew Garden, grayskies","credit_img":"Andrew Garden, keni can fly","credit_chart":"me!"}
+{
+    "id": "XwcbeaNicb",
+    "title": "hesitation",
+    "difficulty": "normal",
+    "bpm": 164,
+    "first_beat": 15193,
+    "preview_time": 61107.633,
+    "measure_size": 4,
+    "snaps": 1,
+    "audio_ext": "mp3",
+    "img_ext": "png",
+    "credit_audio": "Andrew Garden, grayskies",
+    "credit_img": "keni can fly, Andrew Garden",
+    "credit_chart": "[ system ]"
+}

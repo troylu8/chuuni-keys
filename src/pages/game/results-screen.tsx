@@ -11,10 +11,11 @@ const SCORE_WEIGHTS = {
     miss: 0
 }
 
+const LETTERS = ["F", "C", "B", "A", "S", "X"];
+
 function calculateLetter(accuracy: number, fullCombo: boolean) {
     if (Number.isNaN(accuracy)) return "F";
     
-    const LETTERS = ["F", "C", "B", "A", "S", "X"];
     const ACCURACY_REQS = [0, 0.6, 0.75, 0.9, 1];
     
     for (let i = ACCURACY_REQS.length-1; i >= 0; i--) {
@@ -28,7 +29,7 @@ function calculateLetter(accuracy: number, fullCombo: boolean) {
 
 export type LeaderboardEntry = {
     timestamp: number
-    accuracyPercent: string
+    accuracyPercent: number
     maxCombo: number
     letter: string
     fullCombo: boolean
@@ -39,16 +40,26 @@ export async function getLeaderboard(chart: ChartMetadata): Promise<LeaderboardE
     if (!(await exists(leaderboardFile))) return [];
     
     const contents = await readTextFile(leaderboardFile);
-    return contents === '' ? [] : contents.trim().split("\n").map(row => {
+    if (contents === '') return [];
+    
+    const entries = contents.trim().split("\n").map(row => {
         const [timestamp, accuracyPercent, maxCombo, letter, fullCombo] = row.split(",");
         return {
             timestamp: Number(timestamp),
-            accuracyPercent,
+            accuracyPercent: Number(accuracyPercent),
             maxCombo: Number(maxCombo),
             letter,
             fullCombo: fullCombo === "FC"
         }
     });
+    
+    // sort by letter first, accuracy second
+    entries.sort((a, b) => {
+        const letterDiff = LETTERS.indexOf(b.letter) - LETTERS.indexOf(a.letter);
+        return letterDiff == 0? b.accuracyPercent - a.accuracyPercent : letterDiff;
+    });
+    
+    return entries;
 }
 
 export default function ResultsScreen() {
