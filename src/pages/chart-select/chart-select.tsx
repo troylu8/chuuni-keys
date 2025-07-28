@@ -29,9 +29,13 @@ enum DownloadingState { NONE, ALREADY_EXISTS, DOWNLOADING }
 export default function ChartSelect() {
     
     const [charts, _setCharts] = useState<ChartMetadata[] | null>(null);
-    function setCharts(charts: ChartMetadata[]) {
-        sortCharts(charts);
-        _setCharts(charts);
+    function setCharts(setter: (prev: ChartMetadata[] | null) => ChartMetadata[] | null) {
+        _setCharts(prev => {
+            const next = setter(prev);
+            if (next)
+                sortCharts(next);
+            return next;
+        });
     }
     const [[,params], setPageParams] = usePage();
     
@@ -69,7 +73,7 @@ export default function ChartSelect() {
                     
         downloadChart(online_id)
         .then(chartMetadata => {
-            setCharts([...(charts ?? []), chartMetadata]);
+            setCharts(prev => [...(prev ?? []), chartMetadata]);
             setActiveChart(chartMetadata);
             setDownloadingState(DownloadingState.NONE);
         })
@@ -79,7 +83,7 @@ export default function ChartSelect() {
     // load charts
     useEffect(() => {
         invoke<ChartMetadata[]>("get_all_charts").then(charts => {
-            setCharts(charts);
+            setCharts(() => charts);
             
             const initialChartId = (params as ChartSelectParams)?.activeChartId;
             if (initialChartId) {
@@ -141,7 +145,7 @@ export default function ChartSelect() {
         localStorage.removeItem("unsynced." + activeChart.id);
         
         // remove this active chart from charts[]
-        setCharts(charts.filter(chart => chart.id != activeChart.id));
+        setCharts(() => charts.filter(chart => chart.id != activeChart.id));
         
         if (charts.length == 1) 
             setActiveChart(null); // this was the last chart
