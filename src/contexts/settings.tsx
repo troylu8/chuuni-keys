@@ -27,12 +27,28 @@ type SettingsHooks = {
     [K in keyof Settings]?: (val: Settings[K]) => any
 };
 
+let maximizedBeforeFullscreen = false;
+
 /** code to run when a setting is initialized/changed */
 const SETTINGS_HOOKS: SettingsHooks = {
     "musicVolume": vol => bgm.volume = vol,
     "sfxVolume": vol => flags.sfxVolume = vol,
     "hitsoundVolume": vol => flags.hitsoundVolume = vol,
-    "fullscreen": fullscreen => appWindow.setFullscreen(fullscreen)
+    "fullscreen": async fullscreenOn => {
+        
+        if (fullscreenOn) {
+            maximizedBeforeFullscreen = await appWindow.isMaximized();
+            
+            // unmaximize first to prevent issue when turning fullscreen on while maximized 
+            await appWindow.unmaximize();
+            await appWindow.setFullscreen(true);
+        }
+        else {
+            await appWindow.setFullscreen(false);
+            if (maximizedBeforeFullscreen)  await appWindow.maximize();
+            else                            await appWindow.unmaximize();
+        }
+    }
 }
 
 const initialFullscreen = await appWindow.isFullscreen();
