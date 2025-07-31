@@ -28,7 +28,7 @@ function GameInner() {
     
     return (
         <div className="fixed cover">
-            <Background imgPath={metadata.img_ext && `${getChartFolder(metadata)}\\img.${metadata.img_ext}`} />
+            <Background imgPath={metadata.img_ext && `${getChartFolder(metadata)}/img.${metadata.img_ext}`} />
             
             <DeltaProvider>
                 { gameStage == GameStage.PLAYING &&

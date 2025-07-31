@@ -14,7 +14,7 @@ type SFX = "hitsound"
 
 
 const sfxBuffers: Map<SFX, AudioBuffer> = new Map([
-    ["hitsound", await getAudioBuffer(RESOURCE_DIR + "\\sfx\\hitsound.ogg")]
+    ["hitsound", await getAudioBuffer(RESOURCE_DIR + "/sfx/hitsound.ogg")]
 ]);
 
 

@@ -17,7 +17,7 @@ export default function Titlebar() {
             <div id="titlebar-header" data-tauri-drag-region>
                 
                 {/* i swear the image quality is higher when using a 24x24 img and scaling it down to 16 over just using a 16x16 img */}
-                <img src={convertFileSrc(RESOURCE_DIR + "\\icon24x24.png")} width={16} height={16} data-tauri-drag-region />
+                <img src={convertFileSrc(RESOURCE_DIR + "/icon24x24.png")} width={16} height={16} data-tauri-drag-region />
                 
                 <p id="titlebar-text" data-tauri-drag-region>
                     chuuni keys { showBgmTitle && ( " // " + bgmTitle + (credit_audio ? " - " + credit_audio : "") ) }

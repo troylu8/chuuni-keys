@@ -48,7 +48,7 @@ export default function ChartSelect() {
         if (metadata == null)
             return bgm.clear();
         
-        const activeSongSrc = `${getChartFolder(metadata)}\\audio.${metadata.audio_ext}`;
+        const activeSongSrc = `${getChartFolder(metadata)}/audio.${metadata.audio_ext}`;
         
         // this is a different song, so play it from the preview point
         if (bgm.src != activeSongSrc) {

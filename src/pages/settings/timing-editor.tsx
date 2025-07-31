@@ -43,7 +43,7 @@ export default function TimingEditor({ onClose }: Props) {
     const msSinceLastBeat = offsetPos % MS_PER_BEAT;
     
     useEffect(() => {
-        bgm.load(RESOURCE_DIR + "\\metronome.mp3");
+        bgm.load(RESOURCE_DIR + "/metronome.mp3");
         bgm.play();
         
         bgm.onEnd = () => {

@@ -35,7 +35,7 @@ export default function MainMenu() {
             
             <FlairText />
             
-            <img src={convertFileSrc(RESOURCE_DIR + "\\logo.png")} className='w-[60vw]' />
+            <img src={convertFileSrc(RESOURCE_DIR + "/logo.png")} className='w-[60vw]' />
             
             <div 
                 ref={buttonsCont} 

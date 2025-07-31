@@ -188,7 +188,7 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
             <div className="relative w-[25vh] h-[25vh] rotate-45  z-10">
                 <div className="absolute cover overflow-hidden rounded-[25%]">
                     <img 
-                        src={convertFileSrc(metadata.img_ext ? `${getChartFolder(metadata)}\\img.${metadata.img_ext}` : RESOURCE_DIR + "\\default-bg.png")}
+                        src={convertFileSrc(metadata.img_ext ? `${getChartFolder(metadata)}/img.${metadata.img_ext}` : RESOURCE_DIR + "/default-bg.png")}
                         className='absolute cover w-full h-full scale-125 object-cover -rotate-45'
                     />
                 </div>

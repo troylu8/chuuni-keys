@@ -33,10 +33,10 @@ export async function publishChart(metadata: ChartMetadata) {
     const body = new FormData();
     body.append("owner_hash", owner_hash);
     body.append("metadata", stringifyForPublish(metadata));
-    body.append("chart", await getBlob(chartFolder + "\\chart.txt"));
-    body.append("audio", await getBlob(`${chartFolder}\\audio.${metadata.audio_ext}`));
+    body.append("chart", await getBlob(chartFolder + "/chart.txt"));
+    body.append("audio", await getBlob(`${chartFolder}/audio.${metadata.audio_ext}`));
     if (metadata.img_ext)
-        body.append("img", await getBlob(`${chartFolder}\\img.${metadata.img_ext}`));
+        body.append("img", await getBlob(`${chartFolder}/img.${metadata.img_ext}`));
     
     const resp = await fetch(SERVER_URL + "/charts", { method: "POST", body }).then(throwIfNotOk);
     return { online_id: await resp.text(), owner_hash };
@@ -51,9 +51,9 @@ export async function updateChart(metadata: ChartMetadata): Promise<void> {
     const body = new FormData();
     body.append("owner_key", OWNER_KEY);
     body.append("metadata", stringifyForPublish(metadata));
-    body.append("chart", await getBlob(chartFolder + "\\chart.txt"));
+    body.append("chart", await getBlob(chartFolder + "/chart.txt"));
     if (metadata.img_ext)
-        body.append("img", await getBlob(`${chartFolder}\\img.${metadata.img_ext}`));
+        body.append("img", await getBlob(`${chartFolder}/img.${metadata.img_ext}`));
     
     await fetch(SERVER_URL + "/charts/" + metadata.online_id, { method: "PATCH", body }).then(throwIfNotOk);
 }

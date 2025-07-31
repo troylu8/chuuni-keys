@@ -68,8 +68,8 @@ export default function GameManager({ children }: Props) {
         
         (async () => {
             const chartFolder = getChartFolder(metadata);
-            bgm.load(`${chartFolder}\\audio.${metadata.audio_ext}`, metadata);
-            const events = await readChartFile(chartFolder + "\\chart.txt");
+            bgm.load(`${chartFolder}/audio.${metadata.audio_ext}`, metadata);
+            const events = await readChartFile(chartFolder + "/chart.txt");
             
             resetEvents();
                 

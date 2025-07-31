@@ -1,9 +1,9 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
-import { openPath } from '@tauri-apps/plugin-opener';
+import { openPath, openUrl } from '@tauri-apps/plugin-opener';
 import { copyFile, remove } from '@tauri-apps/plugin-fs';
-import { extname, pictureDir } from '@tauri-apps/api/path';
+import { extname, join, pictureDir } from '@tauri-apps/api/path';
 import { Bind, ChartMetadata, Difficulty,  OWNER_KEY } from '../../lib/lib';
 import MuseButton from '../../components/muse-button';
 import { useEffect, useRef, useState } from 'react';
@@ -126,11 +126,11 @@ function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePick
         const newImgExt = await extname(imgFilepath)
         const oldImgExt = metadata.img_ext;
         
-        await copyFile(imgFilepath, `${workingChartFolderRef.current}\\img.${newImgExt}`);
+        await copyFile(imgFilepath, `${workingChartFolderRef.current}/img.${newImgExt}`);
         
         // delete old img if necessary (if same exts, then file will be overwritten so no need to delete)
         if (oldImgExt != undefined && oldImgExt != newImgExt) {
-            await remove(`${workingChartFolderRef.current}\\img.${oldImgExt}`);
+            await remove(`${workingChartFolderRef.current}/img.${oldImgExt}`);
         }
         setMetadata(
             { ...metadata, img_ext: newImgExt }, 
@@ -142,7 +142,7 @@ function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePick
     async function handleClearImg() {
         if (!metadata.img_ext) return;
         
-        await remove(`${workingChartFolderRef.current}\\img.${metadata.img_ext}`);
+        await remove(`${workingChartFolderRef.current}/img.${metadata.img_ext}`);
         setMetadata({...metadata, img_ext: undefined}, true);
         setConfirmVisible(false);
     }
@@ -165,7 +165,9 @@ function ImagePicker({ workingChartFolderRef, metadata, setMetadata }: ImagePick
             
             <MuseButton 
                 className='col-start-1 -col-end-1 ml-auto bg-ctp-mauve'
-                onClick={() => openPath(workingChartFolderRef.current)}
+                
+                // use `join()` to resolve the path with the proper delimiters before opening
+                onClick={() => join(workingChartFolderRef.current).then(openPath)}
             > 
                 <FolderOpen /> &nbsp; open chart folder 
             </MuseButton>

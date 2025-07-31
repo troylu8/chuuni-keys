@@ -100,5 +100,5 @@ export const flags: Flags = {
     hitsoundVolume: 1,
 };
 export function getChartFolder({id, title}: {id: string, title: string}) {
-    return `${USERDATA_DIR}\\charts\\${id} ${filenamify(title, {replacement: '_'})}`.trim();
+    return `${USERDATA_DIR}/charts/${id} ${filenamify(title, {replacement: '_'})}`.trim();
 }

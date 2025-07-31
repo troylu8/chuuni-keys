@@ -38,9 +38,9 @@ export default function NewChart() {
         await mkdir(chartFolder);
         
         const [, chartFileHandle] = await Promise.all([
-            writeTextFile(chartFolder + "\\metadata.json", stringifyIgnoreNull(metadata)),
-            create(chartFolder + "\\chart.txt"),
-            copyFile(audioFilepath, `${chartFolder}\\audio.${metadata.audio_ext}`),
+            writeTextFile(chartFolder + "/metadata.json", stringifyIgnoreNull(metadata)),
+            create(chartFolder + "/chart.txt"),
+            copyFile(audioFilepath, `${chartFolder}/audio.${metadata.audio_ext}`),
         ]);
         await chartFileHandle.close();
         

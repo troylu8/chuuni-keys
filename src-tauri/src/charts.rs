@@ -100,22 +100,22 @@ pub fn zip_chart(
     img_ext: Option<&str>,
 ) -> Result<Vec<u8>, String> {
     let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
-    add_file_to_zip(&mut zip, "chart.txt", &format!("{chart_folder}\\chart.txt"))?;
+    add_file_to_zip(&mut zip, "chart.txt", &format!("{chart_folder}/chart.txt"))?;
     add_file_to_zip(
         &mut zip,
         "metadata.json",
-        &format!("{chart_folder}\\metadata.json"),
+        &format!("{chart_folder}/metadata.json"),
     )?;
     add_file_to_zip(
         &mut zip,
         &format!("audio.{audio_ext}"),
-        &format!("{chart_folder}\\audio.{audio_ext}"),
+        &format!("{chart_folder}/audio.{audio_ext}"),
     )?;
     if let Some(img_ext) = img_ext {
         add_file_to_zip(
             &mut zip,
             &format!("img.{img_ext}"),
-            &format!("{chart_folder}\\img.{img_ext}"),
+            &format!("{chart_folder}/img.{img_ext}"),
         )?;
     }
 
@@ -146,11 +146,11 @@ pub fn unzip_chart(app: AppHandle, buffer: Vec<u8>) -> Result<ChartMetadata, Str
     fs::create_dir(chart_folder).unwrap_or_str()?;
     
     // extract chart files
-    fs::write(format!("{chart_folder}\\metadata.json"), serde_json::to_string(&metadata).unwrap_or_str()?).unwrap_or_str()?;
-    extract_from_zip(&mut zip, "chart.txt", &format!("{chart_folder}\\chart.txt"))?;
-    extract_from_zip(&mut zip, &format!("audio.{}", metadata.audio_ext), &format!("{chart_folder}\\audio.{}", metadata.audio_ext))?;
+    fs::write(format!("{chart_folder}/metadata.json"), serde_json::to_string(&metadata).unwrap_or_str()?).unwrap_or_str()?;
+    extract_from_zip(&mut zip, "chart.txt", &format!("{chart_folder}/chart.txt"))?;
+    extract_from_zip(&mut zip, &format!("audio.{}", metadata.audio_ext), &format!("{chart_folder}/audio.{}", metadata.audio_ext))?;
     if let Some(img_ext) = &metadata.img_ext {
-        extract_from_zip(&mut zip, &format!("img.{img_ext}"), &format!("{chart_folder}\\img.{img_ext}"))?;
+        extract_from_zip(&mut zip, &format!("img.{img_ext}"), &format!("{chart_folder}/img.{img_ext}"))?;
     }
     
     Ok(metadata)

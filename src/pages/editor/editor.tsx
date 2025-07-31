@@ -72,10 +72,10 @@ export default function Editor() {
     }
     
     function loadResources(audioPos: number) {
-        bgm.load(`${chartFolder}\\audio.${metadata.audio_ext}`, metadata);
+        bgm.load(`${chartFolder}/audio.${metadata.audio_ext}`, metadata);
         bgm.pos = audioPos;
         
-        readChartFile(chartFolder + "\\chart.txt").then(events => {
+        readChartFile(chartFolder + "/chart.txt").then(events => {
             let tree = createTree<number, MuseEvent>((a, b) => a - b);
             
             for (const event of events) {
@@ -173,8 +173,8 @@ export default function Editor() {
         }
         
         await Promise.all([
-            writeTextFile(newChartFolder + "\\chart.txt", events.values.map(e => e.join(" ")).join("\n")),
-            writeTextFile(newChartFolder + "\\metadata.json", stringifyIgnoreNull(newMetadata)),
+            writeTextFile(newChartFolder + "/chart.txt", events.values.map(e => e.join(" ")).join("\n")),
+            writeTextFile(newChartFolder + "/metadata.json", stringifyIgnoreNull(newMetadata)),
         ]);
         
         if (newChartFolder != workingChartFolder) loadResources(bgm.pos);
@@ -260,7 +260,7 @@ export default function Editor() {
         <>
             <Background 
                 brightness={activeTab == "keyboard" ? 40 : 15}
-                imgPath={metadata.img_ext && `${workingChartFolderRef.current}\\img.${metadata.img_ext}`} 
+                imgPath={metadata.img_ext && `${workingChartFolderRef.current}/img.${metadata.img_ext}`} 
                 imgCacheBust={metadata.imgCacheBust} 
             />
             <div className="absolute cover flex flex-col">

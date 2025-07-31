@@ -35,7 +35,7 @@ export type LeaderboardEntry = {
     fullCombo: boolean
 }
 export async function getLeaderboard(chart: ChartMetadata): Promise<LeaderboardEntry[]> {
-    const leaderboardFile = getChartFolder(chart) + "\\leaderboard.csv";
+    const leaderboardFile = getChartFolder(chart) + "/leaderboard.csv";
     
     if (!(await exists(leaderboardFile))) return [];
     
@@ -85,7 +85,7 @@ export default function ResultsScreen() {
         // write score in leaderboard file
         if (!Number.isNaN(accuracyPercent)) { // accuracy may be NaN if chart was empty
             writeTextFile(
-                getChartFolder(metadata) + "\\leaderboard.csv", 
+                getChartFolder(metadata) + "/leaderboard.csv", 
                 `${Date.now()},${accuracyPercent},${maxCombo},${letter},${fullCombo? "FC" : ""}\n`,
                 {append: true}
             );

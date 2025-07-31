@@ -49,7 +49,7 @@ export default function ChartInfo({ metadata }: Props) {
                     <div className="absolute cover overflow-hidden rounded-[15%] outline-[1vh] outline-ctp-base">
                         <Background
                             brightness={100}
-                            imgPath={metadata.img_ext && `${getChartFolder(metadata)}\\img.${metadata.img_ext}`} 
+                            imgPath={metadata.img_ext && `${getChartFolder(metadata)}/img.${metadata.img_ext}`} 
                         />
                     </div>
                     
