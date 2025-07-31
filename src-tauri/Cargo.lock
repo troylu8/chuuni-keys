@@ -549,7 +549,7 @@ dependencies = [
 
 [[package]]
 name = "chuuni-keys"
-version = "0.1.0"
+version = "1.0.4"
 dependencies = [
  "filenamify",
  "rand 0.9.1",
