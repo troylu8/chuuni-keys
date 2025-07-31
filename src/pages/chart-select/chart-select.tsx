@@ -212,7 +212,7 @@ export default function ChartSelect() {
             
             { charts && charts.length == 0 &&
                 <div className="absolute left-1/2 top-1/2 -translate-1/2 flex flex-col items-center justify-center">
-                    <h3 className="text-ctp-flamingo font-mono mb-5"> [ No charts installed ] </h3>
+                    <h3 className="text-ctp-mauve font-mono mb-5"> [ No charts installed ] </h3>
                     <p> download some from the <ChartListingLink /> </p>
                     <p>
                         or

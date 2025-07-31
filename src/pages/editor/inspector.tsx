@@ -148,7 +148,7 @@ export default function Inspector({ metadata, events, deleteEvent }: Props) {
             {/* preview time marker */}
             <div 
                 style={{left: getPosOnInspector(preview_time)}} 
-                className="inspector-tick bg-ctp-yellow-600 h-6.5">
+                className="inspector-tick bg-ctp-yellow h-6.5">
             </div>
             
             {/* current position marker */}

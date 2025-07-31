@@ -40,11 +40,11 @@
         "windows": {
             "nsis": {
                 "customLanguageFiles": {
-                    "English": "installer/labels.nsh"
+                    "English": "nsis/labels.nsh"
                 },
                 "installerIcon": "icons/icon.ico",
-                "sidebarImage": "installer/sidebar.bmp",
-                "installerHooks": "installer/hooks.nsh"
+                "sidebarImage": "nsis/sidebar.bmp",
+                "installerHooks": "nsis/hooks.nsh"
             }
         }
     },

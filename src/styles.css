@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@catppuccin/tailwindcss/config.css";
 
 :root {
     --light: #eaeaea;
@@ -23,6 +22,19 @@
 
 @theme {
     --color-light: var(--light);
+
+    /* color scheme: catppuccin mocha */
+    --color-ctp-crust: #11111b;
+    --color-ctp-base: #1e1e2e;
+    --color-ctp-text: #cdd6f4;
+    --color-ctp-mauve: #cba6f7;
+    --color-ctp-red: #f38ba8;
+    --color-ctp-blue: #89b4fa;
+    --color-ctp-lavender: #b4befe;
+    --color-ctp-green: #a6e3a1;
+    --color-ctp-yellow: #f9e2af;
+    --color-ctp-pink: #f5c2e7;
+    --color-ctp-teal: #94e2d5;
 }
 
 .lucide {
