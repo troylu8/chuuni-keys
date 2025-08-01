@@ -51,14 +51,26 @@
     font-family: "EB Garamond";
     src: url("fonts/EBGaramond-Regular.woff2");
 }
+@font-face {
+    font-display: block;
+    font-family: "Courier Prime";
+    src: url("fonts/CourierPrime-Regular.woff2");
+}
 
 .font-serif {
     font-family: "EB Garamond", serif;
+}
+.font-mono {
+    font-family: "Courier Prime", monospace;
 }
 
 body {
     overflow: hidden;
     user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+
     color: var(--color-ctp-text);
     font-family: Signika, sans-serif;
     caret-color: var(--color-ctp-mauve);
@@ -86,7 +98,7 @@ body::selection {
 #titlebar-text {
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    font-family: monospace;
+    font-family: "Courier Prime", monospace;
 }
 
 #titlebar-controls {

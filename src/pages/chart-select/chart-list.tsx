@@ -214,7 +214,7 @@ function ChartEntry({ metadata, onClick, onContextMenu, active }: ChartEntryProp
                     flex justify-center items-center z-10
                 '
             >
-                <p className="-rotate-45 text-ctp-base text-[4vh] font-mono"> 
+                <p className="-rotate-45 text-ctp-base text-[3vh] font-mono"> 
                     { 
                         metadata.difficulty.length > 5 ?
                             metadata.difficulty.substring(0, 4) + "." : 
