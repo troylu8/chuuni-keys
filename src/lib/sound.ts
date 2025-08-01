@@ -1,4 +1,5 @@
 import { readFile } from "@tauri-apps/plugin-fs";
+import { platform } from '@tauri-apps/plugin-os';
 import { appWindow, flags, RESOURCE_DIR } from "./lib";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { getBeatDuration } from "../pages/editor/inspector";
@@ -95,17 +96,26 @@ class BgmPlayer {
     public get src() {
         return this._src;
     }
-    public load(src: string | null, info?: BgmInfo) {
+    public async load(src: string | null, info?: BgmInfo) {
         clearInterval(this.playingLoop);
         delete this.playingLoop;
+
+        if (platform() == "linux" && this.audio.src) 
+            URL.revokeObjectURL(this.audio.src);
         
         this._src = src;
+        
         if (src == null) {
             this.audio.src = "";
             this.onDurationChange?.call(null, 0);
         }
         else {
-            this.audio.src = convertFileSrc(src);    
+            
+            // if on linux, load entire audio into an object url - https://github.com/tauri-apps/tauri/issues/3725
+            this.audio.src = platform() == "linux" ? 
+                URL.createObjectURL(await fetch(convertFileSrc(src)).then(res => res.blob())) :
+                convertFileSrc(src);
+
             this.audio.load();
         }
         this._bpm = info?.bpm;

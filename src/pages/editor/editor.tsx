@@ -71,8 +71,8 @@ export default function Editor() {
         setActiveTabInner(tab);
     }
     
-    function loadResources(audioPos: number) {
-        bgm.load(`${chartFolder}/audio.${metadata.audio_ext}`, metadata);
+    async function loadResources(audioPos: number) {
+        await bgm.load(`${chartFolder}/audio.${metadata.audio_ext}`, metadata);
         bgm.pos = audioPos;
         
         readChartFile(chartFolder + "/chart.txt").then(events => {
@@ -85,7 +85,7 @@ export default function Editor() {
             setEvents(tree);
         });
     }
-    useEffect(() => loadResources(0), []); // load resources on init
+    useEffect(() => { loadResources(0) }, []); // load resources on init
     
     /** [`true/false` = added/removed event, event] */
     const historyRef = useRef<[boolean, MuseEvent][]>([]);

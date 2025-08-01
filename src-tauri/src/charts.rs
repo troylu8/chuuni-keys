@@ -3,22 +3,20 @@ use std::{
     io::{Cursor, Read, Seek, Write},
 };
 
+use filenamify::filenamify;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use zip::{write::SimpleFileOptions, ZipArchive, ZipWriter};
-use filenamify::filenamify;
 
 use crate::UnwrapOrStr;
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChartMetadata {
-    
     #[serde(default = "gen_id")]
     id: String,
     online_id: Option<String>,
     owner_hash: Option<String>,
-    
+
     title: String,
     difficulty: String,
 
@@ -38,34 +36,40 @@ pub struct ChartMetadata {
 
 #[tauri::command]
 pub fn get_all_charts(app: AppHandle) -> Result<Vec<ChartMetadata>, String> {
-    let charts_dir = app.path().app_local_data_dir().unwrap_or_str()?.join("userdata/charts");
-    
+    let charts_dir = app
+        .path()
+        .app_local_data_dir()
+        .unwrap_or_str()?
+        .join("userdata/charts");
+
     // install default charts if userdata/charts folder didnt exist at first
     let should_install_default_charts = !fs::exists(&charts_dir).unwrap_or_str()?;
-    
+
     fs::create_dir_all(&charts_dir).unwrap_or_str()?;
-    
+
     if should_install_default_charts {
-        
         // try to install default charts
-        let default_charts_dir = app.path().resource_dir().unwrap_or_str()?.join("resources/default_charts");
+        let default_charts_dir = app
+            .path()
+            .resource_dir()
+            .unwrap_or_str()?
+            .join("resources/default_charts");
         if fs::exists(&default_charts_dir).unwrap_or_str()? {
             for file in fs::read_dir(&default_charts_dir).unwrap_or_str()? {
                 let original_filepath = file.unwrap_or_str()?.path();
-                
+
                 let filename = original_filepath.clone();
                 let filename = filename.file_name().unwrap();
-                
+
                 fs::rename(original_filepath, charts_dir.join(&filename)).unwrap_or_str()?;
             }
             fs::remove_dir(default_charts_dir).unwrap_or_str()?;
         }
     }
-    
+
     // read chart metadata of each chart in userdata/charts
     let contents = fs::read_dir(charts_dir).unwrap_or_str()?;
-    Ok(
-        contents
+    Ok(contents
         .filter_map(|res| res.ok())
         .filter_map(|file| {
             if let Ok(contents) = fs::read_to_string(file.path().join("metadata.json")) {
@@ -75,10 +79,8 @@ pub fn get_all_charts(app: AppHandle) -> Result<Vec<ChartMetadata>, String> {
             }
             None
         })
-        .collect()
-    )
+        .collect())
 }
-
 
 fn add_file_to_zip<W: Write + Seek>(
     zip: &mut ZipWriter<W>,
@@ -87,7 +89,8 @@ fn add_file_to_zip<W: Write + Seek>(
 ) -> Result<(), String> {
     let data = fs::read(filepath).unwrap_or_str()?;
 
-    zip.start_file(zip_filepath, SimpleFileOptions::default()).unwrap_or_str()?;
+    zip.start_file(zip_filepath, SimpleFileOptions::default())
+        .unwrap_or_str()?;
     zip.write_all(&data).unwrap_or_str()?;
 
     Ok(())
@@ -125,34 +128,51 @@ pub fn zip_chart(
 
 #[tauri::command]
 pub fn unzip_chart(app: AppHandle, buffer: Vec<u8>) -> Result<ChartMetadata, String> {
-    
     let mut zip = ZipArchive::new(Cursor::new(buffer)).unwrap_or_str()?;
-    
+
     // read metadata
     let mut metadata_json = String::new();
     {
         let mut metadata_file = zip.by_name("metadata.json").unwrap_or_str()?;
-        metadata_file.read_to_string(&mut metadata_json).unwrap_or_str()?;
+        metadata_file
+            .read_to_string(&mut metadata_json)
+            .unwrap_or_str()?;
     }
-    
+
     let metadata: ChartMetadata = serde_json::from_str(&metadata_json).unwrap_or_str()?;
-    
+
     // find chart folder
     let app_data_local = app.path().app_local_data_dir().unwrap_or_str()?;
-    let chart_folder = app_data_local.join(format!("userdata/charts/{} {}", metadata.id, filenamify(&metadata.title)));
+    let chart_folder = app_data_local.join(format!(
+        "userdata/charts/{} {}",
+        metadata.id,
+        filenamify(&metadata.title)
+    ));
     let chart_folder = chart_folder.to_str().unwrap();
-    
+
     // create chart folder
     fs::create_dir(chart_folder).unwrap_or_str()?;
-    
+
     // extract chart files
-    fs::write(format!("{chart_folder}/metadata.json"), serde_json::to_string(&metadata).unwrap_or_str()?).unwrap_or_str()?;
+    fs::write(
+        format!("{chart_folder}/metadata.json"),
+        serde_json::to_string(&metadata).unwrap_or_str()?,
+    )
+    .unwrap_or_str()?;
     extract_from_zip(&mut zip, "chart.txt", &format!("{chart_folder}/chart.txt"))?;
-    extract_from_zip(&mut zip, &format!("audio.{}", metadata.audio_ext), &format!("{chart_folder}/audio.{}", metadata.audio_ext))?;
+    extract_from_zip(
+        &mut zip,
+        &format!("audio.{}", metadata.audio_ext),
+        &format!("{chart_folder}/audio.{}", metadata.audio_ext),
+    )?;
     if let Some(img_ext) = &metadata.img_ext {
-        extract_from_zip(&mut zip, &format!("img.{img_ext}"), &format!("{chart_folder}/img.{img_ext}"))?;
+        extract_from_zip(
+            &mut zip,
+            &format!("img.{img_ext}"),
+            &format!("{chart_folder}/img.{img_ext}"),
+        )?;
     }
-    
+
     Ok(metadata)
 }
 
@@ -161,18 +181,17 @@ fn extract_from_zip<R: Read + Seek>(
     filename: &str,
     dest: &str,
 ) -> Result<(), String> {
-    
     let mut file = zip.by_name(filename).unwrap_or_str()?;
     let mut buf: Vec<u8> = Vec::with_capacity(file.size() as usize);
     file.read_to_end(&mut buf).unwrap_or_str()?;
     fs::write(dest, buf).unwrap_or_str()?;
-    
+
     Ok(())
 }
 
 pub fn gen_id() -> String {
     let mut res = [' '; 10];
-    
+
     for i in 0..res.len() {
         res[i] = to_base64_symbol(rand::random::<u8>() & 63)
     }
@@ -181,10 +200,17 @@ pub fn gen_id() -> String {
 }
 
 fn to_base64_symbol(num: u8) -> char {
-    if      num < 10    { (num      + '0' as u8) as char }
-    else if num < 36    { (num - 10 + 'a' as u8) as char }
-    else if num < 62    { (num - 36 + 'A' as u8) as char }
-    else if num == 62   { '-' }
-    else if num == 63   { '_' }
-    else                { panic!("cant convert num > 63 to a base64 symbol") }
+    if num < 10 {
+        (num + '0' as u8) as char
+    } else if num < 36 {
+        (num - 10 + 'a' as u8) as char
+    } else if num < 62 {
+        (num - 36 + 'A' as u8) as char
+    } else if num == 62 {
+        '-'
+    } else if num == 63 {
+        '_'
+    } else {
+        panic!("cant convert num > 63 to a base64 symbol")
+    }
 }

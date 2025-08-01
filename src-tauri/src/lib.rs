@@ -6,8 +6,10 @@ use tauri_plugin_prevent_default::PlatformOptions;
 mod charts;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[allow(unused_mut)]
 pub fn run() {
     let mut app = tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             let _ = app
                 .get_webview_window("main")
@@ -39,15 +41,14 @@ pub fn run() {
                 .build(),
         );
     }
-    
-    app
-        .invoke_handler(tauri::generate_handler![
-            charts::get_all_charts,
-            charts::zip_chart,
-            charts::unzip_chart,
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+
+    app.invoke_handler(tauri::generate_handler![
+        charts::get_all_charts,
+        charts::zip_chart,
+        charts::unzip_chart,
+    ])
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
 }
 
 pub trait UnwrapOrStr<T> {

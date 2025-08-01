@@ -52,7 +52,7 @@ export default function ChartSelect() {
         
         // this is a different song, so play it from the preview point
         if (bgm.src != activeSongSrc) {
-            bgm.load(activeSongSrc, metadata);
+            await bgm.load(activeSongSrc, metadata);
             bgm.pos = metadata.preview_time;
             await bgm.play();
         }
