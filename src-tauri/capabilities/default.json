@@ -74,6 +74,7 @@
           "url": "https://chuuni-keys.troylu.com/*"
         }
       ]
-    }
+    },
+    "os:default"
   ]
 }

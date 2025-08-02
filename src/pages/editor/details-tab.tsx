@@ -1,7 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import Modal from "../../components/modal";
 import TextInput from "../../components/text-input";
-import { openPath, openUrl } from '@tauri-apps/plugin-opener';
+import { openPath } from '@tauri-apps/plugin-opener';
 import { copyFile, remove } from '@tauri-apps/plugin-fs';
 import { extname, join, pictureDir } from '@tauri-apps/api/path';
 import { Bind, ChartMetadata, Difficulty,  OWNER_KEY } from '../../lib/lib';

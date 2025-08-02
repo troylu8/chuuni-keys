@@ -1,7 +1,5 @@
 import { readFile } from "@tauri-apps/plugin-fs";
-import { platform } from '@tauri-apps/plugin-os';
-import { appWindow, flags, RESOURCE_DIR } from "./lib";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { appWindow, ChartMetadata, flags, getAudioSrc, RESOURCE_DIR } from "./lib";
 import { getBeatDuration } from "../pages/editor/inspector";
 import { useEffect } from "react";
 import { useBgmState } from "../contexts/bgm-state";
@@ -41,12 +39,6 @@ export function playSfx(sfx: SFX) {
 
 type PosListener = (pos: number) => any
 type BeatListener = (beat: number) => any
-type BgmInfo = {
-    title?: string
-    credit_audio?: string
-    bpm?: number
-    first_beat?: number
-}
 
 class BgmPlayer {
     
@@ -64,7 +56,7 @@ class BgmPlayer {
     private _bpm?: number;
     private _first_beat?: number;
     
-    public onLoad?: (info?: BgmInfo) => any;
+    public onLoad?: (chartOrSrc: ChartMetadata | string | null) => any;
     public onPlayOrPause?: (paused: boolean) => any; 
     public onDurationChange?: (duration: number) => any; 
     public onVolumeChange?: (volume: number) => any; 
@@ -96,31 +88,23 @@ class BgmPlayer {
     public get src() {
         return this._src;
     }
-    public async load(src: string | null, info?: BgmInfo) {
+    public load(chartOrSrc: ChartMetadata | string | null ) {
         clearInterval(this.playingLoop);
         delete this.playingLoop;
 
-        if (platform() == "linux" && this.audio.src) 
-            URL.revokeObjectURL(this.audio.src);
-        
-        this._src = src;
-        
-        if (src == null) {
+        if (chartOrSrc == null) {
+            this._src = null;
             this.audio.src = "";
             this.onDurationChange?.call(null, 0);
         }
         else {
-            
-            // if on linux, load entire audio into an object url - https://github.com/tauri-apps/tauri/issues/3725
-            this.audio.src = platform() == "linux" ? 
-                URL.createObjectURL(await fetch(convertFileSrc(src)).then(res => res.blob())) :
-                convertFileSrc(src);
-
+            this._src = typeof chartOrSrc === "string" ? chartOrSrc : getAudioSrc(chartOrSrc);
+            this.audio.src = this._src;
             this.audio.load();
         }
-        this._bpm = info?.bpm;
-        this._first_beat = info?.first_beat;
-        this.onLoad?.call(null, info);
+        this._bpm = (chartOrSrc as any)?.bpm;
+        this._first_beat = (chartOrSrc as any)?.first_beat;
+        this.onLoad?.call(null, chartOrSrc);
         this.onPlayOrPause?.call(null, true);
     }
     

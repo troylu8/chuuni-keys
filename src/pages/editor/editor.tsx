@@ -72,7 +72,7 @@ export default function Editor() {
     }
     
     async function loadResources(audioPos: number) {
-        await bgm.load(`${chartFolder}/audio.${metadata.audio_ext}`, metadata);
+        bgm.load(metadata);
         bgm.pos = audioPos;
         
         readChartFile(chartFolder + "/chart.txt").then(events => {

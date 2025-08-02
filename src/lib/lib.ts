@@ -102,3 +102,8 @@ export const flags: Flags = {
 export function getChartFolder({id, title}: {id: string, title: string}) {
     return `${USERDATA_DIR}/charts/${id} ${filenamify(title, {replacement: '_'})}`.trim();
 }
+export function getAudioSrc({id, title, audio_ext}: {id: string, title: string, audio_ext: string}) {
+    
+    // static file server is mounted on USERDATA_DIR
+    return `http://localhost:44888/charts/${id} ${filenamify(title, {replacement: '_'})}/audio.${audio_ext}`.trim();
+}

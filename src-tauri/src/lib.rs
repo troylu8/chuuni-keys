@@ -1,9 +1,11 @@
 use tauri::Manager;
+use std::thread;
 
 #[cfg(target_os = "windows")]
 use tauri_plugin_prevent_default::PlatformOptions;
 
 mod charts;
+mod static_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[allow(unused_mut)]
@@ -17,6 +19,14 @@ pub fn run() {
                 .set_focus();
         }))
         .setup(|app| {
+
+            let userdata_dir = app.path().app_local_data_dir().unwrap().join("userdata");
+
+            thread::spawn(|| {
+                println!("starting audio server");
+                static_server::start(userdata_dir);
+            });
+
             #[cfg(dev)]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;

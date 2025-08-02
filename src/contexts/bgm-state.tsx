@@ -42,13 +42,19 @@ export default function BgmStateProvider({ children }: Props) {
     });
     
     useEffect(() => {
-        bgm.onLoad = info => setBgmState(prev => ({
-            ...prev, 
-            title: info?.title, 
-            credit_audio: info?.credit_audio,
-            bpm: info?.bpm,
-            first_beat: info?.first_beat,
-        }));
+        bgm.onLoad = info => setBgmState(prev => {
+            if (typeof info === "string") {
+                return {...prev, title: undefined, credit_audio: undefined, bpm: undefined, first_beat: undefined}
+            }
+            return {
+                ...prev, 
+                title: info?.title, 
+                credit_audio: info?.credit_audio,
+                bpm: info?.bpm,
+                first_beat: info?.first_beat,
+            }
+        });
+
         bgm.onPlayOrPause = paused => setBgmState(prev => ({...prev, paused}));
         bgm.onDurationChange = duration => setBgmState(prev => ({...prev, duration}));
         bgm.onSpeedChange = speed => setBgmState(prev => ({...prev, speed}));

@@ -67,9 +67,8 @@ export default function GameManager({ children }: Props) {
         museEmitter.setMaxListeners(100);
         
         (async () => {
-            const chartFolder = getChartFolder(metadata);
-            await bgm.load(`${chartFolder}/audio.${metadata.audio_ext}`, metadata);
-            const events = await readChartFile(chartFolder + "/chart.txt");
+            bgm.load(metadata);
+            const events = await readChartFile(getChartFolder(metadata) + "/chart.txt");
             
             resetEvents();
                 

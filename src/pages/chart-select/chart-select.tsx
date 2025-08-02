@@ -2,7 +2,7 @@ import { Page, ChartSelectParams, usePage } from "../../contexts/page";
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import ChartInfo from './chart-info';
-import { ChartMetadata, compareDifficulty, flags, getChartFolder } from "../../lib/lib";
+import { ChartMetadata, compareDifficulty, flags, getAudioSrc, getChartFolder } from "../../lib/lib";
 import bgm from "../../lib/sound";
 import MuseButton from "../../components/muse-button";
 import { ArrowLeft, EllipsisVertical, Plus, TriangleAlert, XIcon } from "lucide-react";
@@ -48,11 +48,10 @@ export default function ChartSelect() {
         if (metadata == null)
             return bgm.clear();
         
-        const activeSongSrc = `${getChartFolder(metadata)}/audio.${metadata.audio_ext}`;
         
         // this is a different song, so play it from the preview point
-        if (bgm.src != activeSongSrc) {
-            await bgm.load(activeSongSrc, metadata);
+        if (bgm.src != getAudioSrc(metadata)) {
+            bgm.load(metadata);
             bgm.pos = metadata.preview_time;
             await bgm.play();
         }
